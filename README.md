@@ -1,11 +1,8 @@
-# Node-TypeScript-Restify-Mongoose
+# ClassPortal API
 
-This is a demo Node.js application written in TypeScript demonstrating how to build a RESTful API
-with Restify and MongoDB for the backend.
+### Description
 
-Inspired by:
-- https://github.com/KunalKapadia/express-mongoose-es6-rest-api
-- https://github.com/madhums/node-express-mongoose-demo
+This ClassPortal REST API is a Node.js application written in TypeScript with Restify as the web framework and MongoDB for the database.
 
 ## Requirements
 
@@ -15,29 +12,28 @@ Inspired by:
 ## Install
 
 ```sh
-$ git clone git://github.com/mksarge/node-ts-restify-mongoose-demo.git
+$ git clone git://github.com/ubccpsc/classportal-api.git
 $ npm install
 ```
 
 ## Test
 
-The test command first lints, then builds the project before running Mocha tests.
+Lint, build, and test (Mocha + Supertest) the project with:
 
 ```sh
-// run tests
 $ npm run test
 
-// run tests with logger enabled
+// with logger enabled
 $ npm run test:debug
 
-// run tests with instanbul coverage
+// with instanbul coverage
 $ npm run cover
 ```
 
 ## Run
 
 ```sh
-$ npm start
+$ npm run start
 ```
 
 Then visit [http://localhost:5000/](http://localhost:5000/)
