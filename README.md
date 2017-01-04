@@ -2,7 +2,7 @@
 
 ### Description
 
-Internal REST API for [ClassPortal](classportal).
+Internal REST API for [ClassPortal][classportal].
 
 Built with
 - [Node.js][nodejs]
@@ -51,7 +51,7 @@ $ npm run start:prod
 
 MIT
 
-[classportal]: <https://classportal-116d2.firebaseapp.com/>
+[classportal]: <https://github.com/mksarge/classportal-ui>
 [nodejs]: <https://nodejs.org>
 [typescript]: <https://www.typescriptlang.org/>
 [restify]: <http://restify.com>
