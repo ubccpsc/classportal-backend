@@ -21,6 +21,10 @@ let settings: LoggerSettings = {
 
 if (config.env === 'dev') {
   settings.streams.push({ level: 'info', stream: infoStream });
+} else if (config.env === 'test') {
+
+} else if (config.env === 'prod') {
+
 }
 
 if (config.debug) {
