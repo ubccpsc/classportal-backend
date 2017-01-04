@@ -1,7 +1,5 @@
 # ClassPortal API
 
-### Description
-
 Internal REST API for [ClassPortal][classportal].
 
 Built with
