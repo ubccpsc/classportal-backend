@@ -2,12 +2,18 @@
 
 ### Description
 
-This ClassPortal REST API is a Node.js application written in TypeScript with Restify as the web framework and MongoDB for the database.
+Internal REST API for [ClassPortal](classportal).
+
+Built with
+- [Node.js][nodejs]
+- [TypeScript][typescript]
+- [Restify][restify] REST framework
+- [MongoDB][mongodb] database.
 
 ## Requirements
 
-* [NodeJs](http://nodejs.org) >= 6.x 
-* [mongodb](http://mongodb.org)
+* [Node.js][nodejs] >= 6.x
+* [mongodb][mongodb]
 
 ## Install
 
@@ -21,6 +27,7 @@ $ npm install
 Lint, build, and test (Mocha + Supertest) the project with:
 
 ```sh
+// run tests
 $ npm run test
 
 // with logger enabled
@@ -33,11 +40,19 @@ $ npm run cover
 ## Run
 
 ```sh
+// dev
 $ npm run start
-```
 
-Then visit [http://localhost:5000/](http://localhost:5000/)
+// production
+$ npm run start:prod
+```
 
 ## License
 
 MIT
+
+[classportal]: <https://classportal-116d2.firebaseapp.com/>
+[nodejs]: <https://nodejs.org>
+[typescript]: <https://www.typescriptlang.org/>
+[restify]: <http://restify.com>
+[mongodb]: <https://mongodb.org>
