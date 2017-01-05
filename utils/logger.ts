@@ -19,11 +19,15 @@ let settings: LoggerSettings = {
   streams: [{ level: 'error', path: `error.log` }]
 };
 
-if (config.env === 'dev') {
+if (config.env === 'development') {
   settings.streams.push({ level: 'info', stream: infoStream });
-} else if (config.env === 'test') {
+}
 
-} else if (config.env === 'prod') {
+if (config.env === 'test') {
+
+}
+
+if (config.env === 'production') {
 
 }
 
