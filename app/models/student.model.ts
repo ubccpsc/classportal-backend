@@ -12,6 +12,7 @@ interface IStudentModel extends mongoose.Model<IStudentDocument> {
   findByUsername(username: string): any;
 }
 
+// Student Schema
 const StudentSchema = new Schema({
   username: {
     type: String,
