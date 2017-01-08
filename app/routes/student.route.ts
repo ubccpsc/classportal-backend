@@ -4,12 +4,6 @@ import * as auth from '../auth';
 
 export default (api: restify.Server) => {
   /**
-   * NOT LOGGED IN USERS ONLY
-   * Student registration
-   */
-  api.post('/api/student/register', controller.register);
-
-  /**
    * ADMINS ONLY
    * Create new student
    */

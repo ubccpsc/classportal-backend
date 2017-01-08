@@ -29,9 +29,7 @@ describe('student API', () => {
           }
         });
     });
-  });
 
-  describe('POST /api/student', () => {
     it('should fail to create the same student twice', (done) => {
       supertest(app)
         .post('/api/student')
@@ -62,9 +60,7 @@ describe('student API', () => {
           }
         });
     });
-  });
 
-  describe('GET /api/student', () => {
     it('should fail to get invalid student', (done) => {
       supertest(app)
         .get('/api/student/nathan')
@@ -96,9 +92,7 @@ describe('student API', () => {
           }
         });
     });
-  });
 
-  describe('PUT /api/student', () => {
     it('should fail to update invalid student', (done) => {
       supertest(app)
         .put('/api/student/michael')
@@ -130,9 +124,7 @@ describe('student API', () => {
           }
         });
     });
-  });
 
-  describe('DEL /api/student', () => {
     it('should fail to delete invalid student', (done) => {
       supertest(app)
         .del('/api/student/nathan')
@@ -147,21 +139,4 @@ describe('student API', () => {
         });
     });
   });
-
-  describe('GET /api/student', () => {
-    it('should fail to get invalid student', (done) => {
-      supertest(app)
-        .get('/api/student/nathan')
-        .end((err: any, res: supertest.Response) => {
-          if (err) {
-            done(err);
-          } else {
-            expect(res.body.username).to.be.undefined;
-            expect(res.status).to.equal(500);
-            done();
-          }
-        });
-    });
-  });
-
 });

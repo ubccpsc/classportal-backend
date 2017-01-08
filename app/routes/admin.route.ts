@@ -5,7 +5,25 @@ import * as auth from '../auth';
 export default (api: restify.Server) => {
   /**
    * PROF ONLY
-   * Update the classlist with csv file
+   * Create an admin
    */
-  api.post('/api/admin/classlist', auth.prof, controller.updateClass);
+  api.post('/api/admin', auth.admin, controller.create);
+
+  /**
+   * PROF ONLY
+   * Get an admin
+   */
+  api.get('/api/admin', auth.admin, controller.get);
+
+  /**
+   * PROF ONLY
+   * Update an admin
+   */
+  api.put('/api/admin', auth.admin, controller.update);
+
+  /**
+   * PROF ONLY
+   * Delete an admin
+   */
+  api.del('/api/admin', auth.admin, controller.remove);
 };

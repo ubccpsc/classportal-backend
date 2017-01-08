@@ -79,21 +79,4 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
     .catch((err: any) => next(err));
 }
 
-
-function verifyRegistration(csid: string, sid: number) {
-
-}
-
-function register(req: restify.Request, res: restify.Response, next: restify.Next) {
-  // verify csid and sid
-  verifyRegistration(req.params.csid, req.params.sid);
-
-  // create student with info provided
-  // create();
-
-  logger.info('register');
-  res.json(200, 'register');
-  return next();
-}
-
-export { get, create, update, remove, load, register };
+export { get, create, update, remove, load };

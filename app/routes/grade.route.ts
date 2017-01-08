@@ -5,13 +5,13 @@ import * as auth from '../auth';
 export default (api: restify.Server) => {
   /**
    * ADMINS ONLY
-   * Get grades of students supplied in params
+   * Get the grades of one or more students
    */
   api.get('/api/grade', auth.admin, controller.get);
 
   /**
    * ADMINS ONLY
-   * Update the grades of students supplied in params
+   * Update the grades of one or more students
    */
   api.put('/api/grade', auth.admin, controller.update);
 };
