@@ -1,19 +1,35 @@
 import * as restify from 'restify';
 
-// The following handlers are only accessible by the prof and TAs.
-const requireAdmin = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+// Verify that user is not yet logged in
+function notLoggedIn (req: restify.Request, res: restify.Response, next: restify.Next) {
   // Logic to restrict access
-  // checkIfAdmin();
+  // check();
+
+  return next();
+}
+
+// Verify that user is logged in
+const loggedIn = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  // Logic to restrict access
+  // check();
 
   return next();
 };
 
-// The following handlers are only accessible by the prof.
-const requireProf = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+// Verify that user is a TA or prof
+const admin = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   // Logic to restrict access
-  // checkIfAdmin();
+  // check();
 
   return next();
 };
 
-export { requireAdmin, requireProf };
+// Verify that user is a prof
+const prof = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  // Logic to restrict access
+  // check();
+
+  return next();
+};
+
+export { notLoggedIn, loggedIn, admin, prof };
