@@ -4,11 +4,11 @@ import { app } from '../../server';
 import { logger } from '../../utils/logger';
 const expect = chai.expect;
 
-describe('login API', () => {
-  describe('PUT /api/login', () => {
+describe('user API', () => {
+  describe('PUT /api/user/login', () => {
     it('should return "login"', (done) => {
       supertest(app)
-        .put('/api/login')
+        .put('/api/user/login')
         .end((err: any, res: supertest.Response) => {
           if (err) {
             done(err);
@@ -20,13 +20,11 @@ describe('login API', () => {
         });
     });
   });
-});
 
-describe('logout API', () => {
-  describe('PUT /api/logout', () => {
+  describe('PUT /api/user/logout', () => {
     it('should return "logout"', (done) => {
       supertest(app)
-        .put('/api/logout')
+        .put('/api/user/logout')
         .end((err: any, res: supertest.Response) => {
           if (err) {
             done(err);

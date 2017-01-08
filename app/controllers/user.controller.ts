@@ -7,4 +7,10 @@ function login(req: restify.Request, res: restify.Response, next: restify.Next) 
   return next();
 }
 
-export { login }
+function logout(req: restify.Request, res: restify.Response, next: restify.Next) {
+  logger.info('logout');
+  res.json(200, 'logout');
+  return next();
+}
+
+export { login, logout }

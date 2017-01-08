@@ -5,10 +5,10 @@ import { logger } from '../../utils/logger';
 const expect = chai.expect;
 
 describe('class API', () => {
-  describe('PUT /api/class', () => {
+  describe('POST /api/class', () => {
     it('should return "update class"', (done) => {
       supertest(app)
-        .put('/api/class')
+        .post('/api/class')
         .end((err: any, res: supertest.Response) => {
           if (err) {
             done(err);
