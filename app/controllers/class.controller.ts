@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
+import { Student, IStudentDocument } from '../models/student.model';
 import { logger } from '../../utils/logger';
 
 /**
@@ -12,7 +13,7 @@ function update(req: restify.Request, res: restify.Response, next: restify.Next)
   if (req.files && req.files[0] && req.files[0].path) {
     // set parser settings
     const options = {
-      columns: ['CSID', 'SNUM', 'LAST', 'FIRST'],
+      columns: ['csid', 'snum', 'lastname', 'firstname'],
       skip_empty_lines: true,
       trim: true,
     };
@@ -28,11 +29,43 @@ function update(req: restify.Request, res: restify.Response, next: restify.Next)
         } else {
           // remove headers
           const sliced = [...data.slice(1)];
+          logger.info('sliced');
 
           // update STUDENT model and return number of added and deleted
-          logger.info(`Updating student collection`);
-          res.json(200, 'update class list');
-          return next();
+          let added = 0;
+          const saveIt = (info: any): Promise<any> => {
+            // make sure all the necessary data exists
+            // if (info.csid && info.csid && info.csid && info.csid) {
+            // create a new student with the info
+            const student = new Student({
+              csid: info.csid,
+              snum: info.snum,
+              lastname: info.lastname,
+              firstname: info.firstname,
+            });
+            return student
+              .save()
+              .then(() => {
+                logger.info('just added a student!');
+                added++;
+              })
+              .catch(() => {
+                // no point printing error about adding deuplicate?
+              });
+            // } else return Promise.reject('oops');
+          };
+
+          // sliced.forEach(saveIt);
+          return Promise.all(sliced.map(saveIt))
+            .then(() => {
+              logger.info(`Updated ${added} students!`);
+              res.json(200, 'update class list');
+              return next();
+            })
+            .catch(() => {
+              res.json(500);
+              return next('oops!');
+            });
         }
       }));
   } else {

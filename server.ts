@@ -11,7 +11,7 @@ const options = { server: { socketOptions: { keepAlive: 1 } } };
 const db: mongoose.Connection = mongoose.connect(config.db, options).connection;
 
 // print mongoose logs in dev and test env
-if (config.debug) {
+if (config.verbose) {
   mongoose.set('debug', true);
 }
 

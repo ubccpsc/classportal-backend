@@ -5,10 +5,13 @@ import { config } from './env';
 import { logger } from '../utils/logger';
 
 // get path to route handlers
-const pathToRoutes: string = path.join(config.root, '/app/routes');
+const pathToRoutes: string = path.join(config.rootFolder, '/app/routes');
 
 // create Restify server with the configured name
 const app: restify.Server = restify.createServer({ name: config.name });
+
+// parse the http query string into req.query
+app.use(restify.queryParser({ mapParams: false }));
 
 // parse the body of the request into req.params
 app.use(restify.bodyParser());

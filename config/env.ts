@@ -1,12 +1,13 @@
 import * as path from 'path';
 
 interface ConfigSettings {
-  root: string;
+  env: string;
+  debug: boolean;
+  verbose: boolean;
+  rootFolder: string;
   name: string;
   port: number;
-  env: string;
   db: string;
-  debug: boolean;
   github: {
     clientID: string;
     clientSecret: string;
@@ -16,13 +17,15 @@ interface ConfigSettings {
 
 const env: string = process.env.NODE_ENV || 'development';
 const debug: boolean = process.env.DEBUG || false;
+const verbose: boolean = process.env.VERBOSE || false;
 
 // default settings are for development environment
 const config: ConfigSettings = {
+  env,
+  debug,
+  verbose,
+  rootFolder: path.join(__dirname, '/..'),
   name: 'ClassPortal API',
-  env: env,
-  debug: debug,
-  root: path.join(__dirname, '/..'),
   port: 5000,
   db: 'mongodb://localhost:27017/development',
   github: {
@@ -42,7 +45,6 @@ if (env === 'test') {
 // settings for production environment
 if (env === 'production') {
   config.db = 'mongodb://localhost:27017/production';
-  config.debug = false;
 }
 
 export { config };

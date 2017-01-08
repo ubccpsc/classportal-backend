@@ -8,12 +8,41 @@ import { logger } from '../../utils/logger';
  * @returns {IStudentDocument}
  */
 function load(req: restify.Request, res: restify.Response, next: restify.Next) {
-  Student.findByUsername(req.params.username)
-    .then((student: IStudentDocument) => {
-      req.params.student = student;
-      return next();
-    })
-    .catch((err: any) => next(err));
+  // check for supplied username
+  if (req.params.username) {
+    Student.findByUsername(req.params.username)
+      .then((student: IStudentDocument) => {
+        req.params.student = student;
+        return next();
+      })
+      .catch((err: any) => next(err));
+  } else {
+    const err = 'Err: Could not load student';
+    logger.info(err);
+    res.json(500, err);
+    return next(err);
+  }
+}
+
+/**
+ * Search for a student by csid and snum, and append it to req.params if successful.
+ * @returns {IStudentDocument}
+ */
+function loadbyCsidSnum(req: restify.Request, res: restify.Response, next: restify.Next) {
+  // check for supplied params
+  if (req.params.csid && req.params.snum) {
+    Student.findByCsidSnum(req.params.csid, req.params.snum)
+      .then((student: IStudentDocument) => {
+        req.params.student = student;
+        return next();
+      })
+      .catch((err: any) => next(err));
+  } else {
+    const err = 'Err: Could not load student';
+    logger.info(err);
+    res.json(500, err);
+    return next(err);
+  }
 }
 
 /**
@@ -32,7 +61,10 @@ function get(req: restify.Request, res: restify.Response, next: restify.Next) {
  */
 function create(req: restify.Request, res: restify.Response, next: restify.Next) {
   const student: IStudentDocument = new Student({
-    username: req.params.username,
+    csid: req.params.csid,
+    snum: req.params.snum,
+    lastname: req.params.lastname,
+    firstname: req.params.firstname,
   });
 
   return student
@@ -79,4 +111,4 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
     .catch((err: any) => next(err));
 }
 
-export { get, create, update, remove, load };
+export { load, loadbyCsidSnum, get, create, update, remove };

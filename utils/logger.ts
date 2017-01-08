@@ -16,24 +16,14 @@ infoStream.write = (info: any): boolean => {
 
 let settings: LoggerSettings = {
   name: config.env,
-  streams: [{ level: 'error', path: `error.log` }]
+  streams: [
+    { level: 'error', path: `error.log` },
+    { level: 'debug', path: 'debug.log' }
+  ]
 };
 
-if (config.env === 'development') {
+if (config.verbose) {
   settings.streams.push({ level: 'info', stream: infoStream });
-}
-
-if (config.env === 'test') {
-
-}
-
-if (config.env === 'production') {
-
-}
-
-if (config.debug) {
-  settings.streams.push({ level: 'trace', stream: infoStream });
-  settings.streams.push({ level: 'debug', path: 'debug.log' });
 }
 
 const logger = bunyan.createLogger(settings);
