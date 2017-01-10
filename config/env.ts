@@ -13,6 +13,13 @@ interface ConfigSettings {
     clientSecret: string;
     callbackURL: string;
   };
+  admins: [
+    {
+      username: string;
+      firstname: string;
+      lastname: string;
+    }
+  ];
 }
 
 const env: string = process.env.NODE_ENV || 'development';
@@ -33,6 +40,18 @@ const config: ConfigSettings = {
     clientSecret: process.env.GITHUB_SECRET,
     callbackURL: ''
   },
+  admins: [
+    {
+      username: 'mksarge',
+      firstname: 'Michael',
+      lastname: 'Sargent',
+    },
+    {
+      username: 'rtholmes',
+      firstname: 'Reid',
+      lastname: 'Holmes',
+    }
+  ],
 };
 
 // settings for test environment

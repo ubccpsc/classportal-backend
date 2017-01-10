@@ -1,14 +1,31 @@
 import * as mongoose from 'mongoose';
 
-const adminSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: true
-  },
+// Document interface
+interface IAdminDocument extends mongoose.Document {
+  prof: boolean;
+  username: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  teams: Array<number>;
+  createdAt: Date;
+}
+
+// Model interface
+interface IAdminModel extends mongoose.Model<IAdminDocument> {
+  findByUsername(username: string, lastname: string, firstname: string): Promise<IAdminDocument>;
+}
+
+// Admin Schema
+const AdminSchema = new mongoose.Schema({
   prof: {
     type: Boolean,
     default: false,
     required: false,
+  },
+  username: {
+    type: String,
+    required: true
   },
   lastname: {
     type: String,
@@ -28,27 +45,34 @@ const adminSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now,
-    required: true
+    default: Date.now
   }
 });
 
+/*
 // Methods
 adminSchema.method({
 });
+*/
 
 // Statics
-adminSchema.static({
-});
+AdminSchema.statics = {
+  /**
+   * create a new admin
+   * @param {string} username - username
+   * @param {string} lastname - lastname
+   * @param {string} firstname - firstname
+   * @returns {Promise<IAdminDocument>} admin
+   */
+  create(username: string, lastname: string, firstname: string): Promise<IAdminDocument> {
+    // console.log(`input: ${username}, ${lastname}, ${firstname}`);
+    const admin = new Admin({ username, lastname, firstname });
+    return admin
+      .save()
+      .catch(err => console.log(`Admin.create() error! ${err}`));
+  }
+};
 
-const Admin = mongoose.model('Admin', adminSchema);
+const Admin: IAdminModel = <IAdminModel>mongoose.model('Admin', AdminSchema);
 
-export { Admin };
-
-/*
-mobileNumber: {
-    type: String,
-    match: [/^[1-9][0-9]{9}$/, 'The value of path {PATH} ({VALUE}) is not a valid mobile number.'],
-    required: true
-},
-*/
+export { Admin, IAdminDocument };

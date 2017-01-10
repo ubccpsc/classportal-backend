@@ -21,15 +21,24 @@ describe('admin API', () => {
   });
 
   describe('POST /api/admin', () => {
-    it('should return "create admin"', (done) => {
+    it('should successfully create a new admin', (done) => {
+      const admin = {
+        username: 'admin',
+        lastname: 'Ad',
+        firstname: 'Min',
+      };
       supertest(app)
         .post('/api/admin')
+        .send(admin)
+        .set('Content-Type', 'application/json')
         .end((err: any, res: supertest.Response) => {
           if (err) {
             done(err);
           } else {
+            expect(res.body.username).to.equal('admin');
+            expect(res.body.lastname).to.equal('Ad');
+            expect(res.body.firstname).to.equal('Min');
             expect(res.status).to.equal(200);
-            expect(res.body).to.equal('create admin');
             done();
           }
         });
