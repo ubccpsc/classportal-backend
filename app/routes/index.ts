@@ -1,22 +1,21 @@
 import * as restify from 'restify';
+import * as routeHandler from './routeHandler';
 import * as auth from './auth';
 
 const routes = (server: restify.Server) => {
-  server.get('/ping', (req: restify.Request, res: restify.Response) => res.send('pong')); // For testing API status
+  // Accessible by anyone
+  server.get('/ping', routeHandler.pong); // For testing API status
+  server.post('/login', routeHandler.login);
+  server.post('/register', routeHandler.checkRegistration);
+
+  // Accessible by logged-in users only
+  server.post('/home', auth.returnUsername, routeHandler.load);
+  server.post('/logout', auth.returnUsername, routeHandler.logout);
 };
 
 export { routes };
 
 /*
-// Accessible by anyone
-server.get('/ping', routeHandler.pong); // For testing API status
-server.post('/login', routeHandler.login);
-server.post('/register', routeHandler.checkRegistration);
-
-// Accessible by logged-in users only
-server.post('/home', auth.returnUsername, routeHandler.load);
-  server.post('/logout', auth.returnUsername, routeHandler.logout);
-
 // Accessible by admins only
 server.get('/teams', auth.admin, teamCtrl.get);
 server.get('/teams/:id', auth.admin, teamCtrl.get);
