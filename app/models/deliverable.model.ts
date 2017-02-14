@@ -1,56 +1,61 @@
 import * as mongoose from 'mongoose';
 
-const deliverableSchema = new mongoose.Schema({
-  id: {
+interface IDeliverableDocument extends mongoose.Document {
+  courseId: string;
+  deliverableId: string;
+  description: string;
+  url: string;
+  isTeam: boolean;
+  isUploaded: boolean;
+  openDate: string;
+  dueDate: string;
+  gradeReleaseDate: string;
+  gradingScheme: string[];
+}
+
+interface IDeliverableModel extends mongoose.Model<IDeliverableDocument> {
+}
+
+const DeliverableSchema = new mongoose.Schema({
+  courseId: {
     type: String,
     required: true,
   },
-  name: {
+  deliverableId: {
     type: String,
     required: true,
   },
   description: {
     type: String,
-    required: true,
   },
   url: {
     type: String,
-    required: true,
-  },
-  open: {
-    type: Date,
-    required: true,
-  },
-  due: {
-    type: Date,
-    required: true,
-  },
-  gradeRelease: {
-    type: Boolean,
-    required: true,
   },
   isTeam: {
     type: Boolean,
-    required: true,
+    default: false,
   },
-  upload: {
+  isUploaded: {
     type: Boolean,
-    required: true,
+    required: false,
   },
-  createdAt: {
+  openDate: {
     type: Date,
-    default: Date.now,
+  },
+  dueDate: {
+    type: Date,
+  },
+  gradeReleaseDate: {
+    type: Date,
+  },
+  gradingScheme: {
+    type: [String],
   },
 });
 
-// Methods
-deliverableSchema.method({
+DeliverableSchema.static({
 });
 
-// Statics
-deliverableSchema.static({
-});
+const Deliverable: IDeliverableModel = <IDeliverableModel>mongoose.model('Deliverable', DeliverableSchema);
 
-const Deliverable = mongoose.model('Student', deliverableSchema);
-
-export { Deliverable };
+export { IDeliverableDocument, IDeliverableModel, Deliverable };
