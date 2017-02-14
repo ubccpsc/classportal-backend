@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
 import { User, IUserDocument } from '../models/user.model';
-// import { requestAccessToken, requestUsername } from '../helpers/ajax';
+import { requestAccessToken, requestUsername } from '../helpers/request';
 import { logger } from '../../utils/logger';
 import { config } from '../../config/env';
 
@@ -12,13 +12,6 @@ import { config } from '../../config/env';
  * @returns portal info
  */
 function login(req: restify.Request, res: restify.Response, next: restify.Next) {
-  const requestAccessToken = () => {
-    // request access token from github
-  };
-  const requestUsername = () => {
-    // request username from github
-  };
-
   return Promise.resolve(req.params.authcode)
     .then(requestAccessToken)
     .then(requestUsername)
@@ -182,6 +175,5 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
     })
     .catch((err: any) => next(err));
 }
-
 
 export { login, logout, checkId, loadPortal };

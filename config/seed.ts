@@ -1,8 +1,8 @@
 import { logger } from '../utils/logger';
-import { Admin, IAdminDocument } from '../app/models/admin.model';
+import { User, IUserDocument } from '../app/models/user.model';
 
 const data = {
-  admins: [
+  users: [
     {
       username: 'rtholmes',
       firstname: 'Reid',
@@ -18,28 +18,28 @@ const data = {
   ],
 };
 
-function seedData(): Promise<IAdminDocument[]> {
-  logger.info('Verifying that admins exist in db:');
+function seedData(): Promise<IUserDocument[]> {
+  logger.info('Verifying that users exist in db:');
 
-  if (data.admins.length < 1) {
-    return Promise.reject(new Error('Error: No admins specified in config.admins!'));
+  if (data.users.length < 1) {
+    return Promise.reject(new Error('Error: No users specified in config.users!'));
   } else {
-    // get admins
-    let adminsArray = data.admins;
-    logger.info(adminsArray.map((admin: any) => admin.firstname));
+    // get users
+    let usersArray = data.users;
+    logger.info(usersArray.map((user: any) => user.firstname));
 
-    // write all admins to db
-    const promises: Promise<IAdminDocument>[] = adminsArray.map((current: any) => {
-      const newAdmin: IAdminDocument = new Admin({
+    // write all users to db
+    const promises: Promise<IUserDocument>[] = usersArray.map((current: any) => {
+      const newUser: IUserDocument = new User({
         username: current.username,
         lastname: current.lastname,
         firstname: current.firstname,
         prof: current.prof,
       });
-      return newAdmin
+      return newUser
         .save()
-        .then((savedAdmin: IAdminDocument) => {
-          return savedAdmin;
+        .then((savedUser: IUserDocument) => {
+          return savedUser;
         });
     });
 
