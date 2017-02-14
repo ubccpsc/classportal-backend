@@ -1,59 +1,41 @@
 import mongoose = require('mongoose');
 import { config } from './config/env';
 import { app } from './config/restify';
+import { seedData } from './config/seed';
 import { logger } from './utils/logger';
-import { Admin, IAdminDocument } from './app/models/admin.model';
 
 // use native ES6 promises instead of mongoose promise library
 mongoose.Promise = global.Promise;
 
-// connect to mongodb
-const options = { server: { socketOptions: { keepAlive: 1 } } };
-const db: mongoose.Connection = mongoose.connect(config.db, options).connection;
+// connect to database
+const connection = mongoose.connect(config.db, {
+  server: {
+    socketOptions: {
+      keepAlive: 1,
+    },
+  },
+}).connection;
 
-// print mongoose logs in dev and test env
+// print to log if debug flag is set
 if (config.debug) mongoose.set('debug', true);
 
-// throw error on db error
-db.on('error', (err: any) => {
+// throw error on connection error
+connection.on('error', (err: any) => {
   throw new Error(`Unable to connect to database: ${err}`);
 });
 
-// execute callback when db connection is made
-db.once('open', () => {
+// execute callback once connection is made
+connection.once('open', () => {
   logger.info(`\nConnected to database: ${config.db}`);
 
-  // start the server
-  app.listen(config.port, () => {
-    logger.info(`\n${config.name} is running at ${app.url}`);
-  });
+  // seed initial data, then start listening
+  return seedData()
+    .then(() => {
+      app.listen(config.port, () => {
+        logger.info(`\n${config.name} is running at ${app.url}`);
+      });
+    })
+    .catch(logger.info);
 });
 
 export { app };
-
-/*
-if (config.admins.length < 1) {
-    throw new Error('Error: No admins specified in config.admins!');
-  } else {
-    // get admins
-    let admins = config.admins;
-    logger.info(`\nAdmins: ${admins.map((admin) => admin.firstname )}`);
-    logger.info('Verifying that admins exist in db...');
-
-    // write all admins to db
-    const promises: Array<Promise<IAdminDocument>> = admins.map((admin: any) => {
-      return Admin.create(admin.username, admin.lastname, admin.firstname)
-        .then((savedAdmin: IAdminDocument) => {
-          return savedAdmin;
-        });
-    });
-
-  // execute promises array
-    return Promise.all(promises)
-      .then(() => {
-        // finally,
-
-        })
-      .catch((err: any) => console.log(err));
-  }
-*/
