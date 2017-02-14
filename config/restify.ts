@@ -1,7 +1,6 @@
-import * as fs from 'fs';
 import * as restify from 'restify';
-import * as path from 'path';
 import { config } from './env';
+import { routes } from '../app/routes';
 import { logger } from '../utils/logger';
 
 // create Restify server with the configured name
@@ -31,18 +30,6 @@ app.use((req: any, res: any, next: any) => {
   return next();
 });
 
-// add route handlers
-fs.readdir(path.join(__dirname, '../app/routes'), (err: any, files: string[]) => {
-  if (err) {
-    throw new Error(err);
-  } else {
-    files
-      .filter((file: string) => path.extname(file) === '.js')
-      .forEach((file: string) => {
-        const route = require(path.join('../app/routes', file));
-        route.default(app);
-      });
-  }
-});
+routes(app);
 
 export { app };
