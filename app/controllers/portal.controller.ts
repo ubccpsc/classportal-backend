@@ -16,7 +16,7 @@ function loadStudent(): Promise<any> {
       snum: 'a',
       firstname: 'a',
       lastname: 'a',
-    }
+    },
   };
   return Promise.resolve(data);
 }

@@ -67,7 +67,7 @@
     ],
     "ter-max-len": [
       true,
-      100
+      120
     ],
     "object-curly-spacing": [
       true,
@@ -132,6 +132,13 @@
     ],
     "member-access": [
       "check-accessor"
+    ],
+    "trailing-comma": [
+      true,
+      {
+        "multiline": "always",
+        "singleline": "never"
+      }
     ]
   }
 }

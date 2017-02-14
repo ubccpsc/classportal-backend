@@ -83,7 +83,7 @@ describe('student API', () => {
         .send({
           csid: 'a1a1',
           snum: '00000001',
-          token: 'mksarge'
+          token: 'mksarge',
         })
         .set('Content-Type', 'application/json')
         .end((err: any, res: supertest.Response) => {

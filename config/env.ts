@@ -13,13 +13,11 @@ interface ConfigSettings {
     clientSecret: string;
     callbackURL: string;
   };
-  admins: [
-    {
-      username: string;
-      firstname: string;
-      lastname: string;
-    }
-  ];
+  admins: {
+    username: string;
+    firstname: string;
+    lastname: string;
+  }[];
 }
 
 const env: string = process.env.NODE_ENV || 'development';
@@ -38,7 +36,7 @@ const config: ConfigSettings = {
   github: {
     clientID: process.env.GITHUB_CLIENTID,
     clientSecret: process.env.GITHUB_SECRET,
-    callbackURL: ''
+    callbackURL: '',
   },
   admins: [
     {
@@ -50,7 +48,7 @@ const config: ConfigSettings = {
       username: 'rtholmes',
       firstname: 'Reid',
       lastname: 'Holmes',
-    }
+    },
   ],
 };
 

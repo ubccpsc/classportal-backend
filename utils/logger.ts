@@ -18,8 +18,8 @@ let settings: LoggerSettings = {
   name: config.env,
   streams: [
     { level: 'error', path: `error.log` },
-    { level: 'debug', path: 'debug.log' }
-  ]
+    { level: 'debug', path: 'debug.log' },
+  ],
 };
 
 if (config.verbose) {

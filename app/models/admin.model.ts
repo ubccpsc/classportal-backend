@@ -25,19 +25,19 @@ const AdminSchema = new mongoose.Schema({
   },
   username: {
     type: String,
-    required: true
+    required: true,
   },
   lastname: {
     type: String,
-    required: true
+    required: true,
   },
   firstname: {
     type: String,
-    required: true
+    required: true,
   },
   email: {
     type: String,
-    required: false
+    required: false,
   },
   teams: {
     type: Array,
@@ -45,8 +45,8 @@ const AdminSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 /*
@@ -70,7 +70,7 @@ AdminSchema.statics = {
     return admin
       .save()
       .catch(err => console.log(`Admin.create() error! ${err}`));
-  }
+  },
 };
 
 const Admin: IAdminModel = <IAdminModel>mongoose.model('Admin', AdminSchema);

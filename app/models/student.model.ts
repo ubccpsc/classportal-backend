@@ -83,7 +83,7 @@ StudentSchema.statics = {
         }
         return Promise.reject('err');
       });
-  }
+  },
 };
 
 const Student: IStudentModel = <IStudentModel>mongoose.model('Student', StudentSchema);
