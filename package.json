@@ -34,7 +34,7 @@
   },
   "scripts": {
     "lint": "node_modules/.bin/tslint --project .",
-    "build": "node_modules/.bin/tsc",
+    "build": "node tsc-cleanup && node_modules/.bin/tsc",
     "test": "npm run lint && npm run build && NODE_ENV='test' node_modules/.bin/_mocha \"test/**/*.spec.js\"",
     "test:debug": "DEBUG=true npm run test",
     "cover": "npm run lint && npm run build && NODE_ENV='test' node_modules/.bin/istanbul cover node_modules/.bin/_mocha \"test/**/*.spec.js\"",
