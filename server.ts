@@ -34,7 +34,7 @@ connection.once('open', () => {
     .then(() => {
       app.listen(config.port, () => {
         logger.info(`\n${config.app_name} is running at ${app.url}`);
-        console.log('config =\n', config);
+        logger.info('config:', config);
       });
     })
     .catch(logger.info);

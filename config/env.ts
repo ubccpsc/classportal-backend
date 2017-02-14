@@ -1,8 +1,7 @@
-// Note: NODE_ENV and DEBUG are set in npm scripts; all other env variables are set in .env
-
 require('dotenv').config();
 
 // defaults to dev config
+// note that NODE_ENV and DEBUG are set in npm scripts; all other env variables should be set in .env
 const config = {
   env: process.env.NODE_ENV || 'development',
   debug: process.env.DEBUG || false,
