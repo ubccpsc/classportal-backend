@@ -4,7 +4,7 @@ import { app } from '../../server';
 import { logger } from '../../utils/logger';
 const expect = chai.expect;
 
-describe('class API', () => {
+xdescribe('class API', () => {
   describe('POST /api/class without CSV', () => {
     it('should return "no file uploaded"', (done) => {
       supertest(app)

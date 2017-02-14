@@ -1,14 +1,13 @@
-import * as chai from 'chai';
 import * as supertest from 'supertest';
+import { expect } from 'chai';
 import { app } from '../../server';
 import { logger } from '../../utils/logger';
-const expect = chai.expect;
 
 describe('ping API', () => {
-  describe('GET /api/ping', () => {
+  describe('GET /ping', () => {
     it('should return "pong"', (done) => {
       supertest(app)
-        .get('/api/ping')
+        .get('/ping')
         .end((err: any, res: supertest.Response) => {
           if (err) {
             done(err);
