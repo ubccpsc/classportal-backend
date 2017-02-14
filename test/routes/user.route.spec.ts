@@ -2,28 +2,28 @@ import * as supertest from 'supertest';
 import { expect } from 'chai';
 import { app } from '../../server';
 import { logger } from '../../utils/logger';
-import { Student } from '../../app/models/student.model';
+import { User } from '../../app/models/user.model';
 
-describe('student API', () => {
+describe('user API', () => {
 
   before((done) => {
-    Student.remove({}, () => {
-      logger.trace('Test db: Student collection removed!');
+    User.remove({}, () => {
+      logger.trace('Test db: User collection removed!');
       done();
     });
   });
 
-  describe('POST /api/student', () => {
-    it('should successfully create a new student', (done) => {
-      const student = {
+  describe('POST /api/user', () => {
+    it('should successfully create a new user', (done) => {
+      const user = {
         csid: 'a1a1',
         snum: '00000001',
         lastname: 'Sargent',
         firstname: 'Michael',
       };
       supertest(app)
-        .post('/api/student')
-        .send(student)
+        .post('/api/user')
+        .send(user)
         .set('Content-Type', 'application/json')
         .end((err: any, res: supertest.Response) => {
           if (err) {
@@ -36,16 +36,16 @@ describe('student API', () => {
         });
     });
 
-    it('should fail to create the same student twice', (done) => {
-      const student = {
+    it('should fail to create the same user twice', (done) => {
+      const user = {
         csid: 'a1a1',
         snum: '00000001',
         lastname: 'Sargent',
         firstname: 'Michael',
       };
       supertest(app)
-        .post('/api/student')
-        .send(student)
+        .post('/api/user')
+        .send(user)
         .set('Content-Type', 'application/json')
         .end((err: any, res: supertest.Response) => {
           if (err) {
@@ -57,13 +57,13 @@ describe('student API', () => {
         });
     });
 
-    it('should fail to create a student with inadequate info', (done) => {
-      const student = {
+    it('should fail to create a user with inadequate info', (done) => {
+      const user = {
         csid: 'b2b2',
       };
       supertest(app)
-        .post('/api/student')
-        .send(student)
+        .post('/api/user')
+        .send(user)
         .set('Content-Type', 'application/json')
         .end((err: any, res: supertest.Response) => {
           if (err) {
@@ -77,7 +77,7 @@ describe('student API', () => {
   });
 
   describe('POST /api/register', () => {
-    it('should successfully register an existing student', (done) => {
+    it('should successfully register an existing user', (done) => {
       supertest(app)
         .post('/api/register')
         .send({
@@ -99,10 +99,10 @@ describe('student API', () => {
   });
 
 
-  describe('PUT /api/student/:username', () => {
-    it('should successfully update existing student', (done) => {
+  describe('PUT /api/user/:username', () => {
+    it('should successfully update existing user', (done) => {
       supertest(app)
-        .put('/api/student/mksarge')
+        .put('/api/user/mksarge')
         .send({ 'newUsername': 'nathan' })
         .set('Content-Type', 'application/json')
         .end((err: any, res: supertest.Response) => {
@@ -116,9 +116,9 @@ describe('student API', () => {
         });
     });
 
-    it('should fail to update invalid student', (done) => {
+    it('should fail to update invalid user', (done) => {
       supertest(app)
-        .put('/api/student/mksarge')
+        .put('/api/user/mksarge')
         .send({ 'newUsername': 'nathan' })
         .set('Content-Type', 'application/json')
         .end((err: any, res: supertest.Response) => {
@@ -134,10 +134,10 @@ describe('student API', () => {
   });
 
 
-  describe('GET /api/student', () => {
-    it('should get valid student', (done) => {
+  describe('GET /api/user', () => {
+    it('should get valid user', (done) => {
       supertest(app)
-        .get('/api/student/nathan')
+        .get('/api/user/nathan')
         .end((err: any, res: supertest.Response) => {
           if (err) {
             done(err);
@@ -149,9 +149,9 @@ describe('student API', () => {
         });
     });
 
-    it('should fail to get invalid student', (done) => {
+    it('should fail to get invalid user', (done) => {
       supertest(app)
-        .get('/api/student/mksarge')
+        .get('/api/user/mksarge')
         .end((err: any, res: supertest.Response) => {
           if (err) {
             done(err);
@@ -164,10 +164,10 @@ describe('student API', () => {
     });
   });
 
-  describe('DEL /api/student', () => {
-    it('should successfully delete valid student', (done) => {
+  describe('DEL /api/user', () => {
+    it('should successfully delete valid user', (done) => {
       supertest(app)
-        .del('/api/student/nathan')
+        .del('/api/user/nathan')
         .end((err: any, res: supertest.Response) => {
           if (err) {
             done(err);
@@ -179,15 +179,90 @@ describe('student API', () => {
         });
     });
 
-    it('should fail to delete invalid student', (done) => {
+    it('should fail to delete invalid user', (done) => {
       supertest(app)
-        .del('/api/student/nathan')
+        .del('/api/user/nathan')
         .end((err: any, res: supertest.Response) => {
           if (err) {
             done(err);
           } else {
             expect(res.body.username).to.be.undefined;
             expect(res.status).to.equal(500);
+            done();
+          }
+        });
+    });
+  });
+});
+
+describe('admin API', () => {
+  describe('GET /api/admin', () => {
+    it('should return "get admin"', (done) => {
+      supertest(app)
+        .get('/api/admin')
+        .end((err: any, res: supertest.Response) => {
+          if (err) {
+            done(err);
+          } else {
+            expect(res.status).to.equal(200);
+            expect(res.body).to.equal('get admin');
+            done();
+          }
+        });
+    });
+  });
+
+  describe('POST /api/admin', () => {
+    it('should successfully create a new admin', (done) => {
+      const admin = {
+        username: 'admin',
+        lastname: 'Ad',
+        firstname: 'Min',
+      };
+      supertest(app)
+        .post('/api/admin')
+        .send(admin)
+        .set('Content-Type', 'application/json')
+        .end((err: any, res: supertest.Response) => {
+          if (err) {
+            done(err);
+          } else {
+            expect(res.body.username).to.equal('admin');
+            expect(res.body.lastname).to.equal('Ad');
+            expect(res.body.firstname).to.equal('Min');
+            expect(res.status).to.equal(200);
+            done();
+          }
+        });
+    });
+  });
+
+  describe('DEL /api/admin', () => {
+    it('should return "remove admin"', (done) => {
+      supertest(app)
+        .del('/api/admin')
+        .end((err: any, res: supertest.Response) => {
+          if (err) {
+            done(err);
+          } else {
+            expect(res.status).to.equal(200);
+            expect(res.body).to.equal('remove admin');
+            done();
+          }
+        });
+    });
+  });
+
+  describe('GET /api/admin', () => {
+    it('should return "get admin"', (done) => {
+      supertest(app)
+        .get('/api/admin')
+        .end((err: any, res: supertest.Response) => {
+          if (err) {
+            done(err);
+          } else {
+            expect(res.status).to.equal(200);
+            expect(res.body).to.equal('get admin');
             done();
           }
         });
