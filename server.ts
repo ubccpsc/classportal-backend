@@ -29,10 +29,12 @@ connection.once('open', () => {
   logger.info(`\nConnected to database: ${config.db}`);
 
   // seed initial data, then start listening
-  return seedData()
+  return Promise.resolve()
+    // .then (seedData)
     .then(() => {
       app.listen(config.port, () => {
-        logger.info(`\n${config.name} is running at ${app.url}`);
+        logger.info(`\n${config.app_name} is running at ${app.url}`);
+        console.log('config =\n', config);
       });
     })
     .catch(logger.info);

@@ -22,3 +22,9 @@ coverage/
 # TypeScript compiled files
 **/*.js
 **/*.map
+
+# SSL
+ssl/
+
+# Dotenv file
+.env

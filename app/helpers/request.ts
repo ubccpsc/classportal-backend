@@ -8,8 +8,8 @@ function requestAccessToken(authcode: string): Promise<any> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      client_id: config.github.clientID,
-      client_secret: config.github.clientSecret,
+      client_id: config.github_client_id,
+      client_secret: config.github_client_secret,
       code: authcode,
     }),
   })

@@ -22,7 +22,7 @@ function seedData(): Promise<IUserDocument[]> {
   logger.info('Verifying that users exist in db:');
 
   if (data.users.length < 1) {
-    return Promise.reject(new Error('Error: No users specified in config.users!'));
+    return Promise.reject(new Error('Error: No users specified in data.users!'));
   } else {
     // get users
     let usersArray = data.users;
