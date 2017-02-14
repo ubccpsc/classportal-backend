@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
-import { Student, IStudentDocument } from '../models/student.model';
+import { User, IUserDocument } from '../models/user.model';
 import { logger } from '../../utils/logger';
 
 /**
@@ -36,17 +36,17 @@ function update(req: restify.Request, res: restify.Response, next: restify.Next)
           const saveIt = (info: any): Promise<any> => {
             // make sure all the necessary data exists
             // if (info.csid && info.csid && info.csid && info.csid) {
-            // create a new student with the info
-            const student = new Student({
+            // create a new user with the info
+            const user = new User({
               csid: info.csid,
               snum: info.snum,
               lastname: info.lastname,
               firstname: info.firstname,
             });
-            return student
+            return user
               .save()
               .then(() => {
-                logger.info('just added a student!');
+                logger.info('just added a user!');
                 added++;
               })
               .catch(() => {
@@ -58,7 +58,7 @@ function update(req: restify.Request, res: restify.Response, next: restify.Next)
           // sliced.forEach(saveIt);
           return Promise.all(sliced.map(saveIt))
             .then(() => {
-              logger.info(`Updated ${added} students!`);
+              logger.info(`Updated ${added} users!`);
               res.json(200, 'update class list');
               return next();
             })
