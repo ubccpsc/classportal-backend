@@ -22,7 +22,7 @@ let settings: LoggerSettings = {
   ],
 };
 
-if (config.verbose) {
+if (config.debug) {
   settings.streams.push({ level: 'info', stream: infoStream });
 }
 

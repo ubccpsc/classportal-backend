@@ -4,9 +4,6 @@ import * as path from 'path';
 import { config } from './env';
 import { logger } from '../utils/logger';
 
-// get path to route handlers
-const pathToRoutes: string = path.join(config.rootFolder, '/app/routes');
-
 // create Restify server with the configured name
 const app: restify.Server = restify.createServer({ name: config.name });
 
@@ -35,14 +32,14 @@ app.use((req: any, res: any, next: any) => {
 });
 
 // add route handlers
-fs.readdir(pathToRoutes, (err: any, files: string[]) => {
+fs.readdir(path.join(__dirname, '../app/routes'), (err: any, files: string[]) => {
   if (err) {
     throw new Error(err);
   } else {
     files
       .filter((file: string) => path.extname(file) === '.js')
       .forEach((file: string) => {
-        const route = require(path.join(pathToRoutes, file));
+        const route = require(path.join('../app/routes', file));
         route.default(app);
       });
   }

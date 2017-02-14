@@ -12,7 +12,7 @@ const options = { server: { socketOptions: { keepAlive: 1 } } };
 const db: mongoose.Connection = mongoose.connect(config.db, options).connection;
 
 // print mongoose logs in dev and test env
-if (config.verbose) mongoose.set('debug', true);
+if (config.debug) mongoose.set('debug', true);
 
 // throw error on db error
 db.on('error', (err: any) => {
@@ -23,7 +23,16 @@ db.on('error', (err: any) => {
 db.once('open', () => {
   logger.info(`\nConnected to database: ${config.db}`);
 
-  if (config.admins.length < 1) {
+  // start the server
+  app.listen(config.port, () => {
+    logger.info(`\n${config.name} is running at ${app.url}`);
+  });
+});
+
+export { app };
+
+/*
+if (config.admins.length < 1) {
     throw new Error('Error: No admins specified in config.admins!');
   } else {
     // get admins
@@ -39,16 +48,12 @@ db.once('open', () => {
         });
     });
 
-    // execute promises array
+  // execute promises array
     return Promise.all(promises)
       .then(() => {
-        // finally, start the server
-        app.listen(config.port, () => {
-          logger.info(`\n${config.name} is running at ${app.url}`);
-        });
-      })
+        // finally,
+
+        })
       .catch((err: any) => console.log(err));
   }
-});
-
-export { app };
+*/

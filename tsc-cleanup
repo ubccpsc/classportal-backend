@@ -10,183 +10,183 @@ var path = require('path');
 
 var tscu;
 (function (tscu) {
-    function cleanup() {
-        var configFile = _findConfigFile();
-        var jsonText   = fs.readFileSync(configFile, 'utf8');
-        var config     = _parseConfigFileTextToJson(jsonText);
+  function cleanup() {
+    var configFile = _findConfigFile();
+    var jsonText = fs.readFileSync(configFile, 'utf8');
+    var config = _parseConfigFileTextToJson(jsonText);
 
-        var excludeList = config.exclude;
+    var excludeList = config.exclude;
 
-        var fileList = _getTSfileList(_getCurrentDirectory(), excludeList);
+    var fileList = _getTSfileList(_getCurrentDirectory(), excludeList);
 
-        var removedList = _removeCompiled(fileList);
-        console.log(removedList);
+    var removedList = _removeCompiled(fileList);
+    // console.log(removedList);
+  }
+  tscu.cleanup = cleanup;
+
+  function _findConfigFile() {
+    var searchPath = _getCurrentDirectory();
+    var fileName = "tsconfig.json";
+    while (true) {
+      if (_fileExists(fileName)) {
+        return fileName;
+      }
+      var parentPath = _getDirectoryPath(searchPath);
+      if (parentPath === searchPath) {
+        break;
+      }
+      searchPath = parentPath;
+      fileName = "../" + fileName;
     }
-    tscu.cleanup = cleanup;
+    return undefined;
+  }
 
-    function _findConfigFile() {
-        var searchPath = _getCurrentDirectory();
-        var fileName = "tsconfig.json";
-        while (true) {
-            if (_fileExists(fileName)) {
-                return fileName;
-            }
-            var parentPath = _getDirectoryPath(searchPath);
-            if (parentPath === searchPath) {
-                break;
-            }
-            searchPath = parentPath;
-            fileName = "../" + fileName;
-        }
-        return undefined;
+  function _parseConfigFileTextToJson(jsonText) {
+    try {
+      return /\S/.test(jsonText) ? JSON.parse(jsonText) : {};
     }
-
-    function _parseConfigFileTextToJson(jsonText) {
-        try {
-            return /\S/.test(jsonText) ? JSON.parse(jsonText) : {};
-        }
-        catch (e) {
-            return { error: "ts.createCompilerDiagnostic(ts.Diagnostics.Failed_to_parse_file_0_Colon_1, fileName, e.message)" };
-        }
+    catch (e) {
+      return { error: "ts.createCompilerDiagnostic(ts.Diagnostics.Failed_to_parse_file_0_Colon_1, fileName, e.message)" };
     }
+  }
 
-    function _getTSfileList(dir, excludeList) {
-        var containsNodeModules = false;
-        var containsTypings     = false;
-        for (var i = 0; i < excludeList.length; i++) {
-            if (excludeList[i] === 'node_modules') {
-                containsNodeModules = true;
-            } else if (excludeList[i] === 'typings') {
-                containsTypings = true;
-            }
-        }
-
-        if (!containsNodeModules) { excludeList.push('node_modules'); }
-        if (!containsTypings) { excludeList.push('typings'); }
-
-        var fileList = __getTSfileListDelegate(dir, excludeList);
-
-        return fileList;
+  function _getTSfileList(dir, excludeList) {
+    var containsNodeModules = false;
+    var containsTypings = false;
+    for (var i = 0; i < excludeList.length; i++) {
+      if (excludeList[i] === 'node_modules') {
+        containsNodeModules = true;
+      } else if (excludeList[i] === 'typings') {
+        containsTypings = true;
+      }
     }
 
-    function _removeCompiled(cleanupList) {
-        var removedFileList = new Array();
+    if (!containsNodeModules) { excludeList.push('node_modules'); }
+    if (!containsTypings) { excludeList.push('typings'); }
 
-        for (var i = 0; i < cleanupList.length; i++) {
-            var tsFile = cleanupList[i];
+    var fileList = __getTSfileListDelegate(dir, excludeList);
 
-            var baseName = tsFile.substr(0, tsFile.lastIndexOf('.'));
-            var jsFile = baseName + '.js';
-            var mapFile = baseName + '.js.map';
+    return fileList;
+  }
 
-            if (_fileExists(jsFile)) {
-                fs.unlinkSync(jsFile);
-                removedFileList.push(jsFile);
-            }
-            if (_fileExists(mapFile)) {
-                fs.unlinkSync(mapFile);
-                removedFileList.push(mapFile);
-            }
-        }
+  function _removeCompiled(cleanupList) {
+    var removedFileList = new Array();
 
-        return removedFileList;
+    for (var i = 0; i < cleanupList.length; i++) {
+      var tsFile = cleanupList[i];
+
+      var baseName = tsFile.substr(0, tsFile.lastIndexOf('.'));
+      var jsFile = baseName + '.js';
+      var mapFile = baseName + '.js.map';
+
+      if (_fileExists(jsFile)) {
+        fs.unlinkSync(jsFile);
+        removedFileList.push(jsFile);
+      }
+      if (_fileExists(mapFile)) {
+        fs.unlinkSync(mapFile);
+        removedFileList.push(mapFile);
+      }
     }
 
-    function _fileExists(filePath) {
-        try {
-            fs.accessSync(filePath, fs.F_OK);
-            return true;
-        } catch (e) {
-            return false;
+    return removedFileList;
+  }
+
+  function _fileExists(filePath) {
+    try {
+      fs.accessSync(filePath, fs.F_OK);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function _getCurrentDirectory() {
+    return process.cwd();
+  }
+
+  function _getDirectoryPath(path) {
+    return path.substr(0, Math.max(_getRootLength(path), path.lastIndexOf("/")));
+  }
+
+  function _getRootLength(path) {
+    if (path.charCodeAt(0) === 47) {
+      if (path.charCodeAt(1) !== 47)
+        return 1;
+      var p1 = path.indexOf("/", 2);
+      if (p1 < 0)
+        return 2;
+      var p2 = path.indexOf("/", p1 + 1);
+      if (p2 < 0)
+        return p1 + 1;
+      return p2 + 1;
+    }
+    if (path.charCodeAt(1) === 58) {
+      if (path.charCodeAt(2) === 47)
+        return 3;
+      return 2;
+    }
+    if (path.lastIndexOf("file:///", 0) === 0) {
+      return "file:///".length;
+    }
+    var idx = path.indexOf("://");
+    if (idx !== -1) {
+      return idx + "://".length;
+    }
+    return 0;
+  }
+
+  function __getTSfileListDelegate(dir, excludeList) {
+    var fileList = fs.readdirSync(dir);
+    var filteredFileList = new Array();
+
+    for (var i = 0; i < fileList.length; i++) {
+      var fileName = dir + '/' + fileList[i];
+      var stat = fs.statSync(fileName);
+
+      if (!stat) { continue; }
+
+      if (stat.isDirectory()) {
+        if (_isInExcludeList(fileName, excludeList)) {
+          continue;
         }
+
+        var subDirList = __getTSfileListDelegate(fileName, excludeList);
+        filteredFileList = filteredFileList.concat(subDirList);
+      } else {
+        if (!_isValidTSfile(fileName, excludeList)) {
+          continue;
+        }
+        filteredFileList.push(fileName);
+      }
     }
 
-    function _getCurrentDirectory() {
-        return process.cwd();
+    return filteredFileList;
+  }
+
+  function _isValidTSfile(fileName, excludeList) {
+    var ext = fileName.substr(fileName.lastIndexOf('.') + 1);
+
+    if (ext !== 'ts') {
+      return false;
     }
 
-    function _getDirectoryPath(path) {
-        return path.substr(0, Math.max(_getRootLength(path), path.lastIndexOf("/")));
+    var isInExcludeList = _isInExcludeList(fileName, excludeList);
+    return !isInExcludeList;
+  }
+
+  function _isInExcludeList(fileName, excludeList) {
+    var isInExcludeList = false;
+    for (var i = 0; i < excludeList.length; i++) {
+      var exclusion = excludeList[i];
+      if (fileName.indexOf(exclusion) > -1) {
+        isInExcludeList = true;
+        break;
+      }
     }
 
-    function _getRootLength(path) {
-        if (path.charCodeAt(0) === 47) {
-            if (path.charCodeAt(1) !== 47)
-                return 1;
-            var p1 = path.indexOf("/", 2);
-            if (p1 < 0)
-                return 2;
-            var p2 = path.indexOf("/", p1 + 1);
-            if (p2 < 0)
-                return p1 + 1;
-            return p2 + 1;
-        }
-        if (path.charCodeAt(1) === 58) {
-            if (path.charCodeAt(2) === 47)
-                return 3;
-            return 2;
-        }
-        if (path.lastIndexOf("file:///", 0) === 0) {
-            return "file:///".length;
-        }
-        var idx = path.indexOf("://");
-        if (idx !== -1) {
-            return idx + "://".length;
-        }
-        return 0;
-    }
-
-    function __getTSfileListDelegate(dir, excludeList) {
-        var fileList = fs.readdirSync(dir);
-        var filteredFileList = new Array();
-
-        for (var i = 0; i < fileList.length; i++) {
-            var fileName = dir + '/' + fileList[i];
-            var stat = fs.statSync(fileName);
-
-            if (!stat) { continue; }
-
-            if (stat.isDirectory()) {
-                if (_isInExcludeList(fileName, excludeList)) {
-                    continue;
-                }
-
-                var subDirList = __getTSfileListDelegate(fileName, excludeList);
-                filteredFileList = filteredFileList.concat(subDirList);
-            } else {
-                if (!_isValidTSfile(fileName, excludeList)) {
-                    continue;
-                }
-                filteredFileList.push(fileName);
-            }
-        }
-
-        return filteredFileList;
-    }
-
-    function _isValidTSfile(fileName, excludeList) {
-        var ext = fileName.substr(fileName.lastIndexOf('.') + 1);
-
-        if (ext !== 'ts') {
-            return false;
-        }
-
-        var isInExcludeList = _isInExcludeList(fileName, excludeList);
-        return !isInExcludeList;
-    }
-
-    function _isInExcludeList(fileName, excludeList) {
-        var isInExcludeList = false;
-        for (var i = 0; i < excludeList.length; i++) {
-            var exclusion = excludeList[i];
-            if (fileName.indexOf(exclusion) > -1) {
-                isInExcludeList = true;
-                break;
-            }
-        }
-
-        return isInExcludeList;
-    }
+    return isInExcludeList;
+  }
 })(tscu || (tscu = {}));
 
 tscu.cleanup();
