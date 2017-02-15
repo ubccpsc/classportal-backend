@@ -47,19 +47,17 @@ function checkRegistration(csid: string, snum: string): Promise<IUserDocument> {
 /**
  * Logout by deleting server token
  */
-function logout(username: string) {
-  return Promise.resolve(username)
-    .then(User.findByUsername)
-    .then((user: IUserDocument) => user.deleteServerToken())
+function logout(user: IUserDocument) {
+  return user.deleteServerToken()
     .catch(Promise.reject);
 }
 
 /**
  * Load data needed to display portal
  */
-function load(username: string) {
-  return Promise.resolve(username)
-    .then(User.findByUsername)
+function load(user: IUserDocument) {
+  return Promise.resolve(user)
+    // .then(loadGrades)
     .then((user: IUserDocument) => {
       // todo: add more things to userdata
       return Object.assign({}, user);

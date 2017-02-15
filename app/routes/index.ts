@@ -9,8 +9,8 @@ const routes = (server: restify.Server) => {
   server.post('/register', routeHandler.checkRegistration);
 
   // Accessible by logged-in users only
-  server.post('/home', auth.returnUsername, routeHandler.load);
-  server.post('/logout', auth.returnUsername, routeHandler.logout);
+  server.post('/home', auth.loadUser, routeHandler.load);
+  server.post('/logout', auth.loadUser, routeHandler.logout);
 };
 
 export { routes };

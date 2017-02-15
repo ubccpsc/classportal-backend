@@ -16,13 +16,13 @@ const checkRegistration = (req: restify.Request, res: restify.Response) => {
 };
 
 const load = (req: restify.Request, res: restify.Response) => {
-  return userCtrl.load(req.params.username)
+  return userCtrl.load(req.params.user)
     .then((userData: any) => res.json(200, { response: userData }))
     .catch((err: any) => res.json(500, { err }));
 };
 
 const logout = (req: restify.Request, res: restify.Response) => {
-  return userCtrl.logout(req.params.username)
+  return userCtrl.logout(req.params.user)
     .then(() => res.json(200))
     .catch((err: any) => res.json(500, { err }));
 };

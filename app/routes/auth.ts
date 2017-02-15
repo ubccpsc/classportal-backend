@@ -1,19 +1,21 @@
 import * as restify from 'restify';
+import { IUserDocument, User } from '../models/user.model';
 import { logger } from '../../utils/logger';
 
-// calls next middleware only if valid student or admin token is supplied
-function returnUsername(req: restify.Request, res: restify.Response, next: restify.Next) {
-  logger.info('checkToken| Checking token..');
-  let username: string = req.header('username');
-  let token: string = req.header('token');
-  let admin: string = req.header('admin');
-
-  if (username && token) {
-    return res.send(400, 'bad request');
+const loadUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  const token = req.header('token');
+  if (token) {
+    User.findWith({ token })
+      .then((user: IUserDocument) => {
+        req.params.user = user;
+        return next();
+      })
+      .catch(() => {
+        return res.send(400, 'Invalid token');
+      });
   } else {
-    logger.info('checkToken| Error: Bad request. Returning..');
-    return res.send(400, 'bad request');
+    return res.send(400, 'Token not supplied');
   }
-}
+};
 
-export { returnUsername };
+export { loadUser };
