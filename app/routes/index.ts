@@ -4,7 +4,7 @@ import * as auth from './auth';
 
 const routes = (server: restify.Server) => {
   // Accessible by anyone
-  server.get('/ping', routeHandler.pong); // For testing API status
+  server.get('/ping', routeHandler.pong);
   server.post('/login', routeHandler.login);
   server.post('/register', routeHandler.checkRegistration);
 

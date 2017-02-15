@@ -1,59 +1,30 @@
 import * as restify from 'restify';
-import * as classCtrl from '../controllers/class.controller';
-import * as gradeCtrl from '../controllers/grade.controller';
 import * as userCtrl from '../controllers/user.controller';
-import * as teamCtrl from '../controllers/team.controller';
 
 const pong = (req: restify.Request, res: restify.Response) => res.send('pong');
 
-/**
- *
- */
-const login: any = (req: restify.Request, res: restify.Response) => {
-  const authcode: string = req.params.authcode;
-  const csid: string = req.params.csid || '';
-  const snum: string = req.params.snum || '';
-
-  return userCtrl.login(authcode, csid, snum)
-    .then((response: any) => {
-      return res.send(200, response);
-    })
-    .catch((err: any) => {
-      return res.send(500, err);
-    });
+const login = (req: restify.Request, res: restify.Response) => {
+  return userCtrl.login(req.params.authcode, req.params.csid = '', req.params.snum = '')
+    .then((token: string) => res.json(200, { response: token }))
+    .catch((err: any) => res.json(500, { err }));
 };
 
-/**
- *
- */
-const logout: any = (req: restify.Request, res: restify.Response) => {
-  const authcode: string = req.params.authcode;
-  const csid: string = req.params.csid;
-  const sid: string = req.params.sid;
-
-  return res.send(500);
+const checkRegistration = (req: restify.Request, res: restify.Response) => {
+  return userCtrl.checkRegistration(req.params.csid = '', req.params.snum = '')
+    .then(() => res.json(200))
+    .catch((err: any) => res.json(500, { err }));
 };
 
-/**
- *
- */
-const checkRegistration: any = (req: restify.Request, res: restify.Response) => {
-  const authcode: string = req.params.authcode;
-  const csid: string = req.params.csid;
-  const sid: string = req.params.sid;
-
-  return res.send(500);
+const load = (req: restify.Request, res: restify.Response) => {
+  return userCtrl.load(req.params.username)
+    .then((userData: any) => res.json(200, { response: userData }))
+    .catch((err: any) => res.json(500, { err }));
 };
 
-/**
- *
- */
-const load: any = (req: restify.Request, res: restify.Response) => {
-  const authcode: string = req.params.authcode;
-  const csid: string = req.params.csid;
-  const sid: string = req.params.sid;
-
-  return res.send(500);
+const logout = (req: restify.Request, res: restify.Response) => {
+  return userCtrl.logout(req.params.username)
+    .then(() => res.json(200))
+    .catch((err: any) => res.json(500, { err }));
 };
 
-export { pong, login, logout, checkRegistration, load };
+export { pong, login, checkRegistration, load, logout };
