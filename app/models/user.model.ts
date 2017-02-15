@@ -75,15 +75,12 @@ UserSchema.statics = {
   * @param {string} username - The GitHub username of the student.
   * @returns {Promise<IStudentDocument>} Returns a Promise of the student.
   */
-  findByUsername: function (username: string): Promise<IUserModel> {
+  findByUsername: (username: string): Promise<IUserModel> => {
     return this
-      .find({ username: username })
+      .find({ username })
       .exec()
       .then((student: IUserModel[]) => {
-        if (student && student.length) {
-          return student[0];
-        }
-        return Promise.reject('err');
+        return (student && student.length) ? Promise.resolve(student[0]) : Promise.reject('err');
       });
   },
 
@@ -93,15 +90,12 @@ UserSchema.statics = {
   * @param {string} snum - student number
   * @returns {Promise<IStudentDocument>} Returns a Promise of the student.
   */
-  findByCsidSnum: function (csid: string, snum: string): Promise<IUserModel> {
+  findByCsidSnum: (csid: string, snum: string): Promise<IUserModel> => {
     return this
-      .find({ csid: csid, snum: snum })
+      .find({ csid, snum })
       .exec()
       .then((student: IUserModel[]) => {
-        if (student && student.length) {
-          return student[0];
-        }
-        return Promise.reject('err');
+        return (student && student.length) ? Promise.resolve(student[0]) : Promise.reject('err');
       });
   },
   storeServerToken(): Promise<string> {

@@ -139,6 +139,7 @@
         "multiline": "always",
         "singleline": "never"
       }
-    ]
+    ],
+    "object-literal-shorthand": true
   }
 }

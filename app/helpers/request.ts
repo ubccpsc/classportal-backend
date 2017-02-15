@@ -1,7 +1,7 @@
 import fetch, { Response } from 'node-fetch';
 import { config } from '../../config/env';
 
-function requestAccessToken(authcode: string): Promise<any> {
+function retrieveAccessToken(authcode: string): Promise<any> {
   return fetch('https://github.com/login/oauth/access_token', {
     method: 'POST',
     headers: {
@@ -22,7 +22,7 @@ function requestAccessToken(authcode: string): Promise<any> {
     });
 }
 
-function requestUsername(token: any): Promise<any> {
+function retrieveUsername(token: any): Promise<any> {
   return fetch('https://api.github.com/user', {
     method: 'GET',
     headers: {
@@ -40,4 +40,4 @@ function requestUsername(token: any): Promise<any> {
     });
 }
 
-export { requestAccessToken, requestUsername };
+export { retrieveAccessToken, retrieveUsername };

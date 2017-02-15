@@ -2,29 +2,37 @@ import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
 import { User, IUserDocument } from '../models/user.model';
-import { requestAccessToken, requestUsername } from '../helpers/request';
 import { logger } from '../../utils/logger';
 import { config } from '../../config/env';
+import * as request from '../helpers/request';
 
 /**
  * User login
  * @param {string} authcode - GitHub authcode
- * @returns portal info
+ * @returns {string} servertoken
  */
-function login(req: restify.Request, res: restify.Response, next: restify.Next) {
-  return Promise.resolve(req.params.authcode)
-    .then(requestAccessToken)
-    .then(requestUsername)
-    .then(User.findByUsername)
-    .then(User.storeServerToken)
-    .then((result: any) => {
-      res.json(200, { message: result });
-      return next();
+function login(authcode: string, csid: string, snum: string) {
+  return Promise.resolve(authcode)
+    .then(request.retrieveAccessToken)
+    .then(request.retrieveUsername)
+    .then((username: string) => {
+      return User.findByUsername(username)
+        .then((user: any) => {
+          return Promise.resolve(user);
+        })
+        .catch(() => {
+          return User.findByCsidSnum(csid, snum)
+            .then((user: any) => {
+              return Promise.resolve(user);
+            })
+            .catch(() => {
+              return Promise.reject('Could not find user by username or by csid!');
+            });
+        });
     })
+    .then(User.storeServerToken)
     .catch((error: any) => {
-      logger.info(error);
-      res.json(400, { error });
-      return next();
+      Promise.reject(error);
     });
 }
 
