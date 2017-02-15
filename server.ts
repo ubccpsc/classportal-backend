@@ -24,16 +24,16 @@ connection.on('error', (err: any) => {
   throw new Error(`Unable to connect to database: ${err}`);
 });
 
-// execute callback once connection is made
+// intial setup upon connection success
 connection.once('open', () => {
-  logger.info(`\nConnected to database: ${config.db}`);
-
-  // seed initial data, then start listening
   return Promise.resolve()
-    // .then (seedData)
+    .then(() => {
+      logger.info(`\nConnected to database: ${config.db}`);
+      // seedData()
+    })
     .then(() => {
       app.listen(config.port, () => {
-        logger.info(`\n${config.app_name} is running at ${app.url}`);
+        logger.info(`\n${config.app_name} is listening on ${app.url}`);
         logger.info('config:', config);
       });
     })

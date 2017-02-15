@@ -4,16 +4,18 @@ import { config } from './env';
 import { routes } from '../app/routes';
 import { logger } from '../utils/logger';
 
-// create Restify server with the configured name
-const app: restify.Server = restify.createServer({
+// create https server
+const app = restify.createServer({
   name: config.app_name,
   key: fs.readFileSync(config.ssl_key_path, 'UTF-8'),
   certificate: fs.readFileSync(config.ssl_cert_path, 'UTF-8'),
 });
 
+// allow cors
 app.use(restify.CORS());
 
-app.opts(/.*/, function (req, res, next) {
+// set cors options
+app.opts(/.*/, (req: restify.Request, res: restify.Response, next: restify.Next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', req.header('Access-Control-Request-Method'));
   res.header('Access-Control-Allow-Headers', req.header('Access-Control-Request-Headers'));
@@ -21,28 +23,19 @@ app.opts(/.*/, function (req, res, next) {
   return next();
 });
 
-// parse the http query string into req.query
-app.use(restify.queryParser({
-  mapParams: false,
-}));
+// parse the http query string into req.query, but not into req.params
+app.use(restify.queryParser({ mapParams: false }));
 
 // parse the body of the request into req.params
 app.use(restify.bodyParser());
 
-// user-defined middleware
-app.use((req: any, res: any, next: any) => {
-  // disable caching so we'll always get the latest data
-  res.setHeader('Cache-Control', 'no-cache');
-
-  // log the request method and url
-  logger.info(`${req.method} ${req.url}`);
-
-  // log the request body
-  logger.info(`Params: ${JSON.stringify(req.params)}`);
-
+// custom middleware to log the request method, url, and params
+app.use((req: restify.Request, res: restify.Response, next: restify.Next) => {
+  logger.info(`${req.method} ${req.url}\nParams: ${JSON.stringify(req.params, null, 2)}`);
   return next();
 });
 
+// add routes and their handlers
 routes(app);
 
 export { app };
