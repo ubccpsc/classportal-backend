@@ -31,7 +31,7 @@ const logout = (req: restify.Request, res: restify.Response) => {
 const createCourse = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.create(req.params)
     .then(() => res.json(200, { response: 'Successfully added CPSC #' + req.params.courseId }))
-    .catch((err: any) => res.json(500, { err } ));
+    .catch((err: any) => res.json(500, { err: err.errmsg } ));
 };
 
 const addClassList = (req: restify.Request, res: restify.Response) => {

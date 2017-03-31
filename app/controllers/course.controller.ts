@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
 import { ICourseDocument, Course } from '../models/course.model';
-import * as courseRepo from '../repos/course.repository';
 import { logger } from '../../utils/logger';
 import { config } from '../../config/env';
 import * as request from '../helpers/request';
@@ -17,33 +16,33 @@ function get(req: restify.Request, res: restify.Response, next: restify.Next) {
 
 /**
  * Create a team
- * @method
- * @returns {Promise.<Object, Error>} The promise returns an object if resolved.
  */
 
 function create(course: ICourseDocument) {
-  return courseRepo.addCourse(course);
+
+  let query = Course.findOne({ 'courseId': course.courseId });
+
+  return query.then( function(c) {
+    if (c) {
+      console.log('Course already exists');
+      return Course.create(course);
+    } else {
+      return Course.create(course)
+        .then((c) => {
+          c.save(
+            function(c, err) {
+              if (err) {
+                logger.info('Error on save! \n' + err);
+              } else {
+                logger.info('successfully saved ' + c);
+              }
+            },
+          );
+          return course;
+        });
+    }
+  });
 }
-
-  //   courseRepo.getAllCourses()
-  //   .then( (c) => { console.log(c); })
-  //   .catch(Promise.reject);
-
-  // courseRepo.getCourseById(course.courseId)
-  //   .then( (c) => { console.log(c); })
-  //   .catch(Promise.reject);
-
-function getCourse(courseId: string) {
-  return courseRepo.getCourseById(courseId);
-}
-
-  //   courseRepo.getAllCourses()
-  //   .then( (c) => { console.log(c); })
-  //   .catch(Promise.reject);
-
-  // courseRepo.getCourseById(course.courseId)
-  //   .then( (c) => { console.log(c); })
-  //   .catch(Promise.reject);
 
 /**
  * Create a team
@@ -51,9 +50,6 @@ function getCourse(courseId: string) {
 function update(req: restify.Request, res: restify.Response, next: restify.Next) {
   res.json(200, 'update team');
   return next();
-
-
-
 }
 
 /**
