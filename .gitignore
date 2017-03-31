@@ -28,3 +28,6 @@ ssl/
 
 # Dotenv file
 .env
+
+# Build folder
+build/

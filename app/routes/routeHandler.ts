@@ -1,6 +1,7 @@
 import * as restify from 'restify';
 import * as userCtrl from '../controllers/user.controller';
 import * as courseCtrl from '../controllers/course.controller';
+import * as classCtrl from '../controllers/class.controller';
 
 const pong = (req: restify.Request, res: restify.Response) => res.send('pong');
 
@@ -35,7 +36,9 @@ const createCourse = (req: restify.Request, res: restify.Response) => {
 };
 
 const addClassList = (req: restify.Request, res: restify.Response) => {
-  return res.json(200, 'faux success');
+  return classCtrl.update(req.files['classList'])
+    .then(() => res.json(200, { response: 'Successfully updated Class List on course #' + req.params.courseId }))
+    .catch((err: any) => res.json(500, { err: err.errmsg }));
 };
 
 export { pong, login, checkRegistration, createCourse, load, logout, addClassList };

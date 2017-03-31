@@ -6,6 +6,7 @@ interface ICourseDocument extends mongoose.Document {
   maxTeamSize: number;
   modules: string[];
   customData: any;
+  classList: Object[];
 }
 
 interface ICourseModel extends mongoose.Model<ICourseDocument> {
@@ -27,6 +28,9 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   },
   modules: {
     type: [String],
+  },
+  classList: {
+    type: [Object],
   },
   customData: {
     type: Object,

@@ -22,19 +22,18 @@ function create(course: ICourseDocument) {
 
   let query = Course.findOne({ 'courseId': course.courseId });
 
-  return query.then( function(c) {
-    if (c) {
-      console.log('Course already exists');
+  return query.then( result => {
+    if (result) {
       return Course.create(course);
     } else {
       return Course.create(course)
-        .then((c) => {
-          c.save(
-            function(c, err) {
+        .then((newCourse) => {
+          newCourse.save(
+            function(newCourse, err) {
               if (err) {
                 logger.info('Error on save! \n' + err);
               } else {
-                logger.info('successfully saved ' + c);
+                logger.info('successfully saved ' + newCourse.courseId);
               }
             },
           );

@@ -27,7 +27,16 @@ app.opts(/.*/, (req: restify.Request, res: restify.Response, next: restify.Next)
 app.use(restify.queryParser({ mapParams: false }));
 
 // parse the body of the request into req.params
-app.use(restify.bodyParser());
+app.use(restify.bodyParser({
+  maxBodySize: 0,
+  mapParams: true,
+  mapFiles: false,
+  overrideParams: false,
+  keepExtensions: true,
+  uploadDir: './build/uploads/',
+  multiples: true,
+  hash: 'sha1',
+}));
 
 // custom middleware to log the request method, url, and params
 app.use((req: restify.Request, res: restify.Response, next: restify.Next) => {
