@@ -40,4 +40,7 @@ connection.once('open', () => {
     .catch(logger.info);
 });
 
+// Enable to seed data in new app and database.
+// seedData();
+
 export { app };

@@ -7,12 +7,24 @@ const data = {
       username: 'rtholmes',
       firstname: 'Reid',
       lastname: 'Holmes',
+      csid: 'a1111111',
+      snum: '111111111',
       prof: true,
     },
     {
       username: 'mksarge',
       firstname: 'Michael',
       lastname: 'Sargent',
+      csid: 'b2222222',
+      snum: '222222222',
+      prof: false,
+    },
+    {
+      username: 'andrewstec',
+      firstname: 'Andrew',
+      lastname: 'Stec',
+      csid: 'c3333333',
+      snum: '333333333',
       prof: false,
     },
   ],
@@ -34,6 +46,8 @@ function seedData(): Promise<IUserDocument[]> {
         username: current.username,
         lastname: current.lastname,
         firstname: current.firstname,
+        csid: current.csid,
+        snum: current.snum,
         prof: current.prof,
       });
       return newUser

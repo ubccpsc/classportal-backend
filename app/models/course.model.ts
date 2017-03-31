@@ -9,6 +9,8 @@ interface ICourseDocument extends mongoose.Document {
 }
 
 interface ICourseModel extends mongoose.Model<ICourseDocument> {
+  findByPlugin(customData: string): Promise<ICourseDocument>;
+  findByCourseId(courseId: string): Promise<ICourseDocument>;
 }
 
 const CourseSchema: mongoose.Schema = new mongoose.Schema({
