@@ -7,7 +7,7 @@ const routes = (server: restify.Server) => {
   server.get('/ping', routeHandler.pong);
   server.post('/login', routeHandler.login);
   server.post('/register', routeHandler.checkRegistration);
-  server.post('/course', routeHandler.createCourse);
+  server.put('/course', routeHandler.createCourse);
   server.post('/classList', routeHandler.addClassList);
   // Accessible by logged-in users only
   server.post('/home', auth.loadUser, routeHandler.load);
