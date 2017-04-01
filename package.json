@@ -21,6 +21,7 @@
     "dotenv": "^4.0.0",
     "mongoose": "^4.8.2",
     "node-fetch": "^1.6.3",
+    "passport-restify": "^1.0.1",
     "restify": "^4.1.1"
   },
   "devDependencies": {

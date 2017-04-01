@@ -9,8 +9,9 @@ import { logger } from '../../utils/logger';
  * Input: CSV
  */
 
-function update(classList: any) {
-  console.log(classList.path);
+function update(classList: any, courseId: string) {
+  console.log('class list: ' + classList.path);
+  console.log('courseID: ' + courseId);
 
   const options = {
     columns: true,
@@ -22,15 +23,26 @@ function update(classList: any) {
   let parser = parse(options, (err, data) => {
 
     let lastCourseNum = null;
-    let course = null; 
+    let course = null;
+    let newClassList = [Object];
 
     for (let key in data) {
-      if (lastCourseNum != data.courseNum) {
-        let course = Course.findOne({ courseId: data.courseNum });
-      }
-      course.update({}) ////////// Continue on with updating the classList field in the course object that matches the row key.
-                        /// Next, make this asyncronous.
+      newClassList.push(data[key]);
+      // console.log('data ' + JSON.stringify(data[key]));
+      // console.log('key ' + key);
+      // console.log('whole object ' + JSON.stringify(data));
     }
+
+    let courseQuery = Course.findOne({ 'courseId': courseId })
+      .then( c => {
+        // console.log('classList' + c.classList);
+        // console.log('newClassList: ' + newClassList);
+        c.classList = newClassList;
+        c.save();
+        return c;
+      });
+
+
     if (err) {
       throw Error(err);
     }

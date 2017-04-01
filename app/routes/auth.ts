@@ -1,6 +1,7 @@
 import * as restify from 'restify';
 import { IUserDocument, User } from '../models/user.model';
 import { logger } from '../../utils/logger';
+let passport = require('passport-restify');
 
 const loadUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   const token = req.header('token');

@@ -30,7 +30,7 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     type: [String],
   },
   classList: {
-    type: [Object],
+    type: [],
   },
   customData: {
     type: Object,
