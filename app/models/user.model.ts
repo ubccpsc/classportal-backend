@@ -1,8 +1,8 @@
 import * as mongoose from 'mongoose';
-let passportLocalMongoose = require('../passport-local-mongoose');
+let passportLocalMongoose = require('passport-local-mongoose');
 let Schema = mongoose.Schema;
-let bcrypt = require('../bcrypt-nodejs');
-let findOrCreate = require('../mongoose-findorcreate');
+let bcrypt = require('bcrypt-nodejs');
+let findOrCreate = require('mongoose-findorcreate');
 
 
 interface CourseData {

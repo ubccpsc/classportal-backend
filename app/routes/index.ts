@@ -1,6 +1,7 @@
 import * as restify from 'restify';
 import * as routeHandler from './routeHandler';
 import * as auth from './auth';
+import { passport } from '../../config/restify';
 
 const routes = (server: restify.Server) => {
   // Accessible by anyone
@@ -13,10 +14,13 @@ const routes = (server: restify.Server) => {
   server.post('/home', auth.loadUser, routeHandler.load);
   server.post('/logout', auth.loadUser, routeHandler.logout);
   // Accessible by admin
-  server.post('/admin/classList', auth.passportLoadUser, routeHandler.addClassList);
+  server.post('/admin/classList', passport.authenticate('github'), routeHandler.addClassList);
   // Authentication routes
-  server.get('/auth/login/github', routeHandler.authenticate);
-  server.get('/auth/login/github/return', routeHandler.callback);
+  server.get('/auth/login/github', passport.authenticate('github'));
+  server.get('/auth/login/github/return', passport.authenticate('github', { failureRedirect: '/failedLogin' }),
+    ( req: restify.Request, res: restify.Response, next: restify.Next) => {
+      res.redirect('/successYes', next);
+    });
 };
 
 export { routes };
