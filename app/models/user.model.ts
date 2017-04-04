@@ -1,4 +1,9 @@
 import * as mongoose from 'mongoose';
+let passportLocalMongoose = require('../passport-local-mongoose');
+let Schema = mongoose.Schema;
+let bcrypt = require('../bcrypt-nodejs');
+let findOrCreate = require('../mongoose-findorcreate');
+
 
 interface CourseData {
   courseId: string;
@@ -23,10 +28,15 @@ interface IUserModel extends mongoose.Model<IUserDocument> {
   findByUsername(username: string): Promise<IUserDocument>;
   findByCsidSnum(csid: string, snum: string): Promise<IUserDocument>;
   findWith(query: Object): Promise<IUserDocument>;
+  findOrReplace(query: Object): Promise<IUserDocument>;
+  findOrCreate(query: Object): Promise<IUserDocument>;
 }
 
 const UserSchema = new mongoose.Schema({
   token: {
+    type: String,
+  },
+  password: {
     type: String,
   },
   username: {
@@ -79,6 +89,10 @@ UserSchema.methods = {
     return Promise.resolve('');
   },
 };
+
+UserSchema.plugin(findOrCreate);
+UserSchema.plugin(passportLocalMongoose);
+
 
 UserSchema.statics = {
   /**

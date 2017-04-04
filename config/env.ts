@@ -13,6 +13,7 @@ const config = {
   ssl_cert_path: process.env.SSL_CERT_PATH,
   github_client_id: process.env.GITHUB_CLIENT_ID,
   github_client_secret: process.env.GITHUB_CLIENT_SECRET,
+  github_callback_url: 'https://www.getpostman.com/oauth2/callback',
 };
 
 // specific to test config

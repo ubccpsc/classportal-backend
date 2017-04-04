@@ -12,6 +12,11 @@ const routes = (server: restify.Server) => {
   // Accessible by logged-in users only
   server.post('/home', auth.loadUser, routeHandler.load);
   server.post('/logout', auth.loadUser, routeHandler.logout);
+  // Accessible by admin
+  server.post('/admin/classList', auth.passportLoadUser, routeHandler.addClassList);
+  // Authentication routes
+  server.get('/auth/login/github', routeHandler.authenticate);
+  server.get('/auth/login/github/return', routeHandler.callback);
 };
 
 export { routes };

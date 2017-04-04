@@ -2,6 +2,7 @@ import * as restify from 'restify';
 import * as userCtrl from '../controllers/user.controller';
 import * as courseCtrl from '../controllers/course.controller';
 import * as classCtrl from '../controllers/class.controller';
+import * as authCtrl from '../controllers/auth.controller';
 
 const pong = (req: restify.Request, res: restify.Response) => res.send('pong');
 
@@ -41,4 +42,16 @@ const addClassList = (req: restify.Request, res: restify.Response) => {
     .catch((err: any) => res.json(500, { err: err.errmsg }));
 };
 
-export { pong, login, checkRegistration, createCourse, load, logout, addClassList };
+const authenticate = (req: restify.Request, res: restify.Response) => {
+  return authCtrl.login(req.params)
+    .then(() => res.json(200, { response: 'Authenticated' }))
+    .catch((err: any) => res.json(500, { err: err.errmsg }));
+};
+
+const callback = (req: restify.Request, res: restify.Response) => {
+  return authCtrl.callback(req.params)
+    .then(() => res.json(200, { response: 'Authenticated' }))
+    .catch((err: any) => res.json(500, { err: err.errmsg }));
+};
+
+export { pong, login, checkRegistration, createCourse, load, logout, addClassList, authenticate, callback };
