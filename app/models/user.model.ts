@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-let passportLocalMongoose = require('passport-local-mongoose');
 let Schema = mongoose.Schema;
 let bcrypt = require('bcrypt-nodejs');
 let findOrCreate = require('mongoose-findorcreate');
@@ -41,7 +40,6 @@ const UserSchema = new mongoose.Schema({
   },
   username: {
     type: String,
-    required: true,
   },
   snum: {
     type: String,
@@ -90,10 +88,6 @@ UserSchema.methods = {
   },
 };
 
-UserSchema.plugin(findOrCreate);
-UserSchema.plugin(passportLocalMongoose);
-
-
 UserSchema.statics = {
   /**
   * Find a user by username.
@@ -135,6 +129,20 @@ UserSchema.statics = {
       .exec()
       .then((user: IUserDocument[]) => {
         return (user && user.length) ? Promise.resolve(user[0]) : Promise.reject('err');
+      });
+  },
+
+    /**
+  * Find a user by Github username. If does not exist, then user created in DB.
+  * @param {string} github username
+  * @returns {Promise<IUserDocument>} Returns a Promise of the user.
+  */
+  findOrCreate: (query: Object): Promise<IUserDocument> => {
+    return User
+      .find(query)
+      .exec()
+      .then((user: IUserDocument[]) => {
+        return (user && user.length) ? Promise.resolve(user[0]) : User.create(query);
       });
   },
 };
