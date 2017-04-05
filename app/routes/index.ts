@@ -2,6 +2,7 @@ import * as restify from 'restify';
 import * as routeHandler from './routeHandler';
 import { passport } from './routeHandler';
 import * as auth from './auth';
+import { isAuthenticated } from '../../app/middleware/auth.middleware';
 
 const routes = (server: restify.Server) => {
   // Accessible by anyone
@@ -29,9 +30,14 @@ const routes = (server: restify.Server) => {
     });
   server.get('/auth/login/github', passport.authenticate('github'));
   server.get('/auth/login/github/return', passport.authenticate('github', { failureRedirect: '/failed' }),
-    ( req: any, res: any, next: restify.Next) => {
+    ( req: restify.Request, res: any, next: restify.Next) => {
       res.redirect('/', next);
+      req.isSecure();
     });
+  server.get('/settings', isAuthenticated,
+  function(req: any, res: any, next: any) {
+    res.json(200, { user: req.user });
+  });
 };
 
 export { routes };

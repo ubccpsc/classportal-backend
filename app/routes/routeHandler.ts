@@ -2,7 +2,6 @@ import * as restify from 'restify';
 import * as userCtrl from '../controllers/user.controller';
 import * as courseCtrl from '../controllers/course.controller';
 import * as classCtrl from '../controllers/class.controller';
-import * as authCtrl from '../controllers/auth.controller';
 import * as testCtrl from '../controllers/test.controller';
 import { passport } from '../../config/auth';
 
