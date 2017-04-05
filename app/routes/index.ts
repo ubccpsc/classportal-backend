@@ -1,43 +1,30 @@
 import * as restify from 'restify';
 import * as routeHandler from './routeHandler';
-import { passport } from './routeHandler';
 import * as auth from './auth';
 import { isAuthenticated } from '../../app/middleware/auth.middleware';
+import { passport } from './routeHandler';
 
 const routes = (server: restify.Server) => {
   // Accessible by anyone
   server.get('/ping', routeHandler.pong);
-  server.post('/login', routeHandler.login);
   server.get('/test', routeHandler.testRoute);
-  server.post('/register', routeHandler.checkRegistration);
   server.put('/course', routeHandler.createCourse);
   server.post('/classList', routeHandler.addClassList);
   // Accessible by logged-in users only
-  server.post('/home', auth.loadUser, routeHandler.load);
   server.post('/logout', auth.loadUser, routeHandler.logout);
   // Accessible by admin
   server.post('/admin/classList', routeHandler.addClassList);
   // Authentication routes
-  server.get('/auth/testRoute', passport.authenticate('github', { failureRedirect: '/failedTestRoute' }),
-    ( req: any, res: any, next: restify.Next) => {
-      console.log('REQUEST ', req);
-      return routeHandler.testRoute;
-    });
-  server.get('/auth/testRoute', passport.authenticate('github', { failureRedirect: '/failedTestRoute' }),
-    ( req: any, res: any, next: restify.Next) => {
-      console.log('REQUEST ', req);
-      return routeHandler.testRoute;
-    });
   server.get('/auth/login/github', passport.authenticate('github'));
   server.get('/auth/login/github/return', passport.authenticate('github', { failureRedirect: '/failed' }),
     ( req: restify.Request, res: any, next: restify.Next) => {
       res.redirect('/', next);
-      req.isSecure();
     });
   server.get('/settings', isAuthenticated,
   function(req: any, res: any, next: any) {
     res.json(200, { user: req.user });
   });
+  server.get('/logout', isAuthenticated, routeHandler.logout);
 };
 
 export { routes };

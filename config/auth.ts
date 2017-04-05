@@ -7,7 +7,7 @@ let session = require('cookie-session');
 let CookieParser = require('restify-cookies');
 let GithubStrategy = require('passport-github').Strategy;
 
-// passport-restify configuration
+// passport
 
 // Configure Passport authenticated session persistence.
 //
@@ -37,17 +37,9 @@ passport.use(new GithubStrategy({
   callbackURL: config.github_callback_url,
 },
   function(accessToken: any, refreshToken: any, profile: any, cb: any) {
-    // In this example, the user's Facebook profile is supplied as the user
-    // record.  In a production-quality application, the Facebook profile should
-    // be associated with a user record in the application's database, which
-    // allows for account linking and authentication with other identity
-    // providers.
-    console.log('Access Token: ', accessToken);
-    console.log('refresh token: ', refreshToken);
-    console.log('profile: ', profile);
-    console.log('cb : ', cb);
+    // This is an area where we can link the information,
+    // if we decide to associate the user account with
     logger.info(profile.username + 'logged in');
-
     User.find({ username: profile.username }, function(err, user) {
       logger.info('Authentication error: ' + user);
       return cb(err, user);
