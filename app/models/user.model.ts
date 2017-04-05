@@ -2,6 +2,7 @@ import * as mongoose from 'mongoose';
 let Schema = mongoose.Schema;
 let bcrypt = require('bcrypt-nodejs');
 let findOrCreate = require('mongoose-findorcreate');
+import { logger } from '../../utils/logger';
 
 
 interface CourseData {
@@ -139,10 +140,17 @@ UserSchema.statics = {
   */
   findOrCreate: (query: Object): Promise<IUserDocument> => {
     return User
-      .find(query)
+      .findOne(query)
       .exec()
-      .then((user: IUserDocument[]) => {
-        return (user && user.length) ? Promise.resolve(user[0]) : User.create(query);
+      .then((user) => {
+        if (user) {
+          Promise.resolve(user);
+        } else {
+          User.create(query)
+            .then((q) => { return q.save(); })
+            .catch((err) => { logger.info(err); });
+        }
+        return Promise.resolve(user);
       });
   },
 };

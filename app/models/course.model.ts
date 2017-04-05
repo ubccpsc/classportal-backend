@@ -20,6 +20,10 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  courseName: {
+    type: String,
+    unique: false,
+  },
   minTeamSize: {
     type: Number,
   },
@@ -32,8 +36,14 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   classList: {
     type: [],
   },
+  studentsSetTeams: {
+    type: Boolean,
+  },
   customData: {
     type: Object,
+  },
+  admins: {
+    type: [String],
   },
 });
 

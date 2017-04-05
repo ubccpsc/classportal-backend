@@ -38,6 +38,7 @@ function update(classList: any, courseId: string) {
         snum : student.SNUM,
         lname : student.LAST,
         fname : student.FIRST,
+        username : student.USERNAME,
       })
         .catch( (err) => { logger.info('Error creating user in class controller' + err); });
       newClassList.push(student);

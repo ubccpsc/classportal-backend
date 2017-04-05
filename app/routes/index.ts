@@ -7,6 +7,7 @@ const routes = (server: restify.Server) => {
   // Accessible by anyone
   server.get('/ping', routeHandler.pong);
   server.post('/login', routeHandler.login);
+  server.get('/test', routeHandler.testRoute);
   server.post('/register', routeHandler.checkRegistration);
   server.put('/course', routeHandler.createCourse);
   server.post('/classList', routeHandler.addClassList);
@@ -16,10 +17,20 @@ const routes = (server: restify.Server) => {
   // Accessible by admin
   server.post('/admin/classList', routeHandler.addClassList);
   // Authentication routes
+  server.get('/auth/testRoute', passport.authenticate('github', { failureRedirect: '/failedTestRoute' }),
+    ( req: any, res: any, next: restify.Next) => {
+      console.log('REQUEST ', req);
+      return routeHandler.testRoute;
+    });
+  server.get('/auth/testRoute', passport.authenticate('github', { failureRedirect: '/failedTestRoute' }),
+    ( req: any, res: any, next: restify.Next) => {
+      console.log('REQUEST ', req);
+      return routeHandler.testRoute;
+    });
   server.get('/auth/login/github', passport.authenticate('github'));
   server.get('/auth/login/github/return', passport.authenticate('github', { failureRedirect: '/failed' }),
-    ( req: restify.Request, res: restify.Response, next: restify.Next) => {
-      res.redirect('/success', next);
+    ( req: any, res: any, next: restify.Next) => {
+      res.redirect('/', next);
     });
 };
 

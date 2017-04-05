@@ -1,8 +1,8 @@
 import { app } from './restify';
 import { config } from '../config/env';
-import { User } from '../app/models/user.model';
+import { User, IUserDocument } from '../app/models/user.model';
 import { logger } from '../utils/logger';
-let passport = require('passport-restify');
+let passport = require('passport');
 let session = require('cookie-session');
 let CookieParser = require('restify-cookies');
 let GithubStrategy = require('passport-github').Strategy;
@@ -18,12 +18,17 @@ let GithubStrategy = require('passport-github').Strategy;
 // from the database when deserializing.  However, due to the fact that this
 // example does not have a database, the complete Facebook profile is serialized
 // and deserialized.
-passport.serializeUser(function(user: any, cb: any) {
+passport.serializeUser(function(user: IUserDocument, cb: any) {
+  console.log('SERIALIZE USER: ' + user);
   cb(null, user);
 });
 
 passport.deserializeUser(function(obj: any, cb: any) {
-  cb(null, obj);
+  console.log('DESERIALIZE ObJECT ' + obj);
+  User.findById(obj)
+    .exec()
+    .then((u) => { cb(null, u); })
+    .catch((err) => { logger.info(err); });
 });
 
 passport.use(new GithubStrategy({
@@ -32,19 +37,21 @@ passport.use(new GithubStrategy({
   callbackURL: config.github_callback_url,
 },
   function(accessToken: any, refreshToken: any, profile: any, cb: any) {
-
     // In this example, the user's Facebook profile is supplied as the user
     // record.  In a production-quality application, the Facebook profile should
     // be associated with a user record in the application's database, which
     // allows for account linking and authentication with other identity
     // providers.
-
     console.log('Access Token: ', accessToken);
     console.log('refresh token: ', refreshToken);
     console.log('profile: ', profile);
     console.log('cb : ', cb);
-    logger.info(profile.id + 'logged in');
-    return User.findOrCreate({ username: profile.username }).catch((err) => { logger.info(err); });
+    logger.info(profile.username + 'logged in');
+
+    User.find({ username: profile.username }, function(err, user) {
+      logger.info('Authentication error: ' + user);
+      return cb(err, user);
+    });
   }),
 );
 
