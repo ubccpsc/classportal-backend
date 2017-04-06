@@ -44,12 +44,19 @@ function update(classList: any, courseId: string) {
       newClassList.push(student);
     }
 
-    let courseQuery = Course.findOne({ 'courseId': courseId })
+    let courseQuery = Course.findOne({ 'courseId': courseId });
+
+    courseQuery
+      .exec()
       .then( c => {
-        c.classList = newClassList;
-        c.save();
+        if (!c) {
+          c.classList = newClassList;
+          c.save();
+          return c;
+        }
         return c;
-      });
+      })
+        .catch((err) => logger.info('Error retrieving course information: ' + err));
 
 
     if (err) {

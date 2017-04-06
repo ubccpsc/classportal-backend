@@ -22,21 +22,25 @@ function logout(req: any, res: any, next: any) {
 /**
 Logins user using Github OAuth Strategy and Passport Plug-in
 **/
-// function loginUser() {
-//   return Promise.resolve(passport.authenticate('github'))
-//     .catch((err) => logger.info('Error logging in: ' + err));
-// }
+function loginUser() {
+  return Promise.resolve(passport.authenticate('github'))
+    .catch((err) => logger.info('Error logging in user: ' + err));
+}
 
-// function authenticateUser(req: any, res: any, next: restify.Next) {
+function oauthCallback(req: any, res: any, next: restify.Next) {
 
-//   const authenticate = passport.authenticate('github', { failureRedirect: '/failed' });
-//   ( req: restify.Request, res: any, next: restify.Next) => {
-//     res.redirect('/', next);
-//   };
+  let authenticate = function() {
+    return Promise.resolve(passport.authenticate('github', { failureRedirect: '/failed' }));
+  };
+  return authenticate()
+    .then(res.redirect('/', next))
+    .catch((err) => logger.info('Error authenticating user: ' + err));
+}
 
-//   return Promise.resolve(authenticate)
-//     .catch((err) => logger.info('Error authenticating user: ' + err));
-// }
+function getUser(req: any, res: any, next: any) {
+  return Promise.resolve(res.json(200, { user: req.user }))
+    .catch((err) => { logger.info('Error loading user info: ' + err); });
+}
 
 
-export { logout };
+export { logout, getUser, loginUser, oauthCallback };

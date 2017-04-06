@@ -9,7 +9,7 @@ const routes = (server: restify.Server) => {
   server.get('/ping', routeHandler.pong);
   server.get('/test', routeHandler.testRoute);
   server.put('/course', routeHandler.createCourse);
-  server.post('/classList', routeHandler.addClassList);
+  server.post('/classList/:courseId', routeHandler.addClassList);
   // Accessible by logged-in users only
   server.post('/logout', auth.loadUser, routeHandler.logout);
   // Accessible by admin
@@ -20,10 +20,7 @@ const routes = (server: restify.Server) => {
     ( req: restify.Request, res: any, next: restify.Next) => {
       res.redirect('/', next);
     });
-  server.get('/settings', isAuthenticated,
-  function(req: any, res: any, next: any) {
-    res.json(200, { user: req.user });
-  });
+  server.get('/settings', isAuthenticated, routeHandler.getUser);
   server.get('/logout', isAuthenticated, routeHandler.logout);
 };
 

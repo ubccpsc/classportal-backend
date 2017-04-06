@@ -48,8 +48,8 @@ app.use((req: restify.Request, res: restify.Response, next: restify.Next) => {
 app.use(CookieParser.parse);
 app.use(session({
   keys: ['key1', 'key2'],
-  maxage: 48 * 3600 /*hours*/ * 1000,  /*in milliseconds*/
-  secureProxy: false, // if you do SSL outside of node
+  maxAge: 48 * 3600 /*hours*/ * 1000,  /*in milliseconds*/
+  secure: false, // if you do SSL outside of node
 }));
 app.use(passport.initialize());
 app.use(passport.session());

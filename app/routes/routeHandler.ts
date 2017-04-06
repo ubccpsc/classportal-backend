@@ -33,16 +33,20 @@ const logout = (req: restify.Request, res: restify.Response, next: restify.Next)
     .catch((err: any) => res.json(500, { err: err.errmsg }));
 };
 
-// const loginUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-//   return authCtrl.loginUser()
-//     .then(() => res.json(200, { response: 'Successfully logged in' }))
-//     .catch((err: any) => res.json(500, { err: err.errmsg }));
-// };
+const getUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return authCtrl.getUser(req, res, next)
+    .catch((err: any) => res.json(500, { err: err.errmsg }));
+};
 
-// const authenticateUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-//   return authCtrl.authenticateUser(req, res, next)
-//     .then(() => res.json(200, { response: 'Successfully authenticated user' }))
-//     .catch((err: any) => res.json(500, { err: err.errmsg }));
-// }
+const loginUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return authCtrl.loginUser()
+    .catch((err: any) => res.json(500, { err: err.errmsg }));
+};
 
-export { pong, createCourse, logout, addClassList, testRoute, passport };
+const oauthCallback = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return authCtrl.oauthCallback(req, res, next)
+    .then(() => res.json(200, { response: 'Successfully authenticated user' }))
+    .catch((err: any) => res.json(500, { err: err.errmsg }));
+};
+
+export { pong, createCourse, logout, addClassList, testRoute, passport, getUser, loginUser };
