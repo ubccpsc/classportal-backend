@@ -58,7 +58,6 @@ function update(classList: any, courseId: string) {
       })
         .catch((err) => logger.info('Error retrieving course information: ' + err));
 
-
     if (err) {
       throw Error(err);
     }

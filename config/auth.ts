@@ -19,12 +19,12 @@ let GithubStrategy = require('passport-github').Strategy;
 // example does not have a database, the complete Facebook profile is serialized
 // and deserialized.
 passport.serializeUser(function(user: IUserDocument, cb: any) {
-  console.log('SERIALIZE USER: ' + user);
+  console.log('Serializing User' + JSON.stringify(user, null, 2));
   cb(null, user);
 });
 
 passport.deserializeUser(function(obj: any, cb: any) {
-  console.log('DESERIALIZE ObJECT ' + obj);
+  console.log('Deserializing object : ' + JSON.stringify(obj, null, 2));
   User.findById(obj)
     .exec()
     .then((u) => { cb(null, u); })
@@ -41,7 +41,6 @@ passport.use(new GithubStrategy({
     // if we decide to associate the user account with
     logger.info(profile.username + 'logged in');
     User.find({ username: profile.username }, function(err, user) {
-      logger.info('Authentication error: ' + user);
       return cb(err, user);
     });
   }),

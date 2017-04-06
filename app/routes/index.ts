@@ -1,7 +1,7 @@
 import * as restify from 'restify';
 import * as routeHandler from './routeHandler';
 import * as auth from './auth';
-import { isAuthenticated } from '../../app/middleware/auth.middleware';
+import { isAuthenticated, adminAuth, superAdminAuth } from '../../app/middleware/auth.middleware';
 import { passport } from './routeHandler';
 
 const routes = (server: restify.Server) => {
@@ -9,11 +9,11 @@ const routes = (server: restify.Server) => {
   server.get('/ping', routeHandler.pong);
   server.get('/test', routeHandler.testRoute);
   server.put('/course', routeHandler.createCourse);
-  server.post('/classList/:courseId', routeHandler.addClassList);
+  server.post('/classList/:courseId', adminAuth, routeHandler.addClassList);
   // Accessible by logged-in users only
   server.post('/logout', auth.loadUser, routeHandler.logout);
   // Accessible by admin
-  server.post('/admin/classList', routeHandler.addClassList);
+  server.post('/admin/classList', adminAuth, routeHandler.addClassList);
   // Authentication routes
   server.get('/auth/login/github', passport.authenticate('github'));
   server.get('/auth/login/github/return', passport.authenticate('github', { failureRedirect: '/failed' }),
