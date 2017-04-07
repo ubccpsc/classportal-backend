@@ -20,29 +20,29 @@ const isAuthenticated = (req: any, res: restify.Response, next: restify.Next) =>
 const adminAuth = (req: any, res: restify.Response, next: restify.Next) => {
   if (req.isAuthenticated()) {
     let loggedInUser = req.user.username;
-    let adminOrSuperAdmin = config.admins.indexOf(loggedInUser) || config.admins.indexOf(loggedInUser) ? true : false;
-    if (adminOrSuperAdmin) {
-      return next();
-    } else {
-      logger.info('Admin/Super Admin permission denied request: ' + req.user);
-      res.json(500, { error: 'Permission denied' } );
+    let adminOrSuperAdmin = function() {
+      return config.admins.indexOf(loggedInUser) >= 0 || config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
+    };
+    if (adminOrSuperAdmin()) {
+      return next(); // authorized
     }
   }
-  res.json(500, { error: 'Permission denied' } );
+  logger.info('Permission denied. Admin permissions needed: ' + req.user);
+  res.json(500, { error: 'Permission denied.' } );
 };
 
 const superAdminAuth = (req: any, res: restify.Response, next: restify.Next) => {
   if (req.isAuthenticated()) {
     let loggedInUser = req.user.username;
-    let adminOrSuperAdmin = config.admins.indexOf(loggedInUser) ? true : false;
-
-    if (adminOrSuperAdmin) {
+    let superAdmin = function() {
+      return config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
+    };
+    if (superAdmin()) {
       return next();
-    } else {
-      res.json(500, { error: 'Permission denied' } );
     }
   }
-  res.json(500, { error: 'Permission denied' } );
+  logger.info('Permission denied. Super Admin permissions needed: ' + req.user);
+  res.json(401, { error: 'Permission denied' } );
 };
 
 export { isAuthenticated, adminAuth, superAdminAuth }

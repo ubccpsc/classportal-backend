@@ -14,6 +14,7 @@ const routes = (server: restify.Server) => {
   server.post('/logout', auth.loadUser, routeHandler.logout);
   // Accessible by admin
   server.post('/admin/classList', adminAuth, routeHandler.addClassList);
+  server.get('/course', adminAuth, routeHandler.createCourse);
   // Authentication routes
   server.get('/auth/login/github', passport.authenticate('github'));
   server.get('/auth/login/github/return', passport.authenticate('github', { failureRedirect: '/failed' }),
