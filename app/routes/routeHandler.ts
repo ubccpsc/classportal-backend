@@ -12,7 +12,7 @@ const pong = (req: restify.Request, res: restify.Response) => res.send('pong');
 const createCourse = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.create(req.params)
     .then(() => res.json(200, { response: 'Successfully added CPSC #' + req.params.courseId }))
-    .catch((err: any) => res.json(500, { err: err.errmsg } ));
+    .catch((err: Error) => res.json(500, { 'err': err.message } ));
 };
 
 const addClassList = (req: restify.Request, res: restify.Response) => {

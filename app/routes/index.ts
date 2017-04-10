@@ -8,13 +8,11 @@ const routes = (server: restify.Server) => {
   // Accessible by anyone
   server.get('/ping', routeHandler.pong);
   server.get('/test', routeHandler.testRoute);
-  server.put('/course', routeHandler.createCourse);
-  server.post('/:courseId/admin/students', routeHandler.addClassList);
   // Accessible by logged-in users only
   server.post('/logout', auth.loadUser, routeHandler.logout);
   // Authentication routes
-  server.get('/course', adminAuth, routeHandler.createCourse);
-  server.post('/admin/students', routeHandler.addClassList);
+  server.put('admin/:courseId', routeHandler.createCourse);
+  server.post('/:courseId/admin/students', routeHandler.addClassList);
   server.get('/auth/login/github', passport.authenticate('github'));
   server.get('/auth/login/github/return', passport.authenticate('github', { failureRedirect: '/failed' }),
     ( req: restify.Request, res: any, next: restify.Next) => {

@@ -20,25 +20,14 @@ function get(req: restify.Request, res: restify.Response, next: restify.Next) {
 
 function create(course: ICourseDocument) {
 
-  let query = Course.findOne({ 'courseId': course.courseId });
+  let query = Course.findOne({ 'courseId': course.courseId }).exec();
 
   return query.then( result => {
-    if (result) {
+    if ( result === null ) {
       return Course.create(course);
     } else {
-      return Course.create(course)
-        .then((newCourse) => {
-          newCourse.save(
-            function(newCourse, err) {
-              if (err) {
-                logger.info('Error on save! \n' + err);
-              } else {
-                logger.info('successfully saved ' + newCourse.courseId);
-              }
-            },
-          );
-          return course;
-        });
+      console.log('course exists');
+      return Promise.reject(Error('Course ' + course.courseId + ' already exists'));
     }
   });
 }
