@@ -32,7 +32,7 @@ function update(classList: any, courseId: string) {
 
     for (let key in data) {
       let student = data[key];
-      console.log('each student' + JSON.stringify(student));
+      logger.info('Parsing student into user model: ' + JSON.stringify(student));
       usersRepo.findOrCreate({
         csid : student.CSID,
         snum : student.SNUM,
@@ -65,7 +65,7 @@ function update(classList: any, courseId: string) {
 
   rs.pipe(parser);
 
-  return Course.find({ 'courseId': 123 });
+  return Course.find({ 'courseId': courseId });
 }
 
 export { update }

@@ -3,6 +3,7 @@ import { User } from '../models/user.model';
 import * as restify from 'restify';
 import { config } from '../../config/env';
 import { logger } from '../../utils/logger';
+let errors = require('restify-errors');
 
 /**
  * Verifies if authentication valid and redirects on basis of boolean result.
@@ -28,7 +29,7 @@ const adminAuth = (req: any, res: restify.Response, next: restify.Next) => {
     }
   }
   logger.info('Permission denied. Admin permissions needed: ' + req.user);
-  res.json(500, { error: 'Permission denied.' } );
+  next(new errors.UnauthorizedError('Permission denied'));
 };
 
 const superAdminAuth = (req: any, res: restify.Response, next: restify.Next) => {
@@ -42,7 +43,7 @@ const superAdminAuth = (req: any, res: restify.Response, next: restify.Next) => 
     }
   }
   logger.info('Permission denied. Super Admin permissions needed: ' + req.user);
-  res.json(401, { error: 'Permission denied' } );
+  next(new errors.UnauthorizedError('Permission denied'));
 };
 
 export { isAuthenticated, adminAuth, superAdminAuth }

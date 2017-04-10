@@ -6,7 +6,7 @@ import { logger } from '../../utils/logger';
 describe('ping API', () => {
   describe('GET /ping', () => {
     it('should return "pong"', (done) => {
-      supertest(app)
+      supertest.agent(app)
         .get('/ping')
         .end((err: any, res: supertest.Response) => {
           if (err) {
