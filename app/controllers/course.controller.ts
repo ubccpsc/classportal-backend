@@ -26,7 +26,6 @@ function create(course: ICourseDocument) {
     if ( result === null ) {
       return Course.create(course);
     } else {
-      console.log('course exists');
       return Promise.reject(Error('Course ' + course.courseId + ' already exists'));
     }
   });
