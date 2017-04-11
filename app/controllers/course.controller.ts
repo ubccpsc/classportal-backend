@@ -7,11 +7,20 @@ import { config } from '../../config/env';
 import * as request from '../helpers/request';
 
 /**
- * Get a team
+ * Get a list of courses
+ * @return Course[] All courses in DB
  */
-function get(req: restify.Request, res: restify.Response, next: restify.Next) {
-  res.json(200, 'get team');
-  return next();
+function get(req: restify.Request) {
+
+  let query = Course.find({}).sort({ courseId: -1 }).select('courseId name icon').exec();
+
+  return query.then( result => {
+    if ( result === null ) {
+      return Promise.reject(Error('No courses found in Courses DB'));
+    } else {
+      return Promise.resolve(query);
+    }
+  });
 }
 
 /**

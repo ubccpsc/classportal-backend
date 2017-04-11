@@ -8,6 +8,8 @@ interface ICourseDocument extends mongoose.Document {
   modules: string[];
   customData: any;
   classList: Object[];
+  deliverables: Object[];
+  admins: string[];
 }
 
 interface ICourseModel extends mongoose.Model<ICourseDocument> {
@@ -21,9 +23,14 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  courseName: {
+  name: {
     type: String,
+    default: '',
     unique: false,
+  },
+  icon: {
+    type: String,
+    default: '//cdn.ubc.ca/clf/7.0.5/img/favicon.ico',
   },
   minTeamSize: {
     type: Number,
@@ -36,6 +43,9 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   },
   classList: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  },
+  deliverables: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }],
   },
   studentsSetTeams: {
     type: Boolean,

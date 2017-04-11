@@ -69,13 +69,13 @@ function update(classList: any, courseId: string) {
 
 function read(courseId: string) {
   let courseQuery = Course.findOne({ 'courseId': courseId })
-    .populate({ path: 'classList' }).exec();
+    .populate({ path: 'classList', select: 'snum fname lname teamUrl' }).exec();
 
   return courseQuery.then(result => {
     if ( result === null ) {
       return Promise.reject(Error('Course #' + courseId + ' does not exist'));
     } else {
-      return Promise.resolve(result);
+      return Promise.resolve(result.classList);
     }
   });
 }

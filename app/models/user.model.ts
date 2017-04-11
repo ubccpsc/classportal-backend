@@ -53,6 +53,10 @@ const UserSchema = new mongoose.Schema({
   lname: {
     type: String,
   },
+  teamUrl: {
+    type: String,
+    default: '',
+  },
   courses: [
     {
       courseId: {
@@ -130,7 +134,7 @@ UserSchema.statics = {
       });
   },
 
-    /**
+  /**
   * Find a user by Github username. If does not exist, then user created in DB.
   * @param {string} github username
   * @returns {Promise<IUserDocument>} Returns a Promise of the user.

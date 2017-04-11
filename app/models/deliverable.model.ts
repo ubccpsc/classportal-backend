@@ -1,43 +1,27 @@
 import * as mongoose from 'mongoose';
+import { logger } from '../../utils/logger';
 
 interface IDeliverableDocument extends mongoose.Document {
   courseId: string;
-  deliverableId: string;
   description: string;
   url: string;
-  isTeam: boolean;
-  isUploaded: boolean;
   openDate: string;
   dueDate: string;
-  gradeReleaseDate: string;
-  gradingScheme: string[];
 }
 
 interface IDeliverableModel extends mongoose.Model<IDeliverableDocument> {
+  findOrCreate(query: Object): Promise<IDeliverableDocument>;
 }
 
 const DeliverableSchema = new mongoose.Schema({
   courseId: {
-    type: String,
-    required: true,
+    type: mongoose.Schema.Types.ObjectId, ref: 'Course',
   },
-  deliverableId: {
-    type: String,
-    required: true,
-  },
-  description: {
+  name: {
     type: String,
   },
   url: {
     type: String,
-  },
-  isTeam: {
-    type: Boolean,
-    default: false,
-  },
-  isUploaded: {
-    type: Boolean,
-    required: false,
   },
   openDate: {
     type: Date,
@@ -45,15 +29,33 @@ const DeliverableSchema = new mongoose.Schema({
   dueDate: {
     type: Date,
   },
-  gradeReleaseDate: {
-    type: Date,
-  },
-  gradingScheme: {
-    type: [String],
+  gradesReleased: {
+    type: Boolean,
   },
 });
 
 DeliverableSchema.static({
+
+    /**
+  * Find a user by Github username. If does not exist, then user created in DB.
+  * @param {string} github username
+  * @returns {Promise<IDeliverableDocument>} Returns a Promise of the user.
+  */
+  findOrCreate: (query: Object): Promise<IDeliverableDocument> => {
+    return Deliverable
+      .findOne(query)
+      .exec()
+      .then((deliverable) => {
+        if (deliverable) {
+          Promise.resolve(deliverable);
+        } else {
+          Deliverable.create(query)
+            .then((q) => { return q.save(); })
+            .catch((err) => { logger.info(err); });
+        }
+        return Promise.resolve(deliverable);
+      });
+  },
 });
 
 const Deliverable: IDeliverableModel = <IDeliverableModel>mongoose.model('Deliverable', DeliverableSchema);

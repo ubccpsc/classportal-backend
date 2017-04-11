@@ -39,9 +39,11 @@ function login(authcode: string, csid: string, snum: string) {
  * @returns {Promise<IUserDocument>}
  */
 function checkRegistration(csid: string, snum: string): Promise<IUserDocument> {
-  return (!csid || !snum)
-    ? Promise.reject('CSID and SNUM not supplied')
-    : User.findByCsidSnum(csid, snum);
+  if ( !csid && !snum ) {
+    return Promise.reject('CSID and SNUM not supplied');
+  } else {
+    return User.findOne({ 'csid': csid, 'snum' : snum }).exec() || Promise.reject('User does not exist');
+  }
 }
 
 /**
@@ -65,7 +67,11 @@ function load(user: IUserDocument) {
     .catch(Promise.reject);
 }
 
-export { login, logout, checkRegistration, load };
+function register(userInfo: any) {
+  return User;
+}
+
+export { login, logout, checkRegistration, load, register };
 
 /*
 
