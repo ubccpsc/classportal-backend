@@ -4,6 +4,7 @@ import * as courseCtrl from '../controllers/course.controller';
 import * as classCtrl from '../controllers/class.controller';
 import * as authCtrl from '../controllers/auth.controller';
 import * as testCtrl from '../controllers/test.controller';
+import { Course, ICourseDocument } from '../models/course.model';
 import { passport } from '../../config/auth';
 
 
@@ -15,10 +16,16 @@ const createCourse = (req: restify.Request, res: restify.Response) => {
     .catch((err: Error) => res.json(500, { 'err': err.message } ));
 };
 
-const addClassList = (req: restify.Request, res: restify.Response) => {
+const addStudentList = (req: restify.Request, res: restify.Response) => {
   return classCtrl.update(req.files['classList'], req.params.courseId)
     .then(() => res.json(200, { response: 'Successfully updated Class List on course #' + req.params.courseId }))
     .catch((err: any) => res.json(500, { err: err.errmsg }));
+};
+
+const getStudentList = (req: restify.Request, res: restify.Response) => {
+  return classCtrl.read(req.params.courseId)
+    .then((classList) => res.json(200, { response: classList }))
+    .catch((err: Error) => res.json(500, { err: err.message }));
 };
 
 const testRoute = (req: restify.Request, res: restify.Response) => {
@@ -49,4 +56,4 @@ const oauthCallback = (req: restify.Request, res: restify.Response, next: restif
     .catch((err: any) => res.json(500, { err: err.errmsg }));
 };
 
-export { pong, createCourse, logout, addClassList, testRoute, passport, getUser, loginUser };
+export { pong, createCourse, logout, addStudentList, getStudentList, testRoute, passport, getUser, loginUser };

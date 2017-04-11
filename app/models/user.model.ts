@@ -154,4 +154,4 @@ UserSchema.statics = {
 
 const User: IUserModel = <IUserModel>mongoose.model('User', UserSchema);
 
-export { IUserDocument, User };
+export { IUserDocument, User, UserSchema };

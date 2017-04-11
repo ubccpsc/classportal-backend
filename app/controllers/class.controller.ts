@@ -27,7 +27,7 @@ function update(classList: any, courseId: string) {
 
     let lastCourseNum = null;
     let course = null;
-    let newClassList = [Object];
+    let newClassList = new Array();
     let usersRepo = User;
 
     for (let key in data) {
@@ -40,8 +40,10 @@ function update(classList: any, courseId: string) {
         fname : student.FIRST,
         username : student.USERNAME,
       })
+        .then(user => {
+          newClassList.push(user);
+        })
         .catch( (err) => { logger.info('Error creating user in class controller' + err); });
-      newClassList.push(student);
     }
 
     let courseQuery = Course.findOne({ 'courseId': courseId });
@@ -49,11 +51,8 @@ function update(classList: any, courseId: string) {
     courseQuery
       .exec()
       .then( c => {
-        if (!c) {
-          c.classList = newClassList;
-          c.save();
-          return c;
-        }
+        c.classList = newClassList;
+        c.save();
         return c;
       })
         .catch((err) => logger.info('Error retrieving course information: ' + err));
@@ -68,4 +67,17 @@ function update(classList: any, courseId: string) {
   return Course.find({ 'courseId': courseId });
 }
 
-export { update }
+function read(courseId: string) {
+  let courseQuery = Course.findOne({ 'courseId': courseId })
+    .populate({ path: 'classList' }).exec();
+
+  return courseQuery.then(result => {
+    if ( result === null ) {
+      return Promise.reject(Error('Course #' + courseId + ' does not exist'));
+    } else {
+      return Promise.resolve(result);
+    }
+  });
+}
+
+export { update, read }

@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import { UserSchema } from '../models/user.model';
 
 interface ICourseDocument extends mongoose.Document {
   courseId: string;
@@ -34,7 +35,7 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     type: [String],
   },
   classList: {
-    type: [],
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
   studentsSetTeams: {
     type: Boolean,
