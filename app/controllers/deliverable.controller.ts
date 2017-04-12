@@ -6,7 +6,8 @@ import { Course, ICourseDocument } from '../models/course.model';
 import { User, IUserDocument } from '../models/user.model';
 import { logger } from '../../utils/logger';
 
-function assignDeliverablesToCourse(course: any, deliverables: [Object]) {
+// Adds DB Course reference to Deliverable object.
+function addCourseToDeliverables(course: any, deliverables: [Object]) {
   let deliverableList = new Array;
 
   if (deliverables) {
@@ -14,23 +15,31 @@ function assignDeliverablesToCourse(course: any, deliverables: [Object]) {
       Deliverable.findOrCreate(deliverables[key])
         .then(d => {
           d.courseId = course._id;
+          addDeliverablesToCourse(course, d);
           d.save();
         })
         .catch((err) => logger.info('Error assigning deliverables to ' + course.courseId + ': ' + err));
     }
   }
-  return course;
+}
+
+// Only add Deliverable to course if it is not already added.
+function addDeliverablesToCourse(course: any, deliverable: any) {
+  let isntAssigned = (course.deliverables.indexOf(deliverable._id) === -1);
+
+  if (isntAssigned) {
+    course.deliverables.push(course);
+    return course.save();
+  }
 }
 
 function create(payload: any) {
 
-  console.log(payload);
   return Course.findOne({ 'courseId' : payload.courseId })
     .exec()
     .then( c => {
       if (c) {
-        console.log(c);
-        return Promise.resolve(assignDeliverablesToCourse(c, payload.deliverables));
+        return Promise.resolve(addCourseToDeliverables(c, payload.deliverables));
       } else {
         return Promise.reject(Error('Error assigning deliverables to course' + c.courseId));
       }
