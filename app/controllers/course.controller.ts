@@ -12,13 +12,13 @@ import * as request from '../helpers/request';
  */
 function get(req: restify.Request) {
 
-  let query = Course.find({}).sort({ courseId: -1 }).select('courseId name icon').exec();
+  let query = Course.find({}, 'courseId icon name -_id').sort({ courseId: -1 }).exec();
 
   return query.then( result => {
     if ( result === null ) {
       return Promise.reject(Error('No courses found in Courses DB'));
     } else {
-      return Promise.resolve(query);
+      return Promise.resolve(result);
     }
   });
 }
