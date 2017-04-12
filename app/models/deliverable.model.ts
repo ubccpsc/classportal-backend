@@ -3,10 +3,11 @@ import { logger } from '../../utils/logger';
 
 interface IDeliverableDocument extends mongoose.Document {
   courseId: string;
-  description: string;
+  name: string;
   url: string;
-  openDate: string;
-  dueDate: string;
+  open: string;
+  close: string;
+  gradesRelease: Boolean;
 }
 
 interface IDeliverableModel extends mongoose.Model<IDeliverableDocument> {
@@ -23,10 +24,10 @@ const DeliverableSchema = new mongoose.Schema({
   url: {
     type: String,
   },
-  openDate: {
+  open: {
     type: Date,
   },
-  dueDate: {
+  close: {
     type: Date,
   },
   gradesReleased: {
