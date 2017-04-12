@@ -79,5 +79,11 @@ const addDeliverables = (req: restify.Request, res: restify.Response, next: rest
     .catch((err: any) => res.json(500, { err: err.message }));
 };
 
+const getDeliverables = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return delivCtrl.read(req.params)
+    .then((deliverables) => res.json(200, { response: deliverables }))
+    .catch((err: any) => res.json(500, { err: err.message }));
+};
+
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
- passport, getUser, loginUser, checkRegistration, registerUser, addDeliverables };
+ passport, getUser, loginUser, checkRegistration, registerUser, addDeliverables, getDeliverables };

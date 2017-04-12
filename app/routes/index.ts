@@ -18,6 +18,7 @@ const routes = (server: restify.Server) => {
   server.put('/:courseId/checkRegistration', routeHandler.checkRegistration);
   server.put('/:courseId/register', routeHandler.registerUser);
   server.post('/:courseId/admin/deliverables', routeHandler.addDeliverables);
+  server.get('/:courseId/deliverables', routeHandler.getDeliverables);
   server.get('/auth/login/github', passport.authenticate('github'));
   server.get('/auth/login/github/return', passport.authenticate('github', { failureRedirect: '/failed' }),
     ( req: restify.Request, res: any, next: restify.Next) => {

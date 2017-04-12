@@ -7,7 +7,7 @@ interface IDeliverableDocument extends mongoose.Document {
   url: string;
   open: string;
   close: string;
-  gradesRelease: Boolean;
+  gradesReleased: Boolean;
 }
 
 interface IDeliverableModel extends mongoose.Model<IDeliverableDocument> {
@@ -38,8 +38,8 @@ const DeliverableSchema = new mongoose.Schema({
 DeliverableSchema.static({
 
     /**
-  * Find a user by Github username. If does not exist, then user created in DB.
-  * @param {string} github username
+  * Find a Deliverable by object query. If doesn't exist, creates it based on object query and returns it.
+  * @param {object} search parameters
   * @returns {Promise<IDeliverableDocument>} Returns a Promise of the user.
   */
   findOrCreate: (query: Object): Promise<IDeliverableDocument> => {
@@ -48,13 +48,14 @@ DeliverableSchema.static({
       .exec()
       .then((deliverable) => {
         if (deliverable) {
-          Promise.resolve(deliverable);
+          return deliverable;
         } else {
-          Deliverable.create(query)
-            .then((q) => { return q.save(); })
+          return Deliverable.create(query)
+            .then((q) => {
+              return q.save();
+            })
             .catch((err) => { logger.info(err); });
         }
-        return Promise.resolve(deliverable);
       });
   },
 });
