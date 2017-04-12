@@ -9,6 +9,7 @@ interface ICourseDocument extends mongoose.Document {
   customData: any;
   classList: Object[];
   deliverables: Object[];
+  grades: Object[];
   admins: string[];
 }
 
@@ -46,6 +47,9 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   },
   deliverables: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }],
+  },
+  grades: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Grade' }],
   },
   studentsSetTeams: {
     type: Boolean,

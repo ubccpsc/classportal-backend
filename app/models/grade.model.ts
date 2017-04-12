@@ -1,4 +1,6 @@
 import * as mongoose from 'mongoose';
+import { logger } from '../../utils/logger';
+
 
 interface IGradeDocument extends mongoose.Document {
   courseId: string;
@@ -8,12 +10,12 @@ interface IGradeDocument extends mongoose.Document {
 }
 
 interface IGradeModel extends mongoose.Model<IGradeDocument> {
+  findOrCreate(query: Object): Promise<IGradeDocument>;
 }
 
 const GradeSchema = new mongoose.Schema({
   courseId: {
-    type: String,
-    required: true,
+    type: mongoose.Schema.Types.ObjectId, ref: 'Course',
   },
   deliverableId: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }],
@@ -24,6 +26,29 @@ const GradeSchema = new mongoose.Schema({
   },
   gradingScheme: {
     type: [Object],
+  },
+});
+
+GradeSchema.static({
+
+    /**
+  * Find a Deliverable by object query. If doesn't exist, creates it based on object query and returns it.
+  * @param {object} search parameters
+  * @returns {Promise<IGradeDocument>} Returns a Promise of the user.
+  */
+  findOrCreate: (query: Object): Promise<IGradeDocument> => {
+    return Grade.findOne(query).exec()
+      .then((grade) => {
+        if (grade) {
+          return grade;
+        } else {
+          return Grade.create(query)
+            .then((grade) => {
+              return grade.save();
+            })
+            .catch((err) => { logger.info(err); });
+        }
+      });
   },
 });
 

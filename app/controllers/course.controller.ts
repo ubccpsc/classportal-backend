@@ -11,7 +11,7 @@ import * as request from '../helpers/request';
  * @return Course[] All courses in DB
  */
 function get(req: restify.Request) {
-
+  logger.info('get() in Courses Controller');
   let query = Course.find({}, 'courseId icon name -_id').sort({ courseId: -1 }).exec();
 
   return query.then( result => {
@@ -28,7 +28,7 @@ function get(req: restify.Request) {
  */
 
 function create(course: ICourseDocument) {
-
+  logger.info('create() in Courses Controller');
   let query = Course.findOne({ 'courseId': course.courseId }).exec();
 
   return query.then( result => {
@@ -44,6 +44,7 @@ function create(course: ICourseDocument) {
  * Create a team
  */
 function update(req: restify.Request, res: restify.Response, next: restify.Next) {
+  logger.info('update() in Courses Controller');
   res.json(200, 'update team');
   return next();
 }
@@ -52,6 +53,7 @@ function update(req: restify.Request, res: restify.Response, next: restify.Next)
  * Create a team
  */
 function remove(req: restify.Request, res: restify.Response, next: restify.Next) {
+  logger.info('remove() in Courses Controller');
   res.json(200, 'remove team');
   return next();
 }

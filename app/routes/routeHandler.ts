@@ -4,6 +4,7 @@ import * as courseCtrl from '../controllers/course.controller';
 import * as classCtrl from '../controllers/class.controller';
 import * as authCtrl from '../controllers/auth.controller';
 import * as delivCtrl from '../controllers/deliverable.controller';
+import * as gradeCtrl from '../controllers/grade.controller';
 import * as testCtrl from '../controllers/test.controller';
 import { Course, ICourseDocument } from '../models/course.model';
 import { passport } from '../../config/auth';
@@ -85,5 +86,18 @@ const getDeliverables = (req: restify.Request, res: restify.Response, next: rest
     .catch((err: any) => res.json(500, { err: err.message }));
 };
 
+const addGrades = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return gradeCtrl.create(req.params)
+    .then((deliverables) => res.json(200, { response: deliverables }))
+    .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const getGrades = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return gradeCtrl.read(req.params)
+    .then((deliverables) => res.json(200, { response: deliverables }))
+    .catch((err: any) => res.json(500, { err: err.message }));
+};
+
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
- passport, getUser, loginUser, checkRegistration, registerUser, addDeliverables, getDeliverables };
+ passport, getUser, loginUser, checkRegistration, registerUser, addDeliverables, getDeliverables,
+ getGrades, addGrades };

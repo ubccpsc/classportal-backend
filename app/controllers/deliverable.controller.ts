@@ -8,6 +8,7 @@ import { logger } from '../../utils/logger';
 
 // Retrives and updates Deliverables object.
 function updateDeliverables(course: any, deliverables: any) {
+  logger.info('updateDeliverables() in Deliverable Controller');
   let deliverableList = new Array;
 
   if (deliverables && course) {
@@ -34,6 +35,7 @@ function updateDeliverables(course: any, deliverables: any) {
 
 // Only add Deliverable to course if it is not already added.
 function addDeliverablesToCourse(course: any, deliverable: any) {
+  logger.info('addDeliverablesToCourse() in Deliverable Controller');
   let isntAssigned = (course.deliverables.indexOf(deliverable._id) === -1);
   if (isntAssigned) {
     course.deliverables.push(deliverable._id);
@@ -42,6 +44,7 @@ function addDeliverablesToCourse(course: any, deliverable: any) {
 }
 
 function create(payload: any) {
+  logger.info('create() in Deliverable Controller');
   return Course.findOne({ 'courseId' : payload.courseId })
     .exec()
     .then( c => {
@@ -55,7 +58,7 @@ function create(payload: any) {
 }
 
 function read(payload: any) {
-
+  logger.info('read() in Deliverable Controller');
   let searchParams = { courseId : payload.courseId };
   let populateParams = { path: 'deliverables', select: 'id name url open close isReleased' };
 
