@@ -4,9 +4,9 @@ import { logger } from '../../utils/logger';
 
 interface IGradeDocument extends mongoose.Document {
   courseId: string;
+  userId: string;
   deliverableId: string;
-  username: string;
-  gradingScheme: any[];
+  details: Object;
 }
 
 interface IGradeModel extends mongoose.Model<IGradeDocument> {
@@ -16,22 +16,24 @@ interface IGradeModel extends mongoose.Model<IGradeDocument> {
 const GradeSchema = new mongoose.Schema({
   courseId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
-  },
-  deliverableId: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }],
-  },
-  username: {
-    type: String,
     required: true,
   },
-  gradingScheme: {
-    type: [Object],
+  deliverableId: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' ,
+    required: true,
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'User' ,
+    required: true,
+  },
+  details: {
+    type: Object,
   },
 });
 
 GradeSchema.static({
 
-    /**
+  /**
   * Find a Deliverable by object query. If doesn't exist, creates it based on object query and returns it.
   * @param {object} search parameters
   * @returns {Promise<IGradeDocument>} Returns a Promise of the user.

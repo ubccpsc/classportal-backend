@@ -88,7 +88,7 @@ const getDeliverables = (req: restify.Request, res: restify.Response, next: rest
 
 const addGrades = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return gradeCtrl.create(req.params)
-    .then((deliverables) => res.json(200, { response: deliverables }))
+    .then((deliverables: any) => res.json(200, { response: deliverables }))
     .catch((err: any) => res.json(500, { err: err.message }));
 };
 

@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { UserSchema } from '../models/user.model';
+import { logger } from '../../utils/logger';
 
 interface ICourseDocument extends mongoose.Document {
   courseId: string;
@@ -16,6 +17,7 @@ interface ICourseDocument extends mongoose.Document {
 interface ICourseModel extends mongoose.Model<ICourseDocument> {
   findByPlugin(customData: string): Promise<ICourseDocument>;
   findByCourseId(courseId: string): Promise<ICourseDocument>;
+  findUsersInCourse(courseId: string): Promise<ICourseDocument[]>;
 }
 
 const CourseSchema: mongoose.Schema = new mongoose.Schema({
@@ -61,6 +63,30 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     type: [String],
   },
 });
+
+CourseSchema.static({
+
+    /**
+  * Gets a list of Users in the course.classList object.
+  * @param {string} search parameters
+  * @returns {Promise<IUserDocument>} Returns a Promise of the user.
+  */
+  findUsersInCourse: (courseId: string): Promise<ICourseDocument> => {
+    return Course
+      .findOne({ 'courseId' : courseId })
+      .populate('classList')
+      .exec()
+      .then((course) => {
+        if (course) {
+          return course;
+        } else {
+          logger.info('findUsersInCourse(): Course #' + courseId + ' not found.');
+          return Error('findUsersInCourse(): Course #' + courseId + ' not found.');
+        }
+      });
+  },
+});
+
 
 const Course: ICourseModel = <ICourseModel>mongoose.model('Course', CourseSchema);
 
