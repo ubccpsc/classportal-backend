@@ -5,25 +5,46 @@ import { Course, ICourseDocument } from '../models/course.model';
 import { Deliverable, IDeliverableDocument } from '../models/deliverable.model';
 import { User, IUserDocument } from '../models/user.model';
 
-
+let payload: any;
 
 function updateCourseGrades(courseId: string) {
   logger.info('upgradeCourseGrades() in Grades Controller');
 
-  let courseQuery = Course.findOne({ 'courseId': courseId })
+  return Course.findOne({ 'courseId': courseId }).populate('classList deliverables')
+    .exec()
     .then(course => {
       if (course) {
-        return course;
-      } else {
-        return Error('Course does not exist');
+        getDeliverables(course);
       }
+      return Error('No course found');
+    })
+    .then( c => {
+      return c;
     });
 }
 
 // 2) Take deliverable names and courseId to get Deliverable Objects List
 
 function getDeliverables(course: ICourseDocument) {
-  return Promise.resolve(course.deliverables);
+  let deliverables = new Array();
+  console.log('eh + ' + course.deliverables);
+  for ( let i = 0; i < course.deliverables.length; i++ ) {
+    console.log(course.deliverables[i]);
+  }
+  return Course.find( { 'courseId' : 555 } );
+}
+
+// 1) Query course
+function getCourse(courseId: string) {
+  return Course.findOne( { 'courseId' : courseId })
+    .populate('deliverables classList')
+    .exec()
+    .then( course => {
+      getDeliverables(course);
+    })
+    .catch( err => {
+      logger.info('Error in createOrUpdateGrades() ' + err);
+    });
 }
 
 function createOrUpdateGrades(grades: [any], courseId: string) {
@@ -31,16 +52,7 @@ function createOrUpdateGrades(grades: [any], courseId: string) {
   let updatedGrades = new Array();
 
 
-  // 1) Query course
-  return Course.findOne( { 'courseId' : courseId })
-    .populate('deliverables classList')
-    .exec()
-    .then( course => {
-      return getDeliverables(course);
-    })
-    .catch( err => {
-    	logger.info('Error in createOrUpdateGrades()');
-    });
+
 
 
   // let loop = function() {
@@ -78,15 +90,32 @@ function createOrUpdateGrades(grades: [any], courseId: string) {
   // };
 
 
-  // Promise.all([COURSE, loop]).then(updateGrades);
-
-
   // return COURSE;
 }
 
+
+  // Promise.all([COURSE, loop]).then(updateGrades);
+let promiseA = function (test: string) {
+  console.log('promise 1 ' + test);
+  return test;
+};
+
+let promiseB = function (test2: string) {
+  return Promise.resolve('promise 2 ' + test2);
+};
+
+let promiseC = function (test3: string) {
+  console.log('promise 3 ' + test3);
+  return Promise.resolve(console.log('done'));
+};
+
 function create(payload: any) {
   logger.info('create() in Grades Controller');
-  return createOrUpdateGrades(payload.grades, payload.courseId);
+  // payload = payload;
+  updateCourseGrades(payload.courseId);
+  return Course.find( {} );
+  // console.log(payload);
+  // return createOrUpdateGrades(payload.grades, payload.courseId);
 }
 
 function read(payload: any) {
