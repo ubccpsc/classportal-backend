@@ -1,121 +1,48 @@
 import * as restify from 'restify';
 import { logger } from '../../utils/logger';
-import { Grade, IGradeDocument } from '../models/grade.model';
 import { Course, ICourseDocument } from '../models/course.model';
 import { Deliverable, IDeliverableDocument } from '../models/deliverable.model';
 import { User, IUserDocument } from '../models/user.model';
-
-let payload: any;
-
-function updateCourseGrades(courseId: string) {
-  logger.info('upgradeCourseGrades() in Grades Controller');
-
-  return Course.findOne({ 'courseId': courseId }).populate('classList deliverables')
-    .exec()
-    .then(course => {
-      if (course) {
-        getDeliverables(course);
-      }
-      return Error('No course found');
-    })
-    .then( c => {
-      return c;
-    });
-}
-
-// 2) Take deliverable names and courseId to get Deliverable Objects List
-
-function getDeliverables(course: ICourseDocument) {
-  let deliverables = new Array();
-  console.log('eh + ' + course.deliverables);
-  for ( let i = 0; i < course.deliverables.length; i++ ) {
-    console.log(course.deliverables[i]);
-  }
-  return Course.find( { 'courseId' : 555 } );
-}
-
-// 1) Query course
-function getCourse(courseId: string) {
-  return Course.findOne( { 'courseId' : courseId })
-    .populate('deliverables classList')
-    .exec()
-    .then( course => {
-      getDeliverables(course);
-    })
-    .catch( err => {
-      logger.info('Error in createOrUpdateGrades() ' + err);
-    });
-}
-
-function createOrUpdateGrades(grades: [any], courseId: string) {
-
-  let updatedGrades = new Array();
-
-
-
-
-
-  // let loop = function() {
-  //   for (let key in grades) {
-  //     let newGrade = Object();
-
-  //     let assignCourseIdToGrade = Promise.resolve(COURSE.then(c => {
-  //       logger.info('assignCourseIdToGrade() in Grades Controller');
-  //       newGrade.courseId = c.courseId;
-  //       return c;
-  //     }));
-
-  //     let assignDeliverableToGrade = Deliverable.findOne( { 'name' : grades[key].deliverable }).exec()
-  //     .then( d => {
-  //       logger.info('assignDeliverableToGrade in Grades Controller');
-  //       newGrade.deliverableId = d._id;
-  //       return d;
-  //     });
-
-  //     let pushNewGrade = Promise.resolve(updatedGrades.push(newGrade));
-
-  //     Promise.all([assignCourseIdToGrade, assignDeliverableToGrade, pushNewGrade]);
-  //     console.log(newGrade);
-  //     console.log(JSON.stringify(updatedGrades));
-  //   }
-
-  //   return Promise.resolve(updatedGrades);
-  // };
-
-
-  // let updateGrades = function() {
-  //   for ( let key in updatedGrades ) {
-  //     Grade.create(updatedGrades[key]);
-  //   }
-  // };
-
-
-  // return COURSE;
-}
-
-
-  // Promise.all([COURSE, loop]).then(updateGrades);
-let promiseA = function (test: string) {
-  console.log('promise 1 ' + test);
-  return test;
-};
-
-let promiseB = function (test2: string) {
-  return Promise.resolve('promise 2 ' + test2);
-};
-
-let promiseC = function (test3: string) {
-  console.log('promise 3 ' + test3);
-  return Promise.resolve(console.log('done'));
-};
+import { Grade, IGradeDocument } from '../models/grade.model';
 
 function create(payload: any) {
   logger.info('create() in Grades Controller');
-  // payload = payload;
-  updateCourseGrades(payload.courseId);
-  return Course.find( {} );
-  // console.log(payload);
-  // return createOrUpdateGrades(payload.grades, payload.courseId);
+  let course: ICourseDocument;
+  let gradesArray = new Array();
+  let getCourse = Course.findOne({ courseId : payload.courseId }).populate('courses').exec();
+
+  let addGradesToCourse = function(newGrades: [Object]) {
+    return getCourse.then( c => {
+      return c;
+    })
+    .then( c => {
+      console.log('one' + c);
+      console.log('two' + newGrades);
+
+      for (let i = 0; i < newGrades.length; i++) {
+        let isInArray = c.grades.some( function(grade: IGradeDocument) {
+          console.log(c.grades[i] === grade._id);
+          console.log(c.grades[i]);
+          newGrades[i] === grade._id ? c.grades.push(grade) : null;
+          return c.grades[i] === grade._id;
+        });
+      }
+    });
+  };
+
+  let findOrCreateGrades = Promise.all(payload.grades.map( (g: IGradeDocument) => {
+    return Grade.createOrUpdate(g)
+      .then( newOrUpdatedGrade => {
+        return newOrUpdatedGrade;
+      })
+      .catch(err => logger.info(err));
+  }))
+  .then( (newGrades) => {
+    console.log(newGrades);
+    addGradesToCourse(newGrades);
+  })
+  .catch(err => logger.info(err));
+  return Course.findOne({ courseId : 710 });
 }
 
 function read(payload: any) {

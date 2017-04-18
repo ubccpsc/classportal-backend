@@ -10,7 +10,7 @@ interface ICourseDocument extends mongoose.Document {
   customData: any;
   classList: Object[];
   deliverables: Object[];
-  grades: Object[];
+  grades: [Object];
   admins: string[];
 }
 
@@ -18,6 +18,7 @@ interface ICourseModel extends mongoose.Model<ICourseDocument> {
   findByPlugin(customData: string): Promise<ICourseDocument>;
   findByCourseId(courseId: string): Promise<ICourseDocument>;
   findUsersInCourse(courseId: string): Promise<ICourseDocument[]>;
+  createOrUpdate(course: ICourseDocument): Promise<ICourseDocument>;
 }
 
 const CourseSchema: mongoose.Schema = new mongoose.Schema({
@@ -85,7 +86,29 @@ CourseSchema.static({
         }
       });
   },
+
+  /**
+  * Finds a Grade and updates it, or creates the Grade if it does not exist.
+  * @param {ICourseDocument} search parameters
+  * @returns {Promise<ICourseDocument>} Returns a Promise of the user.
+  */
+  createOrUpdate: (query: ICourseDocument): Promise<ICourseDocument> => {
+    return Course.findOne(query).exec()
+      .then((course) => {
+        if (course) {
+          course = query;
+          return course.save();
+        } else {
+          return Course.create(query)
+            .then((course) => {
+              return course.save();
+            })
+            .catch((err) => { logger.info(err); });
+        }
+      });
+  },
 });
+
 
 
 const Course: ICourseModel = <ICourseModel>mongoose.model('Course', CourseSchema);
