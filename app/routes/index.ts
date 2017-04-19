@@ -31,19 +31,3 @@ const routes = (server: restify.Server) => {
 };
 
 export { routes };
-
-/*
-// Accessible by admins only
-server.get('/teams', auth.admin, teamCtrl.get);
-server.get('/teams/:id', auth.admin, teamCtrl.get);
-server.post('/teams/:id', auth.admin, teamCtrl.create);
-server.post('/teams/:id', auth.admin, teamCtrl.update);
-server.del('/teams/:id', auth.admin, teamCtrl.remove);
-server.get('/grades', auth.admin, gradeCtrl.get);
-server.get('/grades/:id', auth.admin, gradeCtrl.get);
-server.post('/grades', auth.admin, gradeCtrl.update);
-server.post('/grades/:id', auth.admin, gradeCtrl.update);
-
-// Prof only
-server.post('/class', auth.prof, classCtrl.update);
-*/

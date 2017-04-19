@@ -11,13 +11,12 @@ function create(payload: any) {
   let gradesArray = new Array();
   let getCourse = Course.findOne({ courseId : payload.courseId }).populate('grades classList').exec();
 
+  // Adds Grades to Course object if they do not exist without deleting previous array contents.
   let addGradesToCourse = function(newGrades: [any]) {
     return getCourse.then( c => {
       return c;
     })
     .then( c => {
-      console.log('one' + c);
-      console.log('two' + newGrades);
       for (let key in newGrades) {
         Course.findOne({ 'courseId' : payload.courseId }).populate({
           path: 'courses classList',
@@ -33,10 +32,7 @@ function create(payload: any) {
           }
           return c.save();
         })
-        .then( c => {
-          return c.save();
-        });
-        console.log('this is the new object' + c);
+        .catch(err => logger.info(err));
       }
       return c.save();
     });
@@ -50,11 +46,10 @@ function create(payload: any) {
       .catch(err => logger.info(err));
   }))
   .then( (newGrades) => {
-    console.log('1 ' + newGrades);
     addGradesToCourse(newGrades);
   })
   .catch(err => logger.info(err));
-  return Course.findOne({ courseId : payload.courseId });
+  return Course.findOne({ courseId : payload.courseId }).populate('grades').exec();
 }
 
 function read(payload: any) {
