@@ -7,6 +7,7 @@ import * as delivCtrl from '../controllers/deliverable.controller';
 import * as gradeCtrl from '../controllers/grade.controller';
 import * as testCtrl from '../controllers/test.controller';
 import { Course, ICourseDocument } from '../models/course.model';
+import { Grade, IGradeDocument } from '../models/grade.model';
 import { passport } from '../../config/auth';
 
 
@@ -92,12 +93,18 @@ const addGrades = (req: restify.Request, res: restify.Response, next: restify.Ne
     .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-const getGrades = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return gradeCtrl.read(req.params)
-    .then((deliverables) => res.json(200, { response: deliverables }))
+const getGradesAdmin = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return gradeCtrl.getAllGradesByCourse(req.params.courseId)
+    .then((course: ICourseDocument) => res.json(200, { response: course.grades }))
+    .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const getGradesStudent = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return gradeCtrl.getReleasedGradesByCourse(req)
+    .then((grades: IGradeDocument[]) => res.json(200, { response: grades }))
     .catch((err: any) => res.json(500, { err: err.message }));
 };
 
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
  passport, getUser, loginUser, checkRegistration, registerUser, addDeliverables, getDeliverables,
- getGrades, addGrades };
+ getGradesAdmin, getGradesStudent, addGrades };

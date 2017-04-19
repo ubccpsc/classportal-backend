@@ -52,10 +52,47 @@ function create(payload: any) {
   return Course.findOne({ courseId : payload.courseId }).populate('grades').exec();
 }
 
-function read(payload: any) {
-  logger.info('get grades');
-  console.log(payload.grades);
-  return Promise.resolve('hello');
+function getAllGradesByCourse(courseId: string) {
+  logger.info('getGradesAdmin()');
+  return Course.findOne({ 'courseId' : courseId }).populate('grades').exec();
+}
+
+function getReleasedGradesByCourse(req: any) {
+  logger.info('getReleasedGradesBycourse()');
+  let gradesInCourse = Course.findOne({ 'courseId' : req.params.courseId }).populate('grades').exec();
+
+  let getReleasedDeliverables = Deliverable.find({ gradesReleased: true })
+  .exec()
+  .then( deliverables => {
+    let deliverableNames = new Array();
+    console.log('this is them ' + deliverables);
+    for ( let key in deliverables ) {
+      console.log(deliverables[key]);
+      if (deliverables[key].gradesReleased === true) {
+        console.log(deliverables[key].name);
+        deliverableNames.push(deliverables[key].name);
+      }
+    }
+    return deliverableNames;
+  })
+  .catch(err => logger.info(err));
+
+  return getReleasedDeliverables.then( (deliverableNames: IDeliverableDocument[]) => {
+    let snum = req.user.snum;
+    return Grade.find({
+      'snum' : snum,
+      'deliv' : { $in: deliverableNames },
+    }).exec();
+  });
+
+  // let getReleasedGrades = getReleasedDeliverables
+  //   .then( deliverableNames => {
+  //     gradesInCourse.then( c => {
+  //       for (let key in c.grades) {
+  //         let isReleased = deliverableNames.some
+  //       }
+  //     })
+  //   })
 }
 
 function update(req: restify.Request, res: restify.Response, next: restify.Next) {
@@ -64,4 +101,5 @@ function update(req: restify.Request, res: restify.Response, next: restify.Next)
   return next();
 }
 
-export { update, read, create }
+
+export { update, getAllGradesByCourse, getReleasedGradesByCourse, create }

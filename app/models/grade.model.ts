@@ -18,11 +18,9 @@ const GradeSchema = new mongoose.Schema({
   snum: {
     type: String,
     required: true,
-    unique: true,
   },
   deliv: {
     required: true,
-    unique: true,
     type: String,
   },
   details: {
@@ -61,7 +59,10 @@ GradeSchema.static({
   * @returns {Promise<IGradeDocument>} Returns a Promise of the user.
   */
   createOrUpdate: (query: IGradeDocument): Promise<IGradeDocument> => {
-    return Grade.findOne({ snum: query.snum })
+    return Grade.findOne({
+      snum: query.snum,
+      deliv: query.deliv,
+    })
       .then((grade) => {
         if (grade) {
           grade.details = query.details;
