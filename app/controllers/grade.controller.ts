@@ -9,24 +9,36 @@ function create(payload: any) {
   logger.info('create() in Grades Controller');
   let course: ICourseDocument;
   let gradesArray = new Array();
-  let getCourse = Course.findOne({ courseId : payload.courseId }).populate('courses').exec();
+  let getCourse = Course.findOne({ courseId : payload.courseId }).populate('grades classList').exec();
 
-  let addGradesToCourse = function(newGrades: [Object]) {
+  let addGradesToCourse = function(newGrades: [any]) {
     return getCourse.then( c => {
       return c;
     })
     .then( c => {
       console.log('one' + c);
       console.log('two' + newGrades);
-
-      for (let i = 0; i < newGrades.length; i++) {
-        let isInArray = c.grades.some( function(grade: IGradeDocument) {
-          console.log(c.grades[i] === grade._id);
-          console.log(c.grades[i]);
-          newGrades[i] === grade._id ? c.grades.push(grade) : null;
-          return c.grades[i] === grade._id;
+      for (let key in newGrades) {
+        Course.findOne({ 'courseId' : payload.courseId }).populate({
+          path: 'courses classList',
+          match: { _id : newGrades[key]._id },
+        })
+        .exec()
+        .then( c => {
+          let isInArray = c.grades.some( function(grade: IGradeDocument) {
+            return grade._id !== newGrades[key]._id;
+          });
+          if (!isInArray) {
+            c.grades.push(newGrades[key]);
+          }
+          return c.save();
+        })
+        .then( c => {
+          return c.save();
         });
+        console.log('this is the new object' + c);
       }
+      return c.save();
     });
   };
 
@@ -38,11 +50,11 @@ function create(payload: any) {
       .catch(err => logger.info(err));
   }))
   .then( (newGrades) => {
-    console.log(newGrades);
+    console.log('1 ' + newGrades);
     addGradesToCourse(newGrades);
   })
   .catch(err => logger.info(err));
-  return Course.findOne({ courseId : 710 });
+  return Course.findOne({ courseId : payload.courseId });
 }
 
 function read(payload: any) {
