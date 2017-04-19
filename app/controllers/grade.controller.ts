@@ -7,7 +7,6 @@ import { Grade, IGradeDocument } from '../models/grade.model';
 
 function create(payload: any) {
   logger.info('create() in Grades Controller');
-  let course: ICourseDocument;
   let gradesArray = new Array();
   let getCourse = Course.findOne({ courseId : payload.courseId }).populate('grades classList').exec();
 
@@ -65,11 +64,8 @@ function getReleasedGradesByCourse(req: any) {
   .exec()
   .then( deliverables => {
     let deliverableNames = new Array();
-    console.log('this is them ' + deliverables);
     for ( let key in deliverables ) {
-      console.log(deliverables[key]);
       if (deliverables[key].gradesReleased === true) {
-        console.log(deliverables[key].name);
         deliverableNames.push(deliverables[key].name);
       }
     }
@@ -84,15 +80,6 @@ function getReleasedGradesByCourse(req: any) {
       'deliv' : { $in: deliverableNames },
     }).exec();
   });
-
-  // let getReleasedGrades = getReleasedDeliverables
-  //   .then( deliverableNames => {
-  //     gradesInCourse.then( c => {
-  //       for (let key in c.grades) {
-  //         let isReleased = deliverableNames.some
-  //       }
-  //     })
-  //   })
 }
 
 function update(req: restify.Request, res: restify.Response, next: restify.Next) {
