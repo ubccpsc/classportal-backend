@@ -31,7 +31,7 @@ passport.deserializeUser(function(obj: any, cb: any) {
   console.log('Deserializing object : ' + JSON.stringify(obj, null, 2));
   User.findById(obj)
     .exec()
-    .then((u) => { cb(null, u); })
+    .then((u) => { cb(null, u.username); })
     .catch((err) => { logger.info(err); });
 });
 

@@ -16,5 +16,18 @@ function consoleLogRequest(req: restify.Request) {
   return Promise.resolve('test').catch((err) => { console.log(err); } );
 }
 
-export { consoleLogRequest };
+/**
+ * Gets the logged-in Username that has been deserialized in Passport
+ * @param {restify.Request}
+ * @param {restify.Response}
+ * @param {restify.Next}
+ * @returns {string} the logged in username
+ */
+function getUser(req: any, res: any, next: any) {
+  return Promise.resolve(res.json(200, { user: req.user }))
+    .catch((err) => { logger.info('Error loading user info: ' + err); });
+}
+
+
+export { consoleLogRequest, getUser };
 

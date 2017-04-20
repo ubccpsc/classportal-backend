@@ -67,98 +67,47 @@ function load(user: IUserDocument) {
     .catch(Promise.reject);
 }
 
-function register(userInfo: any) {
-  return User;
-}
-
-export { login, logout, checkRegistration, load, register };
-
-/*
-
 /**
- * Search for a user by username, and append it to req.params if successful.
- * @returns {IUserDocument}
- /
-function load(req: restify.Request, res: restify.Response, next: restify.Next) {
-  // check for supplied username
-  if (req.params.username) {
-    User.findByUsername(req.params.username)
-      .then((user: IUserDocument) => {
-        req.params.user = user;
-        return next();
-      })
-      .catch((err: any) => next(err));
-  } else {
-    const err = 'Err: Could not load user';
-    logger.info(err);
-    res.json(500, err);
-    return next(err);
+ * Register a Github ID for a course
+ * @return {IUserDocument} All courses in DB
+ */
+function validateRegistration(req: any, res: any, next: restify.Next) {
+
+  let query = User.findOne({ csid : req.csid, snum : req.snum }).exec();
+
+  function isAlreadyRegistered(user: IUserDocument) {
+    if (user.username !== '') {
+      return true;
+    }
+    return false;
   }
-}
 
-/**
- * Get a user.
- * @returns {IUserDocument}
- /
-function get(req: restify.Request, res: restify.Response, next: restify.Next) {
-  res.json(200, req.params.user);
-  return next();
-}
-
-/**
- * Create a new user from a username, and return it.
- * @property {string} req.params.username - the GitHub username of the user
- * @returns {IUserDocument}
- /
-function create(req: restify.Request, res: restify.Response, next: restify.Next) {
-  const user: IUserDocument = new User({
-    csid: req.params.csid,
-    snum: req.params.snum,
-    lastname: req.params.lastname,
-    firstname: req.params.firstname,
+  return query.then( user => {
+    if (user === null) {
+      return Promise.reject(Error('Unable to validate CSID and SNUM'));
+    } else if (isAlreadyRegistered(user)) {
+      return Promise.reject(Error('User is already registered'));
+    } else {
+      return res.redirect('/auth/github/register', next);
+    }
   });
-
-  return user
-    .save()
-    .then((savedUser: IUserDocument) => {
-      res.json(200, savedUser);
-      return next();
-    })
-    .catch((err: any) => next(err));
 }
 
 /**
- * Update an existing user, and return it.
- * @property {string} req.params.original - the original username
- * @property {string} req.params.new - the new username
- * @returns {IUserDocument}
- /
-function update(req: restify.Request, res: restify.Response, next: restify.Next) {
-  const user = req.params.user;
-  user.username = req.params.newUsername;
+ * Register a Github ID for a course
+ * @return {IUserDocument} All courses in DB
+ */
+function addGithubUsername(req: any) {
+  logger.info('addGithubUsername() in Courses Controller');
+  let query = User.find({}).exec();
 
-  return user
-    .save()
-    .then((updatedUser: IUserDocument) => {
-      res.json(200, updatedUser);
-      return next();
-    })
-    .catch((err: any) => next(err));
+  return query.then( result => {
+    if ( result === null ) {
+      return Promise.reject(Error('No courses found in Courses DB'));
+    } else {
+      return Promise.resolve(result);
+    }
+  });
 }
 
-/**
- * Delete a user, and return it. (??)
- * @returns {IUserDocument}
- /
-function remove(req: restify.Request, res: restify.Response, next: restify.Next) {
-  const user = req.params.user;
-
-  return user
-    .remove()
-    .then((deletedUser: IUserDocument) => {
-      res.json(200, deletedUser);
-      return next();
-    })
-    .catch((err: any) => next(err));
-}
-*/
+export { login, logout, checkRegistration, load, validateRegistration, addGithubUsername };

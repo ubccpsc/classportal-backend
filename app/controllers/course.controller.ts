@@ -49,6 +49,9 @@ function update(req: restify.Request, res: restify.Response, next: restify.Next)
   return next();
 }
 
+
+
+
 /**
  * Create a team
  */

@@ -9,10 +9,9 @@ const routes = (server: restify.Server) => {
   server.get('/ping', routeHandler.pong);
   server.get('/courses', routeHandler.getCourseList);
   server.get('/test', routeHandler.testRoute);
-  server.put('/:courseId/checkRegistration', routeHandler.checkRegistration);
-  server.put('/:courseId/register', routeHandler.registerUser);
   server.get('/:courseId/deliverables', routeHandler.getDeliverables);
   server.get('/:courseId/grades', routeHandler.getGradesStudent);
+  server.put('/register', routeHandler.validateRegistration);
   // OAuth routes by logged-in users only
   server.post('/logout', auth.loadUser, routeHandler.logout);
   server.get('/auth/login/github', passport.authenticate('github'));
@@ -20,6 +19,7 @@ const routes = (server: restify.Server) => {
     ( req: restify.Request, res: any, next: restify.Next) => {
       res.redirect('/', next);
     });
+  server.get('/auth/github/register', passport.authenticate('github'), routeHandler.addGithubUsername);
   // Authentication routes
   server.put('admin/:courseId', routeHandler.createCourse);
   server.get(':courseId/admin/students', routeHandler.getStudentList);

@@ -8,6 +8,7 @@ import * as gradeCtrl from '../controllers/grade.controller';
 import * as testCtrl from '../controllers/test.controller';
 import { Course, ICourseDocument } from '../models/course.model';
 import { Grade, IGradeDocument } from '../models/grade.model';
+import { User, IUserDocument } from '../models/user.model';
 import { passport } from '../../config/auth';
 
 
@@ -50,22 +51,7 @@ const logout = (req: restify.Request, res: restify.Response, next: restify.Next)
 };
 
 const getUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return authCtrl.getUser(req, res, next)
-    .catch((err: any) => res.json(500, { err: err.errmsg }));
-};
-
-const loginUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return authCtrl.loginUser()
-    .catch((err: any) => res.json(500, { err: err.errmsg }));
-};
-
-const checkRegistration = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return authCtrl.loginUser()
-    .catch((err: any) => res.json(500, { err: err.errmsg }));
-};
-
-const registerUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return authCtrl.loginUser()
+  return testCtrl.getUser(req, res, next)
     .catch((err: any) => res.json(500, { err: err.errmsg }));
 };
 
@@ -105,6 +91,18 @@ const getGradesStudent = (req: restify.Request, res: restify.Response, next: res
     .catch((err: any) => res.json(500, { err: err.message }));
 };
 
+const validateRegistration = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return userCtrl.validateRegistration(req, res, next)
+   .then((user: IUserDocument[]) => res.json(200, { response: user }))
+   .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const addGithubUsername = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return userCtrl.addGithubUsername(req)
+   .then((user: IUserDocument[]) => res.json(200, { response: user }))
+   .catch((err: any) => res.json(500, { err: err.message }));
+};
+
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
- passport, getUser, loginUser, checkRegistration, registerUser, addDeliverables, getDeliverables,
- getGradesAdmin, getGradesStudent, addGrades };
+ passport, getUser, validateRegistration, addGithubUsername,
+addDeliverables, getDeliverables, getGradesAdmin, getGradesStudent, addGrades };
