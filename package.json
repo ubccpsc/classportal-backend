@@ -38,6 +38,7 @@
     "istanbul": "^0.4.5",
     "mocha": "^3.2.0",
     "mocha-typescript": "^1.0.23",
+    "passport-mock": "0.0.3",
     "retyped-chai-http-tsd-ambient": "0.0.0-0",
     "sinon": "^1.17.7",
     "supertest": "^3.0.0",

@@ -21,12 +21,12 @@ const routes = (server: restify.Server) => {
       res.redirect('/', next);
     });
   // Authentication routes
-  server.put('admin/:courseId', routeHandler.createCourse);
-  server.get(':courseId/admin/students', routeHandler.getStudentList);
-  server.post('/:courseId/admin/students', routeHandler.addStudentList);
-  server.post('/:courseId/admin/grades', routeHandler.addGrades);
-  server.get('/:courseId/admin/grades', routeHandler.getGradesAdmin);
-  server.post('/:courseId/admin/deliverables', routeHandler.addDeliverables);
+  server.put('admin/:courseId', adminAuth, routeHandler.createCourse);
+  server.get(':courseId/admin/students', adminAuth, routeHandler.getStudentList);
+  server.post('/:courseId/admin/students', adminAuth, routeHandler.addStudentList);
+  server.post('/:courseId/admin/grades', adminAuth, routeHandler.addGrades);
+  server.get('/:courseId/admin/grades', adminAuth, routeHandler.getGradesAdmin);
+  server.post('/:courseId/admin/deliverables', adminAuth, routeHandler.addDeliverables);
   server.get('/settings', isAuthenticated, routeHandler.getUser);
   server.get('/logout', isAuthenticated, routeHandler.logout);
 };

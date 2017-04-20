@@ -5,7 +5,11 @@ import { logger } from '../utils/logger';
 let passport = require('passport');
 let session = require('cookie-session');
 let CookieParser = require('restify-cookies');
-let GithubStrategy = require('passport-github').Strategy;
+let Strategy = require('passport-github').Strategy;
+
+if (config.env === 'test' ) {
+  let Strategy = require('passport-mock').Strategy;
+}
 
 // passport
 
@@ -31,7 +35,7 @@ passport.deserializeUser(function(obj: any, cb: any) {
     .catch((err) => { logger.info(err); });
 });
 
-passport.use(new GithubStrategy({
+passport.use(new Strategy({
   clientID: config.github_client_id,
   clientSecret: config.github_client_secret,
   callbackURL: config.github_callback_url,

@@ -20,6 +20,8 @@ const isAuthenticated = (req: any, res: restify.Response, next: restify.Next) =>
 
 const adminAuth = (req: any, res: restify.Response, next: restify.Next) => {
   if (req.isAuthenticated()) {
+    console.log('true? ' + req.isAuthenticated());
+    console.log(req.user.username);
     let loggedInUser = req.user.username;
     let adminOrSuperAdmin = function() {
       return config.admins.indexOf(loggedInUser) >= 0 || config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
