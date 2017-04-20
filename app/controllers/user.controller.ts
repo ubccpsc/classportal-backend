@@ -67,25 +67,23 @@ function load(user: IUserDocument) {
     .catch(Promise.reject);
 }
 
+
 /**
- * Register a Github ID for a course
- * @return {IUserDocument} All courses in DB
- */
+* Verifies that CSID and SNUM are valid before Github authentication/registration
+* @param {restify.Request} restify request object
+* @param {restify.Response} restify response object
+* @param {restify.Next} restify next object
+* @return {IUserDocument || void } that matches request object CSID and SNUM params
+**/
 function validateRegistration(req: any, res: any, next: restify.Next) {
 
-  let query = User.findOne({ csid : req.csid, snum : req.snum }).exec();
-
-  function isAlreadyRegistered(user: IUserDocument) {
-    if (user.username !== '') {
-      return true;
-    }
-    return false;
-  }
-
+  let csid = req.params.csid;
+  let snum = req.params.snum;
+  let query = User.findOne({ 'csid' : csid, 'snum' : snum }).exec();
   return query.then( user => {
     if (user === null) {
       return Promise.reject(Error('Unable to validate CSID and SNUM'));
-    } else if (isAlreadyRegistered(user)) {
+    } else if (isUsernameRegistered(user)) {
       return Promise.reject(Error('User is already registered'));
     } else {
       return res.redirect('/auth/github/register', next);
@@ -94,20 +92,40 @@ function validateRegistration(req: any, res: any, next: restify.Next) {
 }
 
 /**
- * Register a Github ID for a course
- * @return {IUserDocument} All courses in DB
- */
+* Verifies that CSID and SNUM are valid before Github authentication/registration
+* @param {restify.Request} restify request object
+* @return {IUserDocument} that matches request object CSID and SNUM params
+**/
 function addGithubUsername(req: any) {
   logger.info('addGithubUsername() in Courses Controller');
-  let query = User.find({}).exec();
+  let csid = req.params.csid;
+  let snum = req.params.snum;
+  let username = req.params.username;
+  let query = User.findOne({ 'csid' : csid, 'snum' : snum }).exec();
 
-  return query.then( result => {
-    if ( result === null ) {
-      return Promise.reject(Error('No courses found in Courses DB'));
+  return query.then( user => {
+    if (user === null) {
+      return Promise.reject(Error('Unable to validate CSID and SNUM'));
+    } else if (isUsernameRegistered(user)) {
+      return Promise.reject(Error('User is already registered'));
     } else {
-      return Promise.resolve(result);
+      user.username = username;
+      return user.save();
     }
   });
 }
+
+/**
+* Determines if Github Username is already registered in User object
+* @param {IUserDocument} mongoose user instance
+* @return {boolean} true if exists
+**/
+function isUsernameRegistered(user: IUserDocument) {
+  if (user.username !== '') {
+    return true;
+  }
+  return false;
+}
+
 
 export { login, logout, checkRegistration, load, validateRegistration, addGithubUsername };

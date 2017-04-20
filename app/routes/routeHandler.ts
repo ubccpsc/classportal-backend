@@ -93,13 +93,12 @@ const getGradesStudent = (req: restify.Request, res: restify.Response, next: res
 
 const validateRegistration = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return userCtrl.validateRegistration(req, res, next)
-   .then((user: IUserDocument[]) => res.json(200, { response: user }))
    .catch((err: any) => res.json(500, { err: err.message }));
 };
 
 const addGithubUsername = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return userCtrl.addGithubUsername(req)
-   .then((user: IUserDocument[]) => res.json(200, { response: user }))
+   .then((user: IUserDocument) => res.json(200, { response: user }))
    .catch((err: any) => res.json(500, { err: err.message }));
 };
 

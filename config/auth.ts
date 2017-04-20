@@ -11,8 +11,8 @@ if (config.env === 'test' ) {
   let Strategy = require('passport-mock').Strategy;
 }
 
-// passport
-
+// Passport JS
+//
 // Configure Passport authenticated session persistence.
 //
 // In order to restore authentication state across HTTP requests, Passport needs
@@ -41,9 +41,10 @@ passport.use(new Strategy({
   callbackURL: config.github_callback_url,
 },
   function(accessToken: any, refreshToken: any, profile: any, cb: any) {
+    logger.info(profile.username + 'logged in');
+
     // This is an area where we can link the information,
     // if we decide to associate the user account with
-    logger.info(profile.username + 'logged in');
     User.find({ username: profile.username }, function(err, user) {
       return cb(err, user);
     });

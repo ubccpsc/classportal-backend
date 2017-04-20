@@ -28,6 +28,5 @@ function getUser(req: any, res: any, next: any) {
     .catch((err) => { logger.info('Error loading user info: ' + err); });
 }
 
-
 export { consoleLogRequest, getUser };
 

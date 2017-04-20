@@ -19,7 +19,7 @@ const routes = (server: restify.Server) => {
     ( req: restify.Request, res: any, next: restify.Next) => {
       res.redirect('/', next);
     });
-  server.get('/auth/github/register', passport.authenticate('github'), routeHandler.addGithubUsername);
+  server.put('/auth/github/register', routeHandler.addGithubUsername);
   // Authentication routes
   server.put('admin/:courseId', routeHandler.createCourse);
   server.get(':courseId/admin/students', routeHandler.getStudentList);
