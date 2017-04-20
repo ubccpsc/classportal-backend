@@ -11,8 +11,9 @@ import { passport } from '../../config/auth';
 /**
 * User logout
 * @param {restify.Request} restify request object
-* @param {restify.Response} restify request object
-* @param {restify.Next} restify request object
+* @param {restify.Response} restify response object
+* @param {restify.Next} restify next object
+* @returns {void}
 **/
 function logout(req: any, res: any, next: any) {
   return Promise.resolve(req.logout())
@@ -20,13 +21,12 @@ function logout(req: any, res: any, next: any) {
 }
 
 /**
-Logins user using Github OAuth Strategy and Passport Plug-in
+* Provides callback token authorization for Passport JS
+* @param {restify.Request} restify request object
+* @param {restify.Response} restify response object
+* @param {restify.Next} restify next object
+* @returns {void}
 **/
-function loginUser() {
-  return Promise.resolve(passport.authenticate('github'))
-    .catch((err) => logger.info('Error logging in user: ' + err));
-}
-
 function oauthCallback(req: any, res: any, next: restify.Next) {
 
   let authenticate = function() {
@@ -37,10 +37,16 @@ function oauthCallback(req: any, res: any, next: restify.Next) {
     .catch((err) => logger.info('Error authenticating user: ' + err));
 }
 
+/**
+* Gets logged in username
+* @param {restify.Request} restify request object
+* @param {restify.Response} restify response object
+* @param {restify.Next} restify next object
+* @returns {object} that holds username in string
+**/
 function getUser(req: any, res: any, next: any) {
   return Promise.resolve(res.json(200, { user: req.user }))
     .catch((err) => { logger.info('Error loading user info: ' + err); });
 }
 
-
-export { logout, getUser, loginUser, oauthCallback };
+export { logout, getUser, oauthCallback };
