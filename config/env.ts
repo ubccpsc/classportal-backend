@@ -24,6 +24,7 @@ if (config.env === 'test') {
   config.host = process.env.TEST_HOST;
   config.port = process.env.TEST_PORT;
   config.db = process.env.TEST_DB;
+  config.debug = true;
   config.super_admin = process.env.TEST_SUPER_ADMIN;
   config.admins = process.env.TEST_ADMINS.split(' ');
   config.auth_strategy = 'local';

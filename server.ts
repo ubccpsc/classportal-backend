@@ -1,7 +1,6 @@
 import mongoose = require('mongoose');
 import { config } from './config/env';
 import { app } from './config/restify';
-import { seedData } from './config/seed';
 import { logger } from './utils/logger';
 
 // use native ES6 promises instead of mongoose promise library
@@ -25,22 +24,22 @@ connection.on('error', (err: any) => {
 });
 
 // intial setup upon connection success
-connection.once('open', () => {
+let onConnect = Promise.resolve(connection.once('open', () => {
   return Promise.resolve()
     .then(() => {
       logger.info(`\nConnected to database: ${config.db}`);
-      // seedData()
+      return false;
     })
     .then(() => {
-      app.listen(config.port, () => {
+      return app.listen(config.port, () => {
         logger.info(`\n${config.app_name} is listening on ${app.url}`);
         logger.info('config:', config);
+        return true;
       });
     })
     .catch(logger.info);
-});
+}));
 
 // Enable to seed data in new app and database.
-// seedData();
 
-export { app };
+export { app, onConnect };
