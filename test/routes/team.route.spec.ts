@@ -3,18 +3,17 @@ import { expect } from 'chai';
 import { app } from '../../server';
 import { logger } from '../../utils/logger';
 
-describe('GET /auth/login', () => {
+xdescribe('GET /auth/login', () => {
   it('should login successfully', (done) => {
     let user1 = supertest.agent(app)
       .get('/auth/login')
-      .query({ username: 'andrewstec', snum: 4 })
+      .query({ username: 'thekitsch', snum: 5 })
       .end((err: any, res: supertest.Response) => {
         if (err) {
           done(err);
         } else {
-          console.log(res);
-          expect(res.status).to.equal(400);
-          expect(res.body).to.equal('get team');
+          expect(res.status).to.equal(200);
+          expect(res.body.user.username).to.equal('thekitsch');
           done();
         }
       });
@@ -85,7 +84,7 @@ xdescribe('team API', () => {
     });
   });
 
-  describe('DEL /api/team', () => {
+  xdescribe('DEL /api/team', () => {
     it('should return "remove team"', (done) => {
       supertest(app)
         .del('/api/team')
@@ -101,7 +100,7 @@ xdescribe('team API', () => {
     });
   });
 
-  describe('GET /api/team', () => {
+  xdescribe('GET /api/team', () => {
     it('should return "get team"', (done) => {
       supertest(app)
         .get('/api/team')

@@ -15,7 +15,7 @@ const routes = (server: restify.Server) => {
   server.put('/register', routeHandler.validateRegistration);
   // OAuth routes by logged-in users only
   server.post('/logout', auth.loadUser, routeHandler.logout);
-  server.get('/auth/login', passport.authenticate(config.auth_strategy));
+  server.get('/auth/login', passport.authenticate(config.auth_strategy), routeHandler.getUser);
   server.get('/auth/login/return', passport.authenticate(config.auth_strategy, { failureRedirect: '/failed' }),
     ( req: restify.Request, res: any, next: restify.Next) => {
       res.redirect('/', next);
