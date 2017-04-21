@@ -1,7 +1,7 @@
 import * as restify from 'restify';
 import * as routeHandler from './routeHandler';
 import * as auth from './auth';
-import { isAuthenticated, adminAuth, superAdminAuth } from '../../app/middleware/auth.middleware';
+import { isAuthenticated, adminAuthenticated, superAuthenticated } from '../../app/middleware/auth.middleware';
 import { passport } from './routeHandler';
 import { config } from '../../config/env';
 

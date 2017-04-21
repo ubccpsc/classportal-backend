@@ -18,7 +18,7 @@ const isAuthenticated = (req: any, res: any, next: restify.Next) => {
   }
 };
 
-const adminAuth = (req: any, res: restify.Response, next: restify.Next) => {
+const adminAuthenticated = (req: any, res: restify.Response, next: restify.Next) => {
   if (req.isAuthenticated()) {
     console.log('true? ' + req.isAuthenticated());
     console.log(req.user.username);
@@ -34,7 +34,7 @@ const adminAuth = (req: any, res: restify.Response, next: restify.Next) => {
   next(new errors.UnauthorizedError('Permission denied'));
 };
 
-const superAdminAuth = (req: any, res: restify.Response, next: restify.Next) => {
+const superAuthenticated = (req: any, res: restify.Response, next: restify.Next) => {
   if (req.isAuthenticated()) {
     let loggedInUser = req.user.username;
     let superAdmin = function() {
@@ -48,4 +48,4 @@ const superAdminAuth = (req: any, res: restify.Response, next: restify.Next) => 
   next(new errors.UnauthorizedError('Permission denied'));
 };
 
-export { isAuthenticated, adminAuth, superAdminAuth }
+export { isAuthenticated, adminAuthenticated, superAuthenticated }

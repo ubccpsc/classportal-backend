@@ -8,8 +8,8 @@ import { session, CookieParser, passport } from './auth';
 // create https server
 const app = restify.createServer({
   name: config.app_name,
-//  key: fs.readFileSync(config.ssl_key_path, 'UTF-8'),
-//  certificate: fs.readFileSync(config.ssl_cert_path, 'UTF-8'),
+  key: fs.readFileSync(config.ssl_key_path, 'UTF-8'),
+  certificate: fs.readFileSync(config.ssl_cert_path, 'UTF-8'),
 });
 
 // allow cors
