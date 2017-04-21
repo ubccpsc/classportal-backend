@@ -7,9 +7,46 @@ let session = require('cookie-session');
 let CookieParser = require('restify-cookies');
 let Strategy = require('passport-github').Strategy;
 
+passport.use(new Strategy({
+  clientID: config.github_client_id,
+  clientSecret: config.github_client_secret,
+  callbackURL: config.github_callback_url,
+},
+  function(accessToken: any, refreshToken: any, profile: any, cb: any) {
+    logger.info(profile.username + 'logged in');
+
+    // Github username taken and lookup for that user in our DB.
+    User.find({ username: profile.username }, function(err, user) {
+      return cb(err, user);
+    });
+  }),
+);
+
+// Passport Local strategy used in lieu of Github strategy for unit tests.
 if (config.env === 'test' ) {
-  let Strategy = require('passport-mock').Strategy;
+
+  Strategy = require('passport-local').Strategy;
+
+  passport.use(new Strategy({
+    usernameField: 'username',
+    passwordField: 'snum',
+    passReqToCallback: true,
+    session: true,
+  },
+  function(req: any, username: any, password: any, done: any) {
+    let query = User.findOne({ 'username': username, snum : password }).exec();
+    query.then( user => {
+      if (user) {
+        return done(null, user);
+      } else {
+        return done(null, false, { message: 'Unable to login' });
+      }
+    });
+  },
+));
 }
+
+
 
 // Passport JS
 //
@@ -23,32 +60,16 @@ if (config.env === 'test' ) {
 // example does not have a database, the complete Facebook profile is serialized
 // and deserialized.
 passport.serializeUser(function(user: IUserDocument, cb: any) {
-  console.log('Serializing User' + JSON.stringify(user, null, 2));
+  logger.info('Serializing User' + JSON.stringify(user, null, 2));
   cb(null, user);
 });
 
 passport.deserializeUser(function(obj: any, cb: any) {
-  console.log('Deserializing object : ' + JSON.stringify(obj, null, 2));
+  logger.info('Deserializing object : ' + JSON.stringify(obj, null, 2));
   User.findById(obj)
     .exec()
     .then((u) => { cb(null, u.username); })
     .catch((err) => { logger.info(err); });
 });
-
-passport.use(new Strategy({
-  clientID: config.github_client_id,
-  clientSecret: config.github_client_secret,
-  callbackURL: config.github_callback_url,
-},
-  function(accessToken: any, refreshToken: any, profile: any, cb: any) {
-    logger.info(profile.username + 'logged in');
-
-    // This is an area where we can link the information,
-    // if we decide to associate the user account with
-    User.find({ username: profile.username }, function(err, user) {
-      return cb(err, user);
-    });
-  }),
-);
 
 export { passport, CookieParser, session }

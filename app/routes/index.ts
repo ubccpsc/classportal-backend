@@ -3,6 +3,7 @@ import * as routeHandler from './routeHandler';
 import * as auth from './auth';
 import { isAuthenticated, adminAuth, superAdminAuth } from '../../app/middleware/auth.middleware';
 import { passport } from './routeHandler';
+import { config } from '../../config/env';
 
 const routes = (server: restify.Server) => {
   // Accessible by anyone
@@ -14,8 +15,8 @@ const routes = (server: restify.Server) => {
   server.put('/register', routeHandler.validateRegistration);
   // OAuth routes by logged-in users only
   server.post('/logout', auth.loadUser, routeHandler.logout);
-  server.get('/auth/login/github', passport.authenticate('github'));
-  server.get('/auth/login/github/return', passport.authenticate('github', { failureRedirect: '/failed' }),
+  server.get('/auth/login', passport.authenticate(config.auth_strategy));
+  server.get('/auth/login/return', passport.authenticate(config.auth_strategy, { failureRedirect: '/failed' }),
     ( req: restify.Request, res: any, next: restify.Next) => {
       res.redirect('/', next);
     });

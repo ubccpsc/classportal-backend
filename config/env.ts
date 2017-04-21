@@ -13,9 +13,10 @@ const config = {
   ssl_cert_path: process.env.SSL_CERT_PATH,
   github_client_id: process.env.GITHUB_CLIENT_ID,
   github_client_secret: process.env.GITHUB_CLIENT_SECRET,
-  github_callback_url: 'http://localhost:5000/auth/login/github/return',
+  github_callback_url: 'http://localhost:5000/auth/login/return',
   super_admin: process.env.DEV_SUPER_ADMIN,
   admins: process.env.DEV_ADMINS.split(' '),
+  auth_strategy: 'github',
 };
 
 // specific to test config
@@ -23,8 +24,10 @@ if (config.env === 'test') {
   config.host = process.env.TEST_HOST;
   config.port = process.env.TEST_PORT;
   config.db = process.env.TEST_DB;
+  config.github_callback_url = 'http://localhost:9000/auth/login/',
   config.super_admin = process.env.TEST_SUPER_ADMIN;
   config.admins = process.env.TEST_ADMINS.split(' ');
+  config.auth_strategy = 'local';
 }
 
 // specific to production config
@@ -34,6 +37,7 @@ if (config.env === 'production') {
   config.db = process.env.PROD_DB;
   config.super_admin = process.env.PROD_SUPER_ADMIN;
   config.admins = process.env.PROD_ADMINS.split(' ');
+  config.auth_strategy = 'github';
 }
 
 export { config };
