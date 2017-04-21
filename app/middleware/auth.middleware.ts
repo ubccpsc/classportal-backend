@@ -10,7 +10,7 @@ let errors = require('restify-errors');
  * @return boolean
  */
 
-const isAuthenticated = (req: any, res: restify.Response, next: restify.Next) => {
+const isAuthenticated = (req: any, res: any, next: restify.Next) => {
   if (req.isAuthenticated()) {
     return next();
   } else {

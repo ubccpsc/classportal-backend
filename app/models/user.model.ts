@@ -1,6 +1,5 @@
 import * as mongoose from 'mongoose';
 let Schema = mongoose.Schema;
-let bcrypt = require('bcrypt-nodejs');
 let findOrCreate = require('mongoose-findorcreate');
 import { logger } from '../../utils/logger';
 
