@@ -30,4 +30,7 @@ ssl/
 .env
 
 # Build folder
-build/
+build/*
+
+# Exception of builds/uploads folder needed for bodyParser (without uploaded files)
+!build/uploads/*

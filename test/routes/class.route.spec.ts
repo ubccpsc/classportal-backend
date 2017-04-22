@@ -6,7 +6,7 @@ const expect = chai.expect;
 
 let studentAgent = supertest.agent(app);
 
-describe('POST admin/:courseId/grades', () => {
+describe('PUT admin/:courseId', () => {
   it('should return a successfully added class # response', (done) => {
     let course = {
       courseId : '710',
@@ -19,16 +19,16 @@ describe('POST admin/:courseId/grades', () => {
       admins : ['fred', 'jimmy'],
     };
     studentAgent
-      .post('admin/' + course.courseId + '/grades')
-      .field('test', 'test')
+      .put('/admin/' + course.courseId)
       .field('test2', 'test2')
-      .attach('csv', course.classList)
       .end((err, res) => {
         if (err) {
           console.log(err);
         } else {
+          console.log(course.classList);
           expect(res.status).to.equal(200);
           expect(res.body).to.equal('Successfully added CPSC #' + course.courseId );
+          done();
         }
       });
   });
