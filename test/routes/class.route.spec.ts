@@ -10,6 +10,33 @@ describe('PUT admin/:courseId', () => {
   it('should return a successfully added class # response', (done) => {
     let course = {
       courseId : '710',
+      courseName : 'Computer Science 710',
+      minTeamSize : '1',
+      maxTeamSize : '9',
+      customData : {},
+      studentsSetTeams : 1,
+      admins : ['fred', 'jimmy'],
+    };
+    studentAgent
+      .put('/admin/' + course.courseId)
+      .send(course)
+      .end((err, res) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log(res.body);
+          expect(res.status).to.equal(200);
+          expect(res.body).to.equal('Successfully added CPSC #' + course.courseId );
+          done();
+        }
+      });
+  });
+});
+
+describe('PUT /:courseId/admin/students', () => {
+  it('should return a successfully added class # response', (done) => {
+    let course = {
+      courseId : '710',
       classList : __dirname.replace('/build/test/routes', '') +
       '/test/assets/mockDataCList.csv',
       minTeamSize : '1',
@@ -19,13 +46,13 @@ describe('PUT admin/:courseId', () => {
       admins : ['fred', 'jimmy'],
     };
     studentAgent
-      .put('/admin/' + course.courseId)
-      .field('test2', 'test2')
+      .post('/' + course.courseId + '/admin/students')
+      .attach('classList', course.classList)
       .end((err, res) => {
         if (err) {
           console.log(err);
         } else {
-          console.log(course.classList);
+          console.log('tes' + course.classList);
           expect(res.status).to.equal(200);
           expect(res.body).to.equal('Successfully added CPSC #' + course.courseId );
           done();
@@ -33,6 +60,7 @@ describe('PUT admin/:courseId', () => {
       });
   });
 });
+
 
 studentAgent
   .get('/auth/login')
