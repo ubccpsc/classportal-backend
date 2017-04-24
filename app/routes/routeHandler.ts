@@ -1,7 +1,6 @@
 import * as restify from 'restify';
 import * as userCtrl from '../controllers/user.controller';
 import * as courseCtrl from '../controllers/course.controller';
-import * as classCtrl from '../controllers/class.controller';
 import * as authCtrl from '../controllers/auth.controller';
 import * as delivCtrl from '../controllers/deliverable.controller';
 import * as gradeCtrl from '../controllers/grade.controller';
@@ -9,14 +8,12 @@ import * as testCtrl from '../controllers/test.controller';
 import { Course, ICourseDocument } from '../models/course.model';
 import { Grade, IGradeDocument } from '../models/grade.model';
 import { User, IUserDocument } from '../models/user.model';
-import { passport } from '../../config/auth';
-
 
 const pong = (req: restify.Request, res: restify.Response) => res.send('pong');
 
 const createCourse = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.create(req.params)
-    .then(() => res.json(200, { response: 'Successfully added CPSC #' + req.params.courseId }))
+    .then(() => res.json(200, { response: 'Successfully added Course #' + req.params.courseId }))
     .catch((err: Error) => res.json(500, { 'err': err.message }));
 };
 
@@ -27,13 +24,13 @@ const getCourseList = (req: restify.Request, res: restify.Response) => {
 };
 
 const addStudentList = (req: restify.Request, res: restify.Response) => {
-  return classCtrl.update(req.files['classList'], req.params.courseId)
+  return courseCtrl.updateClassList(req.files['classList'], req.params.courseId)
     .then(() => res.json(200, { response: 'Successfully updated Class List on course #' + req.params.courseId }))
     .catch((err: any) => res.json(500, { err: err.errmsg }));
 };
 
 const getStudentList = (req: restify.Request, res: restify.Response) => {
-  return classCtrl.read(req.params.courseId)
+  return courseCtrl.readClassList(req.params.courseId)
     .then((classList) => res.json(200, { response: classList }))
     .catch((err: Error) => res.json(500, { err: err.message }));
 };
@@ -103,5 +100,5 @@ const addGithubUsername = (req: restify.Request, res: restify.Response, next: re
 };
 
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
- passport, getUser, validateRegistration, addGithubUsername,
-addDeliverables, getDeliverables, getGradesAdmin, getGradesStudent, addGrades };
+   getUser, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
+   getGradesAdmin, getGradesStudent, addGrades };
