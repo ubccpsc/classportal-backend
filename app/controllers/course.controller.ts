@@ -37,7 +37,6 @@ function updateClassList(classList: any, courseId: string) {
         snum : student.SNUM,
         lname : student.LAST,
         fname : student.FIRST,
-        username : student.USERNAME,
       })
         .then(user => {
           newClassList.push(user);

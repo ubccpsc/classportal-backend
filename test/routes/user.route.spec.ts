@@ -1,196 +1,134 @@
 import * as supertest from 'supertest';
-import { expect } from 'chai';
+import { expect, assert } from 'chai';
 import { app } from '../../server';
 import { logger } from '../../utils/logger';
 import { User } from '../../app/models/user.model';
 
-xdescribe('user API', () => {
+let studentAgent = supertest.agent(app);
+const VALID_CSID_SNUM = { snum : '5', csid : '12312321' };
+const INVALID_CSID_SNUM = { snum : '131352332', csid : '59843983' };
+const GITHUB_USERNAME = 'testing_account';
+const ALPHA_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const NUMBER_CHARS = '1234567890';
 
-  before((done) => {
-    User.remove({}, () => {
-      logger.trace('Test db: User collection removed!');
-      done();
-    });
+studentAgent
+  .get('/auth/login')
+  .query({ username: 'thekitsch', snum: 5 })
+  .end((err, res) => {
+    // user should be authenticated with session state
+    if (err) {
+      console.log(err);
+    } else {
+      console.log('logged into "thekitsch"');
+    }
   });
 
-  describe('POST /api/user', () => {
-    it('should successfully create a new user', (done) => {
-      const user = {
-        csid: 'a1a1',
-        snum: '00000001',
-        lastname: 'Sargent',
-        firstname: 'Michael',
-      };
+function randomString(length: number, chars: string) {
+  let result = '';
+  for (let i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
+  return result;
+}
+
+describe('/register', () => {
+
+  const INVALID_CSID_RESPONSE = { err : 'Unable to validate CSID and SNUM' };
+  const SUCCESS_RESPONSE = '/auth/github/register';
+  const ALREADY_REGISTERED_RESPONSE = { err : 'User is already registered' };
+
+  it('should receive redirect 302 when given valid CSID and SNUM', (done) => {
+    supertest(app)
+      .put('/register')
+      .send(VALID_CSID_SNUM)
+      .end((err, res) => {
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          expect(res.status).to.equal(302);
+          expect(res.header.location).to.equal(SUCCESS_RESPONSE);
+          done();
+        }
+      });
+  });
+
+  it('should receive error when given invalid CSID and SNUM', (done) => {
+    supertest(app)
+      .put('/register')
+      .send(INVALID_CSID_SNUM)
+      .end((err, res) => {
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          expect(res.status).to.equal(500);
+          expect(JSON.stringify(res.body)).to.equal(JSON.stringify(INVALID_CSID_RESPONSE));
+          done();
+        }
+      });
+  });
+
+  it('should receive an already registered error if given pre-registered CSID and SNUM', (done) => {
+    User.create({
+      snum: randomString(7, NUMBER_CHARS),
+      csid: randomString(9, NUMBER_CHARS),
+      fname: 'Roger',
+      lname: 'Brackendale',
+      username: GITHUB_USERNAME,
+    })
+    .then( user => {
       supertest(app)
-        .post('/api/user')
+        .put('/register')
         .send(user)
-        .set('Content-Type', 'application/json')
-        .end((err: any, res: supertest.Response) => {
+        .end((err, res) => {
           if (err) {
+            console.log(err);
             done(err);
           } else {
-            expect(res.body.csid).to.equal('a1a1');
-            expect(res.status).to.equal(200);
+            expect(res.status).to.equal(500);
+            expect(JSON.stringify(res.body)).to.equal(JSON.stringify(ALREADY_REGISTERED_RESPONSE));
             done();
           }
         });
     });
 
-    it('should fail to create the same user twice', (done) => {
-      const user = {
-        csid: 'a1a1',
-        snum: '00000001',
-        lastname: 'Sargent',
-        firstname: 'Michael',
-      };
-      supertest(app)
-        .post('/api/user')
-        .send(user)
-        .set('Content-Type', 'application/json')
-        .end((err: any, res: supertest.Response) => {
-          if (err) {
-            done(err);
-          } else {
-            expect(res.status).to.equal(500);
-            done();
-          }
-        });
-    });
 
-    it('should fail to create a user with inadequate info', (done) => {
-      const user = {
-        csid: 'b2b2',
-      };
-      supertest(app)
-        .post('/api/user')
-        .send(user)
-        .set('Content-Type', 'application/json')
-        .end((err: any, res: supertest.Response) => {
-          if (err) {
-            done(err);
-          } else {
-            expect(res.status).to.equal(500);
-            done();
-          }
-        });
-    });
+  });
+});
+
+describe('/register/username', () => {
+
+  const ERROR_RESPONSE = { err : 'Unable to validate CSID and SNUM' };
+  const SUCCESS_RESPONSE = '/auth/github/register';
+
+  it('should receive redirect 302 when given valid CSID and SNUM', (done) => {
+    supertest(app)
+      .put('/register')
+      .send(VALID_CSID_SNUM)
+      .end((err, res) => {
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          expect(res.status).to.equal(302);
+          expect(res.header.location).to.equal(SUCCESS_RESPONSE);
+          done();
+        }
+      });
   });
 
-  describe('POST /api/register', () => {
-    it('should successfully register an existing user', (done) => {
-      supertest(app)
-        .post('/api/register')
-        .send({
-          csid: 'a1a1',
-          snum: '00000001',
-          token: 'mksarge',
-        })
-        .set('Content-Type', 'application/json')
-        .end((err: any, res: supertest.Response) => {
-          if (err) {
-            done(err);
-          } else {
-            expect(res.body.username).to.equal('mksarge');
-            expect(res.status).to.equal(200);
-            done();
-          }
-        });
-    });
-  });
-
-
-  describe('PUT /api/user/:username', () => {
-    it('should successfully update existing user', (done) => {
-      supertest(app)
-        .put('/api/user/mksarge')
-        .send({ 'newUsername': 'nathan' })
-        .set('Content-Type', 'application/json')
-        .end((err: any, res: supertest.Response) => {
-          if (err) {
-            done(err);
-          } else {
-            expect(res.body.username).to.equal('nathan');
-            expect(res.status).to.equal(200);
-            done();
-          }
-        });
-    });
-
-    it('should fail to update invalid user', (done) => {
-      supertest(app)
-        .put('/api/user/mksarge')
-        .send({ 'newUsername': 'nathan' })
-        .set('Content-Type', 'application/json')
-        .end((err: any, res: supertest.Response) => {
-          if (err) {
-            done(err);
-          } else {
-            expect(res.body.username).to.be.undefined;
-            expect(res.status).to.equal(500);
-            done();
-          }
-        });
-    });
-  });
-
-
-  describe('GET /api/user', () => {
-    it('should get valid user', (done) => {
-      supertest(app)
-        .get('/api/user/nathan')
-        .end((err: any, res: supertest.Response) => {
-          if (err) {
-            done(err);
-          } else {
-            expect(res.body.username).to.equal('nathan');
-            expect(res.status).to.equal(200);
-            done();
-          }
-        });
-    });
-
-    it('should fail to get invalid user', (done) => {
-      supertest(app)
-        .get('/api/user/mksarge')
-        .end((err: any, res: supertest.Response) => {
-          if (err) {
-            done(err);
-          } else {
-            expect(res.body.username).to.be.undefined;
-            expect(res.status).to.equal(500);
-            done();
-          }
-        });
-    });
-  });
-
-  describe('DEL /api/user', () => {
-    it('should successfully delete valid user', (done) => {
-      supertest(app)
-        .del('/api/user/nathan')
-        .end((err: any, res: supertest.Response) => {
-          if (err) {
-            done(err);
-          } else {
-            expect(res.body.username).to.equal('nathan');
-            expect(res.status).to.equal(200);
-            done();
-          }
-        });
-    });
-
-    it('should fail to delete invalid user', (done) => {
-      supertest(app)
-        .del('/api/user/nathan')
-        .end((err: any, res: supertest.Response) => {
-          if (err) {
-            done(err);
-          } else {
-            expect(res.body.username).to.be.undefined;
-            expect(res.status).to.equal(500);
-            done();
-          }
-        });
-    });
+  it('should receive error when given invalid CSID and SNUM', (done) => {
+    supertest(app)
+      .put('/register')
+      .send(INVALID_CSID_SNUM)
+      .end((err, res) => {
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          expect(res.status).to.equal(500);
+          expect(JSON.stringify(res.body)).to.equal(JSON.stringify(ERROR_RESPONSE));
+          done();
+        }
+      });
   });
 });

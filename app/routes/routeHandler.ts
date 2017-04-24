@@ -95,7 +95,8 @@ const validateRegistration = (req: restify.Request, res: restify.Response, next:
 
 const addGithubUsername = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return userCtrl.addGithubUsername(req)
-   .then((user: IUserDocument) => res.json(200, { response: user }))
+   .then((user: IUserDocument) => res.json(200, { response: user.username + ' added to CSID #' + user.csid +
+     ' and SNUM #' + user.snum + '.' }))
    .catch((err: any) => res.json(500, { err: err.message }));
 };
 

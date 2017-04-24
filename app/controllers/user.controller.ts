@@ -104,7 +104,7 @@ function addGithubUsername(req: any) {
   let query = User.findOne({ 'csid' : csid, 'snum' : snum }).exec();
 
   return query.then( user => {
-    if (user === null) {
+    if (!user) {
       return Promise.reject(Error('Unable to validate CSID and SNUM'));
     } else if (isUsernameRegistered(user)) {
       return Promise.reject(Error('User is already registered'));
@@ -124,6 +124,7 @@ function isUsernameRegistered(user: IUserDocument) {
   if (user.username !== '') {
     return true;
   }
+  console.log('username' + user.username);
   return false;
 }
 
