@@ -26,7 +26,7 @@ const getCourseList = (req: restify.Request, res: restify.Response) => {
 const addStudentList = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.updateClassList(req.files['classList'], req.params.courseId)
     .then(() => res.json(200, { response: 'Successfully updated Class List on course #' + req.params.courseId }))
-    .catch((err: any) => res.json(500, { err: err.errmsg }));
+    .catch((err: any) => res.json(500, { 'err': err.message }));
 };
 
 const getStudentList = (req: restify.Request, res: restify.Response) => {

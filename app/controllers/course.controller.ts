@@ -63,7 +63,14 @@ function updateClassList(classList: any, courseId: string) {
 
   rs.pipe(parser);
 
-  return Course.find({ 'courseId': courseId });
+  return Course.findOne({ 'courseId': courseId })
+    .then( c => {
+      if (c) {
+        return Promise.resolve(c);
+      }
+      return Promise.reject(Error('Course #' + courseId + ' does not exist. ' +
+        'Cannot add class list to course that does not exist.'));
+    });
 }
 
 function readClassList(courseId: string) {

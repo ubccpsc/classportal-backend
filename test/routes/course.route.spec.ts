@@ -5,11 +5,10 @@ import { logger } from '../../utils/logger';
 let expect = chai.expect;
 let assert = chai.assert;
 
+const CLASS_LIST_PATH = __dirname.replace('/build/test/routes', '') + '/test/assets/mockDataCList.csv';
 const COURSE_DATA = {
   courseId : Math.floor(Math.random() * 99999),
   name : 'Computer Studies',
-  classList : __dirname.replace('/build/test/routes', '') +
-  '/test/assets/mockDataCList.csv',
   minTeamSize : '1',
   maxTeamSize : '9',
   modules : new Array(),
@@ -22,34 +21,42 @@ let studentAgent = supertest.agent(app);
 
 describe('PUT admin/:courseId', () => {
 
-  const ERROR_RESULT = { err: 'Course ' + COURSE_DATA.courseId + ' already exists' };
+  const ERROR_RESULT = { err: 'Course validation failed' };
   const SUCCESS_RESULT = { response: 'Successfully added Course #' + COURSE_DATA.courseId };
   const ALREADY_EXISTS = { err: 'Course ' + COURSE_DATA.courseId + ' already exists' };
 
   it('should return a successfully added course # response', (done) => {
     studentAgent
       .put('/admin/' + COURSE_DATA.courseId )
-      .send({
-        name : COURSE_DATA.name,
-        minTeamSize : COURSE_DATA.minTeamSize,
-        maxTeamSize : COURSE_DATA.maxTeamSize,
-        modules : COURSE_DATA.modules,
-        customData : COURSE_DATA.customData,
-        icon: COURSE_DATA.icon,
-        studentsSetTeams : COURSE_DATA.studentsSetTeams,
-        admins : COURSE_DATA.admins,
-      })
+      .send(COURSE_DATA)
       .end((err: any, res: supertest.Response) => {
         if (err) {
           console.log(err);
           done(err);
         } else {
-          console.log(res);
           expect(JSON.stringify(res.body)).to.equal(JSON.stringify(SUCCESS_RESULT));
           done();
         }
       });
   });
+
+  it('should result in an error because schema fails', (done) => {
+    let randomNum = Math.floor(Math.random() * 99999);
+    studentAgent
+      .put('/admin/' + randomNum )
+      .send({ classList: 'not an array. faulty data' })
+      .end((err: any, res: supertest.Response) => {
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          expect(res.status).to.equal(500);
+          expect(JSON.stringify(res.body)).to.equal(JSON.stringify(ERROR_RESULT));
+          done();
+        }
+      });
+  });
+
 
   it('should return a course # already exists response', (done) => {
     studentAgent
@@ -69,14 +76,15 @@ describe('PUT admin/:courseId', () => {
 });
 
 describe('PUT /:courseId/admin/students', () => {
-
-  const ERROR_RESULT = { err: 'error' };
+  let invalidNum = Math.floor(Math.random() * 9999956);
+  const ERROR_RESULT = { err: 'Course #' + invalidNum +
+    ' does not exist. Cannot add class list to course that does not exist.' };
   const SUCCESS_RESULT = { response: 'Successfully updated Class List on course #' + COURSE_DATA.courseId };
 
-  it('should return a successfully added class # response', (done) => {
+  it('should return a successfully added class list response', (done) => {
     studentAgent
       .post('/' + COURSE_DATA.courseId + '/admin/students')
-      .attach('classList', COURSE_DATA.classList)
+      .attach('classList', CLASS_LIST_PATH)
       .end((err, res) => {
         if (err) {
           console.log(err);
@@ -84,6 +92,21 @@ describe('PUT /:courseId/admin/students', () => {
         } else {
           expect(res.status).to.equal(200);
           expect(JSON.stringify(res.body)).to.equal(JSON.stringify(SUCCESS_RESULT));
+          done();
+        }
+      });
+  });
+
+  it('should return an error response as class number does not exist', (done) => {
+    studentAgent
+      .post('/' + invalidNum + '/admin/students')
+      .attach('classList', CLASS_LIST_PATH)
+      .end((err, res) => {
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          expect(JSON.stringify(res.body)).to.equal(JSON.stringify(ERROR_RESULT));
           done();
         }
       });
