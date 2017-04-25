@@ -4,10 +4,13 @@ import * as courseCtrl from '../controllers/course.controller';
 import * as authCtrl from '../controllers/auth.controller';
 import * as delivCtrl from '../controllers/deliverable.controller';
 import * as gradeCtrl from '../controllers/grade.controller';
+import * as teamCtrl from '../controllers/team.controller';
 import * as testCtrl from '../controllers/test.controller';
 import { Course, ICourseDocument } from '../models/course.model';
 import { Grade, IGradeDocument } from '../models/grade.model';
 import { User, IUserDocument } from '../models/user.model';
+import { Team, ITeamDocument } from '../models/team.model';
+
 
 const pong = (req: restify.Request, res: restify.Response) => res.send('pong');
 
@@ -30,7 +33,13 @@ const addStudentList = (req: restify.Request, res: restify.Response) => {
 };
 
 const getStudentList = (req: restify.Request, res: restify.Response) => {
-  return courseCtrl.readClassList(req.params.courseId)
+  return courseCtrl.getClassList(req.params.courseId)
+    .then((classList) => res.json(200, { response: classList }))
+    .catch((err: Error) => res.json(500, { err: err.message }));
+};
+
+const getStudentNamesFromCourse = (req: restify.Request, res: restify.Response) => {
+  return courseCtrl.getStudentNamesFromCourse(req.params.courseId)
     .then((classList) => res.json(200, { response: classList }))
     .catch((err: Error) => res.json(500, { err: err.message }));
 };
@@ -100,6 +109,12 @@ const addGithubUsername = (req: restify.Request, res: restify.Response, next: re
    .catch((err: any) => res.json(500, { err: err.message }));
 };
 
+const addTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.addTeam(req)
+   .then((team: ITeamDocument) => res.json(200, { response: team }))
+   .catch((err: any) => res.json(500, { err: err.message }));
+};
+
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
    getUser, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
-   getGradesAdmin, getGradesStudent, addGrades };
+   getGradesAdmin, getGradesStudent, addGrades, addTeam, getStudentNamesFromCourse };

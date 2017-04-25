@@ -72,9 +72,22 @@ function updateClassList(classList: any, courseId: string) {
     });
 }
 
-function readClassList(courseId: string) {
+function getClassList(courseId: string) {
   let courseQuery = Course.findOne({ 'courseId': courseId })
     .populate({ path: 'classList', select: 'snum fname lname teamUrl' }).exec();
+
+  return courseQuery.then(result => {
+    if ( result === null ) {
+      return Promise.reject(Error('Course #' + courseId + ' does not exist'));
+    } else {
+      return Promise.resolve(result.classList);
+    }
+  });
+}
+
+function getStudentNamesFromCourse(courseId: string) {
+  let courseQuery = Course.findOne({ 'courseId': courseId })
+    .populate({ path: 'classList', select: '_id fname lname' }).exec();
 
   return courseQuery.then(result => {
     if ( result === null ) {
@@ -141,4 +154,4 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
   return next();
 }
 
-export { get, create, update, remove, updateClassList, readClassList }
+export { get, create, update, remove, updateClassList, getClassList, getStudentNamesFromCourse }

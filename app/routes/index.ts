@@ -13,6 +13,8 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/deliverables', routeHandler.getDeliverables);
   server.get('/:courseId/grades', routeHandler.getGradesStudent);
   server.put('/register', routeHandler.validateRegistration);
+  server.put('/:courseId/team', routeHandler.addTeam);
+  server.get('/:courseId/students', routeHandler.getStudentNamesFromCourse);
   // OAuth routes by logged-in users only
   server.put('/register/username', routeHandler.addGithubUsername);
   server.post('/logout', auth.loadUser, routeHandler.logout);
@@ -22,8 +24,8 @@ const routes = (server: restify.Server) => {
       res.redirect('/', next);
     });
   // Authentication routes
-  server.put('admin/:courseId', routeHandler.createCourse);
-  server.get(':courseId/admin/students', routeHandler.getStudentList);
+  server.put('/admin/:courseId', routeHandler.createCourse);
+  server.get('/:courseId/admin/students', routeHandler.getStudentList);
   server.post('/:courseId/admin/students', routeHandler.addStudentList);
   server.post('/:courseId/admin/grades', routeHandler.addGrades);
   server.get('/:courseId/admin/grades', routeHandler.getGradesAdmin);

@@ -1,15 +1,11 @@
 import * as mongoose from 'mongoose';
-
-interface TeamMembers {
-  username: string;
-  fname: string;
-  lname: string;
-}
+import { logger } from '../../utils/logger';
 
 interface ITeamDocument extends mongoose.Document {
-  courseId: string;
+  course: Object[];
   teamId: string;
-  members: TeamMembers[];
+  members: Object[];
+  deliverable: Object;
 }
 
 interface ITeamModel extends mongoose.Model<ITeamDocument> {
@@ -17,31 +13,16 @@ interface ITeamModel extends mongoose.Model<ITeamDocument> {
 }
 
 const TeamSchema = new mongoose.Schema({
-  courseId: {
-    type: String,
+  course: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'Course',
     required: true,
   },
-  teamId: {
-    type: String,
+  deliverable: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable',
     required: true,
   },
   members: {
-    type: [
-      {
-        username: {
-          type: String,
-          required: true,
-        },
-        fname: {
-          type: String,
-          required: true,
-        },
-        lname: {
-          type: String,
-          required: true,
-        },
-      },
-    ],
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     required: true,
   },
 });
@@ -52,6 +33,26 @@ TeamSchema.method({
 
 // Statics
 TeamSchema.static({
+  /**
+  * Find a team by object ID. If does not exist, then team is created in DB.
+  * @param {object} recommended courseId
+  * @returns {Promise<ITeamDocument>} Returns a Promise of the user.
+  */
+  findOrCreate: (query: Object): Promise<ITeamDocument> => {
+    return Team
+      .findOne(query)
+      .exec()
+      .then((team) => {
+        if (team) {
+          Promise.resolve(team);
+        } else {
+          Team.create(query)
+            .then((q) => { return q.save(); })
+            .catch((err) => { logger.info(err); });
+        }
+        return Promise.resolve(team);
+      });
+  },
 });
 
 const Team: ITeamModel = <ITeamModel>mongoose.model('Team', TeamSchema);
