@@ -14,7 +14,7 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/grades', routeHandler.getGradesStudent);
   server.put('/register', routeHandler.validateRegistration);
   // OAuth routes by logged-in users only
-  server.put('register/username', routeHandler.addGithubUsername);
+  server.put('/register/username', routeHandler.addGithubUsername);
   server.post('/logout', auth.loadUser, routeHandler.logout);
   server.get('/auth/login', passport.authenticate(config.auth_strategy), routeHandler.getUser);
   server.get('/auth/login/return', passport.authenticate(config.auth_strategy, { failureRedirect: '/failed' }),

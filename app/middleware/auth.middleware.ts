@@ -12,6 +12,7 @@ let errors = require('restify-errors');
 
 const isAuthenticated = (req: any, res: any, next: restify.Next) => {
   if (req.isAuthenticated()) {
+    console.log('authenticated' + req.user.username);
     return next();
   } else {
     res.redirect('/login', next);
@@ -21,7 +22,6 @@ const isAuthenticated = (req: any, res: any, next: restify.Next) => {
 const adminAuthenticated = (req: any, res: restify.Response, next: restify.Next) => {
   if (req.isAuthenticated()) {
     console.log('true? ' + req.isAuthenticated());
-    console.log(req.user.username);
     let loggedInUser = req.user.username;
     let adminOrSuperAdmin = function() {
       return config.admins.indexOf(loggedInUser) >= 0 || config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;

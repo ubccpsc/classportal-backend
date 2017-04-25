@@ -18,6 +18,8 @@ const data = {
       'username' : 'eodney', 'courses' : new Array(), 'teamUrl' : ''},
     { 'csid' : '12312321', 'snum' : '5', 'lname' : 'Smith', 'fname' : 'Thomas',
       'username' : 'thekitsch', 'courses' : new Array() },
+    { 'csid' : '999999222', 'snum' : '83', 'lname' : 'Smith', 'fname' : 'Cynthia',
+      'username' : 'TEST_ADMIN_1', 'courses' : new Array() },
   ],
 
   courses: [
@@ -29,8 +31,13 @@ const data = {
 };
 
 server.onConnect.then( connection => {
+  clearUsers();
   return seedData();
 });
+
+function clearUsers() {
+  User.remove({}).exec();
+}
 
 function seedData(): Promise<IUserDocument[]> {
   logger.info('Verifying that users exist in db:');
