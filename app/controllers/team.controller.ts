@@ -2,6 +2,7 @@ import * as restify from 'restify';
 import { logger } from '../../utils/logger';
 import { ITeamDocument, Team } from '../models/team.model';
 import { ICourseDocument, Course } from '../models/course.model';
+import { IUserDocument, User } from '../models/user.model';
 import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
 
 
@@ -11,30 +12,45 @@ import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
 function addTeam(req: restify.Request) {
   console.log('params' + JSON.stringify(req.params));
 
+  function checkForDuplicateTeamMembers(teams: ITeamDocument[]) {
+      let duplicateEntry: boolean;
+      let userCompiliation = new Array();
+
+      for ( let team in teams ) {
+        // Push each team member into an array to cross-check Teams per Deliverable with.
+        teams[team].members.forEach( function(member) {
+          userCompiliation.push(member);
+          for (let i = 0; i < userCompiliation.length; i++) {
+            duplicateEntry = teams[team].members.some( function(user: IUserDocument) {
+              return user._id === userCompiliation[i]._id;
+            });
+          }
+        });
+
+        if (duplicateEntry) {
+          throw Error('Duplicate entry for team member per Deliverable error');
+        }
+      }
+  }
   let courseId = req.params.courseId;
   let deliverable = req.params.deliverable;
   let members = req.params.members;
-  let deliverableQuery = Deliverable.findById(deliverable).exec();
+  let teamQuery = Team.find({ 'deliverable' : deliverable })
+    .populate('members').exec();
 
   // One student per deliverable --> Maps to these conditions:
   // 1) Students must be unique on the team.
-  // 2) Amongst the teams that exist with a particular Deliverable ID, 
+  // 2) Amongst the teams that exist with a particular Deliverable ID,
   //    students must also be unique.
   // ---> These conditions ensure that students cannot be on multiple teams
   //      per deliverable.
 
+  // If no teams with deliverableId found, create new team.
 
-  deliverableQuery
-    .then( d => {
-
-      if (d === null) {
-        throw Error('No deliverable document found');
-      } else {
-
-      }
-      // I am looking for the Teams with a Deliverable to see if Users exist on the teams. 
-      // Must check for this criteria, as one student per deliverable is the plan.
-    })
+  teamQuery
+    .then( teams => {
+      checkForDuplicateTeamMembers(teams);
+    });
 
   return Course.findOne({ 'courseId' : courseId })
     .exec()
