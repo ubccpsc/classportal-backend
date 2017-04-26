@@ -10,7 +10,9 @@ import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
  * Create a team
  */
 function addTeam(req: restify.Request) {
-  console.log('params' + JSON.stringify(req.params));
+  let courseId = req.params.courseId;
+  let deliverable = req.params.deliverable;
+  let members = req.params.members;
 
   function checkForDuplicateTeamMembers(teams: ITeamDocument[]) {
     let duplicateEntry: boolean;
@@ -27,45 +29,45 @@ function addTeam(req: restify.Request) {
         }
       });
     }
-    if (duplicateEntry) {
-      console.log('Deuplicate team entry found' + duplicateEntry);
-      throw Error('Duplicate team member entry per Deliverable error');
-    } else {
-      return true;
-    }
+    return duplicateEntry;
   }
-  let courseId = req.params.courseId;
-  let deliverable = req.params.deliverable;
-  let members = req.params.members;
+
   let teamQuery = Team.find({ 'deliverable' : deliverable })
     .populate('members')
     .exec()
     .then( teams => {
-      let duplicateMembers = checkForDuplicateTeamMembers(teams);
+      console.log('weird output' + checkForDuplicateTeamMembers(teams));
+      return checkForDuplicateTeamMembers(teams);
     })
     .catch(err => logger.info(err));
+
   let courseQuery = teamQuery.then( duplicateMembers => {
-    if (duplicateMembers) {
-      throw Error('Cannot add team. Duplicate team members found in single Deliverable.');
-    } else {
       return Course.findOne({ 'courseId' : courseId })
         .exec();
-    }
   })
   .catch(err => logger.info(err));
 
-  let createTeam = courseQuery.then((c: ICourseDocument) => {
+  let createTeam = function(courseId: string) {
     return Team.create({
-      'course' : c._id,
+      'course' : courseId,
       'deliverable' : deliverable,
       'members' : members,
     })
     .catch(err => logger.info('Error creating course' + err));
-  });
+  };
 
-  return createTeam.then( (t: ITeamDocument ) => {
-    return Team.findOne(t).populate('members').exec();
-  });
+  return Promise.all([teamQuery, courseQuery])
+    .then(function(results: any) {
+      console.log(results);
+      if (results[0] !== true) {
+        return createTeam(results[1]._id)
+          .then( t => {
+            return t;
+          })
+          .catch(err => 'Cannot create team' + err);
+      }
+      throw Error('Cannot add duplicate team members to deliverable.');
+    });
 
   // One student per deliverable --> Maps to these conditions:
   // 1) Students must be unique on the team.

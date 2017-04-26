@@ -111,7 +111,7 @@ const addGithubUsername = (req: restify.Request, res: restify.Response, next: re
 
 const addTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return teamCtrl.addTeam(req)
-   .then((team: ITeamDocument) => res.json(200, { response: team }))
+   .then(() => res.json(200, { response: 'Success' }))
    .catch((err: any) => res.json(500, { err: err.message }));
 };
 
