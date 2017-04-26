@@ -26,18 +26,46 @@ function addTeam(req: restify.Request) {
           });
         }
       });
-
-      if (duplicateEntry) {
-        console.log('Deuplicate team entry found' + duplicateEntry);
-        throw Error('Duplicate team member entry per Deliverable error');
-      }
+    }
+    if (duplicateEntry) {
+      console.log('Deuplicate team entry found' + duplicateEntry);
+      throw Error('Duplicate team member entry per Deliverable error');
+    } else {
+      return true;
     }
   }
   let courseId = req.params.courseId;
   let deliverable = req.params.deliverable;
   let members = req.params.members;
   let teamQuery = Team.find({ 'deliverable' : deliverable })
-    .populate('members').exec();
+    .populate('members')
+    .exec()
+    .then( teams => {
+      let duplicateMembers = checkForDuplicateTeamMembers(teams);
+    })
+    .catch(err => logger.info(err));
+  let courseQuery = teamQuery.then( duplicateMembers => {
+    if (duplicateMembers) {
+      throw Error('Cannot add team. Duplicate team members found in single Deliverable.');
+    } else {
+      return Course.findOne({ 'courseId' : courseId })
+        .exec();
+    }
+  })
+  .catch(err => logger.info(err));
+
+  let createTeam = courseQuery.then((c: ICourseDocument) => {
+    return Team.create({
+      'course' : c._id,
+      'deliverable' : deliverable,
+      'members' : members,
+    })
+    .catch(err => logger.info('Error creating course' + err));
+  });
+
+  return createTeam.then( (t: ITeamDocument ) => {
+    return Team.findOne(t).populate('members').exec();
+  });
 
   // One student per deliverable --> Maps to these conditions:
   // 1) Students must be unique on the team.
@@ -47,28 +75,6 @@ function addTeam(req: restify.Request) {
   //      per deliverable.
 
   // If no teams with deliverableId found, create new team.
-
-  teamQuery
-    .then( teams => {
-      checkForDuplicateTeamMembers(teams);
-    })
-    .catch(err => logger.info(err));
-
-  return Course.findOne({ 'courseId' : courseId })
-    .exec()
-    .then( c => {
-      return Team.create({
-        'course' : c._id,
-        'deliverable' : deliverable,
-        'members' : members,
-      })
-      .catch( err => {
-        logger.info('There was an error creating the team: ' + err);
-      });
-    })
-    .catch( err => {
-      logger.info('There was an error finding the course: ' + err);
-    });
 }
 
 export { addTeam }

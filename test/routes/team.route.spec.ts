@@ -10,6 +10,7 @@ const DUPLICATE_ENTRY_DATA = {
 };
 
 let agent = supertest.agent(app);
+let sessionCookie: any;
 
 describe('Logging in agent for Team Routes Tests', () => {
   it('should have username in Response after logging in', (done) => {
@@ -20,6 +21,7 @@ describe('Logging in agent for Team Routes Tests', () => {
         if (err) {
           console.log(err);
         }
+        sessionCookie = res.headers['set-cookie'];
         expect(res.status).to.equal(200);
         expect(res.user.username).to.equal('thekitsch');
         done();
@@ -31,6 +33,7 @@ describe('PUT /:courseId/team', () => {
   it('should reject team creation due to duplicate team members entered', (done) => {
     agent
       .put('/710/team')
+      .set('cookie', sessionCookie)
       .send(DUPLICATE_ENTRY_DATA)
       .end((err: any, res: supertest.Response) => {
         if (err) {
