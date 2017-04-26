@@ -26,7 +26,7 @@ passport.use(new Strategy({
 if (config.env === 'test' ) {
 
   Strategy = require('passport-local').Strategy;
-
+  console.log('strategy', Strategy);
   passport.use(new Strategy({
     usernameField: 'username',
     passwordField: 'snum',
@@ -34,7 +34,10 @@ if (config.env === 'test' ) {
     session: true,
   },
   function(req: any, username: any, password: any, done: any) {
-    let query = User.findOne({ 'username': username, snum : password }).exec();
+    console.log('username', username);
+    console.log('passdword or snum', password);
+    let query = User.findOne({ 'username': username, 'snum' : password }).exec();
+    console.log('Local strategy enabled');
     query.then( user => {
       if (user) {
         return done(null, user);
@@ -68,7 +71,7 @@ passport.deserializeUser(function(obj: any, cb: any) {
   logger.info('Deserializing object : ' + JSON.stringify(obj, null, 2));
   User.findById(obj)
     .exec()
-    .then((u) => { cb(null, u.username); })
+    .then((u) => { cb(null, u); })
     .catch((err) => { logger.info(err); });
 });
 

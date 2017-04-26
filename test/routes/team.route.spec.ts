@@ -3,17 +3,42 @@ import { expect } from 'chai';
 import { app } from '../../server';
 import { logger } from '../../utils/logger';
 
-xdescribe('GET /auth/login', () => {
-  it('should login successfully', (done) => {
-    let user1 = supertest.agent(app)
-      .get('/auth/login')
-      .query({ username: 'thekitsch', snum: 5 })
+const SNUM_GITHUB_LOGIN = { username: 'thekitsch', snum: 5 };
+const DUPLICATE_ENTRY_DATA = {
+  'deliverable': '58ee95b9ec03e72706a11ca4',
+  'members': ['58fe43146d60f13e703e9c1a', '58fe43146d60f13e703e9c1b'],
+};
+
+let agent = supertest.agent(app);
+
+describe('Logging in agent for Team Routes Tests', () => {
+  it('should have username in Response after logging in', (done) => {
+    agent
+      .get('/auth/login?username=' + SNUM_GITHUB_LOGIN.username + '&snum=' + SNUM_GITHUB_LOGIN.snum)
+      .end((err, res: any) => {
+        // user should be authenticated with session state
+        if (err) {
+          console.log(err);
+        }
+        expect(res.status).to.equal(200);
+        expect(res.user.username).to.equal('thekitsch');
+        done();
+      });
+  });
+});
+
+describe('PUT /:courseId/team', () => {
+  it('should reject team creation due to duplicate team members entered', (done) => {
+    agent
+      .put('/710/team')
+      .send(DUPLICATE_ENTRY_DATA)
       .end((err: any, res: supertest.Response) => {
         if (err) {
           done(err);
         } else {
+          console.log('newest test' + JSON.stringify(res));
           expect(res.status).to.equal(200);
-          expect(res.body.user.username).to.equal('thekitsch');
+          expect(JSON.stringify(res)).to.equal('thekitsch');
           done();
         }
       });

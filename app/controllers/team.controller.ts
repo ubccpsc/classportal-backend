@@ -13,24 +13,25 @@ function addTeam(req: restify.Request) {
   console.log('params' + JSON.stringify(req.params));
 
   function checkForDuplicateTeamMembers(teams: ITeamDocument[]) {
-      let duplicateEntry: boolean;
-      let userCompiliation = new Array();
+    let duplicateEntry: boolean;
+    let userCompiliation = new Array();
 
-      for ( let team in teams ) {
-        // Push each team member into an array to cross-check Teams per Deliverable with.
-        teams[team].members.forEach( function(member) {
-          userCompiliation.push(member);
-          for (let i = 0; i < userCompiliation.length; i++) {
-            duplicateEntry = teams[team].members.some( function(user: IUserDocument) {
-              return user._id === userCompiliation[i]._id;
-            });
-          }
-        });
-
-        if (duplicateEntry) {
-          throw Error('Duplicate entry for team member per Deliverable error');
+    for ( let team in teams ) {
+      // Push each team member into an array to cross-check Teams per Deliverable with.
+      teams[team].members.forEach( function(member) {
+        userCompiliation.push(member);
+        for (let i = 0; i < userCompiliation.length; i++) {
+          duplicateEntry = teams[team].members.some( function(user: IUserDocument) {
+            return user._id === userCompiliation[i]._id;
+          });
         }
+      });
+
+      if (duplicateEntry) {
+        console.log('Deuplicate team entry found' + duplicateEntry);
+        throw Error('Duplicate team member entry per Deliverable error');
       }
+    }
   }
   let courseId = req.params.courseId;
   let deliverable = req.params.deliverable;
@@ -50,7 +51,8 @@ function addTeam(req: restify.Request) {
   teamQuery
     .then( teams => {
       checkForDuplicateTeamMembers(teams);
-    });
+    })
+    .catch(err => logger.info(err));
 
   return Course.findOne({ 'courseId' : courseId })
     .exec()
