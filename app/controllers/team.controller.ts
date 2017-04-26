@@ -14,10 +14,24 @@ function addTeam(req: restify.Request) {
   let courseId = req.params.courseId;
   let deliverable = req.params.deliverable;
   let members = req.params.members;
-  let deliverableQuery = Deliverable.find({ deliverable }).exec();
+  let deliverableQuery = Deliverable.findById(deliverable).exec();
+
+  // One student per deliverable --> Maps to these conditions:
+  // 1) Students must be unique on the team.
+  // 2) Amongst the teams that exist with a particular Deliverable ID, 
+  //    students must also be unique.
+  // ---> These conditions ensure that students cannot be on multiple teams
+  //      per deliverable.
+
 
   deliverableQuery
     .then( d => {
+
+      if (d === null) {
+        throw Error('No deliverable document found');
+      } else {
+
+      }
       // I am looking for the Teams with a Deliverable to see if Users exist on the teams. 
       // Must check for this criteria, as one student per deliverable is the plan.
     })
