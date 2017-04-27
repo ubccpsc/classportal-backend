@@ -50,8 +50,6 @@ const data = {
 };
 
 function getChildTables() {
-  console.log(course610);
-  console.log(course710);
   child_tables = {
     deliverables: [
       { 'name' : 'Assignment 1', 'gradesReleased' : true, 'open' : '1970-01-18T02:21:07.200Z',
@@ -66,17 +64,15 @@ function getChildTables() {
   };
 }
 
-
 server.onConnect.then( connection => {
   clearUsers();
   clearTeams();
   clearCourses();
+  clearDeliverables();
   seedUsers();
   seedCourses().then(() => {
     getQueries()
-    .then( (courseQueries: any) => {
-      course610 = courseQueries[0];
-      course710 = courseQueries[1];
+    .then( () => {
     })
     .then(() => {
       getChildTables();
@@ -90,11 +86,13 @@ server.onConnect.then( connection => {
 function getQueries() {
   let query1 = Course.findOne({ 'courseId' : '610' }).exec()
     .then(c => {
+      course610 = c;
       return c;
     })
     .catch(err => { console.log(err); });
   let query2 = Course.findOne({ 'courseId' : '710' }).exec()
     .then(c => {
+      course710 = c;
       return c;
     })
     .catch(err => { console.log(err); });
@@ -114,6 +112,9 @@ function clearCourses() {
   Course.remove({}).exec();
 }
 
+function clearDeliverables() {
+  Deliverable.remove({}).exec();
+}
 function seedUsers(): Promise<IUserDocument[]> {
   logger.info('Verifying that users exist in db:');
 
@@ -178,7 +179,7 @@ function seedDeliverables(): Promise<IDeliverableDocument[]> {
   } else {
     // get deliverables
     let deliverablesArray = child_tables.deliverables;
-    logger.info(deliverablesArray.map((deliverable: any) => deliverable.deliverableId));
+    logger.info(deliverablesArray.map((deliverable: any) => deliverable.name));
 
     // write all deliverables to db
     const promises: Promise<IDeliverableDocument>[] = deliverablesArray.map((current: any) => {

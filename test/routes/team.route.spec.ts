@@ -16,8 +16,6 @@ const COURSE_610 = User.findOne({ courseId: '610' }).exec();
 const COURSE_510 = User.findOne({ courseId: '410' }).exec();
 const COURSE_410 = User.findOne({ courseId: '510' }).exec();
 
-
-
 let agent = supertest.agent(app);
 let sessionCookie: any;
 
