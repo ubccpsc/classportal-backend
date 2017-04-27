@@ -9,12 +9,7 @@ const DUPLICATE_ENTRY_DATA = {
   'deliverable': '58ee95b9ec03e72706a11ca4',
   'members': ['58fe43146d60f13e703e9c1a', '58fe43146d60f13e703e9c1b'],
 };
-const USER_1_THOMAS = User.findOne({ csid: 12312321, fname: 'Thomas' }).exec();
-const USER_2_CYNTHIA = User.findOne({ csid: 999999222, fname: 'Cynthia' }).exec();
-const COURSE_710 = User.findOne({ courseId: '710' }).exec();
-const COURSE_610 = User.findOne({ courseId: '610' }).exec();
-const COURSE_510 = User.findOne({ courseId: '410' }).exec();
-const COURSE_410 = User.findOne({ courseId: '510' }).exec();
+
 
 let agent = supertest.agent(app);
 let sessionCookie: any;
