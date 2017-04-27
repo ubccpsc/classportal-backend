@@ -26,7 +26,6 @@ passport.use(new Strategy({
 if (config.env === 'test' ) {
 
   Strategy = require('passport-local').Strategy;
-  console.log('strategy', Strategy);
   passport.use(new Strategy({
     usernameField: 'username',
     passwordField: 'snum',
@@ -34,8 +33,6 @@ if (config.env === 'test' ) {
     session: true,
   },
   function(req: any, username: any, password: any, done: any) {
-    console.log('username', username);
-    console.log('passdword or snum', password);
     let query = User.findOne({ 'username': username, 'snum' : password }).exec();
     console.log('Local strategy enabled');
     query.then( user => {

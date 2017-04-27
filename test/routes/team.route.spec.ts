@@ -2,12 +2,21 @@ import * as supertest from 'supertest';
 import { expect } from 'chai';
 import { app } from '../../server';
 import { logger } from '../../utils/logger';
+import { User, IUserDocument } from '../../app/models/user.model';
 
 const SNUM_GITHUB_LOGIN = { username: 'thekitsch', snum: 5 };
 const DUPLICATE_ENTRY_DATA = {
   'deliverable': '58ee95b9ec03e72706a11ca4',
   'members': ['58fe43146d60f13e703e9c1a', '58fe43146d60f13e703e9c1b'],
 };
+const USER_1_THOMAS = User.findOne({ csid: 12312321, fname: 'Thomas' }).exec();
+const USER_2_CYNTHIA = User.findOne({ csid: 999999222, fname: 'Cynthia' }).exec();
+const COURSE_710 = User.findOne({ courseId: '710' }).exec();
+const COURSE_610 = User.findOne({ courseId: '610' }).exec();
+const COURSE_510 = User.findOne({ courseId: '410' }).exec();
+const COURSE_410 = User.findOne({ courseId: '510' }).exec();
+
+
 
 let agent = supertest.agent(app);
 let sessionCookie: any;
@@ -23,7 +32,7 @@ describe('Logging in agent for Team Routes Tests', () => {
         }
         sessionCookie = res.headers['set-cookie'];
         expect(res.status).to.equal(200);
-        expect(res.user.username).to.equal('thekitsch');
+        expect(res.text.user.username).to.equal('thekitsch');
         done();
       });
   });
@@ -49,7 +58,7 @@ describe('PUT /:courseId/team', () => {
 
   it('should return array of students', (done) => {
     supertest.agent(app)
-      .get('/710/admin/students')
+      .get('/710/students')
       .end((err: any, res: supertest.Response) => {
         if (err) {
           done(err);
