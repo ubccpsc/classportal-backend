@@ -6,7 +6,9 @@ import { IUserDocument, User } from '../models/user.model';
 import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
 
 
-/**
+/**    userCompiliation.some( function(user: any)) {
+      return user === member[i];
+    }
  * Create a team
  */
 function addTeam(req: restify.Request) {
@@ -16,27 +18,34 @@ function addTeam(req: restify.Request) {
 
   function checkForDuplicateTeamMembers(teams: ITeamDocument[]) {
     let duplicateEntry: boolean;
+    let duplicatedMember: boolean;
     let userCompiliation = new Array();
 
+    // Push each team member into an array to cross-check that member is not added
+    // to more than one Team per Deliverable.
     for ( let team in teams ) {
-      // Push each team member into an array to cross-check Teams per Deliverable with.
-      teams[team].members.forEach( function(member) {
-        userCompiliation.push(member);
-        for (let i = 0; i < userCompiliation.length; i++) {
-          duplicateEntry = teams[team].members.some( function(user: IUserDocument) {
-            return user._id === userCompiliation[i]._id;
-          });
-        }
-      });
+      for ( let i = 0; i < teams[team].members.length; i++) {
+        userCompiliation.push(teams[team].members[i]);
+      }
     }
-    return duplicateEntry;
+
+    for (let i = 0; i < userCompiliation.length; i++) {
+      duplicateEntry = members.some( function(member: IUserDocument) {
+        return userCompiliation[i] == member;
+      });
+      if (duplicateEntry) {
+        duplicatedMember = true;
+      }
+    }
+
+    return duplicatedMember;
   }
 
   let teamQuery = Team.find({ 'deliverable' : deliverable })
-    .populate('members')
+    .populate('deliverable')
     .exec()
     .then( teams => {
-      console.log('weird output' + checkForDuplicateTeamMembers(teams));
+      console.log('array of teams' + JSON.stringify(teams));
       return checkForDuplicateTeamMembers(teams);
     })
     .catch(err => logger.info(err));
