@@ -14,13 +14,13 @@ let child_tables: any;
 const data = {
 
   users: [
-    { 'csid' : 'a1a1', 'snum' : '1', 'lname' : 'Alast', 'fname' : 'Afirst',
+    { 'csid' : 'a1a1', 'snum' : '1', 'lname' : 'Smith', 'fname' : 'Connor',
       'username' : 'rodney', 'courses' : new Array(), 'teamUrl' : '' },
-    { 'csid' : 'b2b1', 'snum' : '2', 'lname' : 'Blast', 'fname' : 'Bfirst',
+    { 'csid' : 'b2b1', 'snum' : '2', 'lname' : 'Smith', 'fname' : 'Roger',
       'username' : 'bodney', 'courses' : new Array(), 'teamUrl' : '' },
-    { 'csid' : 'c3c1', 'snum' : '3', 'lname' : 'Clast', 'fname' : 'Cfirst',
+    { 'csid' : 'c3c1', 'snum' : '3', 'lname' : 'Smith', 'fname' : 'Agent',
       'username' : 'codney', 'courses' : new Array(), 'teamUrl' : '' },
-    { 'csid' : 'e5e5', 'snum' : '5', 'lname' : 'Elast', 'fname' : 'Efirst',
+    { 'csid' : 'e5e5', 'snum' : '4', 'lname' : 'Smith', 'fname' : 'Regis',
       'username' : 'eodney', 'courses' : new Array(), 'teamUrl' : ''},
     { 'csid' : '12312321', 'snum' : '5', 'lname' : 'Smith', 'fname' : 'Thomas',
       'username' : 'thekitsch', 'courses' : new Array() },
