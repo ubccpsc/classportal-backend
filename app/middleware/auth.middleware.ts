@@ -20,8 +20,8 @@ const isAuthenticated = (req: any, res: any, next: restify.Next) => {
 };
 
 const adminAuthenticated = (req: any, res: restify.Response, next: restify.Next) => {
+  console.log('super true ' + req.isAuthenticated());
   if (req.isAuthenticated()) {
-    console.log('true? ' + req.isAuthenticated());
     let loggedInUser = req.user.username;
     let adminOrSuperAdmin = function() {
       return config.admins.indexOf(loggedInUser) >= 0 || config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
@@ -30,7 +30,6 @@ const adminAuthenticated = (req: any, res: restify.Response, next: restify.Next)
       return next(); // authorized
     }
   }
-  logger.info('Permission denied. Admin permissions needed: ' + req.user);
   next(new errors.UnauthorizedError('Permission denied'));
 };
 
@@ -44,8 +43,20 @@ const superAuthenticated = (req: any, res: restify.Response, next: restify.Next)
       return next();
     }
   }
-  logger.info('Permission denied. Super Admin permissions needed: ' + req.user);
   next(new errors.UnauthorizedError('Permission denied'));
 };
 
-export { isAuthenticated, adminAuthenticated, superAuthenticated }
+const isAdmin = (req: any, res: restify.Response, next: restify.Next) => {
+  if (req.isAuthenticated()) {
+    let loggedInUser = req.user.username;
+    let adminOrSuperAdmin = function() {
+      return config.admins.indexOf(loggedInUser) >= 0 || config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
+    };
+    if (adminOrSuperAdmin()) {
+      return true;
+    }
+  }
+  return false;
+};
+
+export { isAuthenticated, adminAuthenticated, superAuthenticated, isAdmin }

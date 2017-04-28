@@ -3,9 +3,11 @@ import { logger } from '../../utils/logger';
 
 interface ITeamDocument extends mongoose.Document {
   course: Object[];
-  teamId: string;
+  teamId: number;
   members: Object[];
   deliverable: Object;
+  name: string;
+  githubUrl: string;
 }
 
 interface ITeamModel extends mongoose.Model<ITeamDocument> {
@@ -13,6 +15,18 @@ interface ITeamModel extends mongoose.Model<ITeamDocument> {
 }
 
 const TeamSchema = new mongoose.Schema({
+  teamId: {
+    type: Number,
+    required: true,
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+  githubUrl: {
+    type: String,
+    required: true,
+  },
   course: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
     required: true,
@@ -24,6 +38,9 @@ const TeamSchema = new mongoose.Schema({
   members: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     required: true,
+  },
+  admins: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
 });
 

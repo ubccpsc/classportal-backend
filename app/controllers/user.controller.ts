@@ -80,9 +80,7 @@ function validateRegistration(req: any, res: any, next: restify.Next) {
   let csid = req.params.csid;
   let snum = req.params.snum;
   let query = User.findOne({ 'csid' : csid, 'snum' : snum }).exec();
-  console.log('query made');
   return query.then( user => {
-    console.log('query made' + user);
 
     if (user === null) {
       return Promise.reject(Error('Unable to validate CSID and SNUM'));
@@ -105,8 +103,6 @@ function addGithubUsername(req: any) {
   let snum = req.params.snum;
   let username = req.params.username;
   let query = User.findOne({ 'csid' : csid, 'snum' : snum }).exec();
-
-  console.log('parameters2' + JSON.stringify(req.params));
 
   return query.then( user => {
     if (!user) {

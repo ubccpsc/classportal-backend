@@ -25,6 +25,7 @@ const routes = (server: restify.Server) => {
     });
   // Authentication routes
   server.put('/admin/:courseId', routeHandler.createCourse);
+  server.post('/:courseId/admin/team', adminAuthenticated, routeHandler.addTeam);
   server.get('/:courseId/admin/students', routeHandler.getStudentList);
   server.post('/:courseId/admin/students', routeHandler.addStudentList);
   server.post('/:courseId/admin/grades', routeHandler.addGrades);
