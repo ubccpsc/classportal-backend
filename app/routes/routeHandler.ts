@@ -110,11 +110,18 @@ const addGithubUsername = (req: restify.Request, res: restify.Response, next: re
 };
 
 const addTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return teamCtrl.addTeam(req)
+  return teamCtrl.add(req)
    .then(() => res.json(200, { response: 'Successfully added a new team.' }))
    .catch((err: any) => res.json(500, { err: err.message }));
 };
 
+const updateTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.update(req)
+   .then(() => res.json(200, { response: 'Successfully updated team.' }))
+   .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
    getUser, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
-   getGradesAdmin, getGradesStudent, addGrades, addTeam, getStudentNamesFromCourse };
+   getGradesAdmin, getGradesStudent, addGrades, addTeam, updateTeam, getStudentNamesFromCourse };
