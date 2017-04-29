@@ -13,8 +13,6 @@ function checkForDuplicateTeamMembers(existingTeams: ITeamDocument[], newTeamMem
   let duplicatedMember: boolean;
   let userCompiliation = new Array();
 
-  console.log('existing teams' + existingTeams);
-
   // Push each team member into an array to cross-check that member is not added
   // to more than one Team per Deliverable.
   for ( let team in existingTeams ) {
@@ -31,7 +29,6 @@ function checkForDuplicateTeamMembers(existingTeams: ITeamDocument[], newTeamMem
       duplicatedMember = true;
     }
   }
-  console.log('duplicated member');
   return duplicatedMember;
 }
 
@@ -61,44 +58,37 @@ let updateTeam = function(team_Id: string, updatedModel: ITeamDocument) {
   return Team.findOne({ '_id' : team_Id })
     .exec()
     .then( t => {
-      if (t) {
-        t.deliverable = updatedModel.deliverable;
-        t.githubUrl = updatedModel.githubUrl;
-        t.members = updatedModel.members;
-        t.name = updatedModel.name;
-        t.save();
-      } else {
-        Promise.reject('Unable to update team model.');
-      }
-    }).catch(err => logger.info(err));
+      t.deliverable = updatedModel.deliverable;
+      t.githubUrl = updatedModel.githubUrl;
+      t.members = updatedModel.members;
+      t.name = updatedModel.name;
+      return t.save();
+    })
+    .catch(err => { logger.info('Error retrieving team object: ' + err); });
 };
 
 function update(_req: any) {
   req = _req;
   let courseId: string = req.params.courseId;
-  let deliverable: string = req.params.deliverable;
+  let deliverable: string = req.params.updatedModel.deliverable;
   let newTeamMembers: [Object] = req.params.updatedModel.members;
   let teamId: string = req.params.teamId;
   let updatedModel: ITeamDocument = req.params.updatedModel;
-
   let getTeamsUnderDeliverable = Team.find({ 'deliverable' : deliverable, '_id': { $nin : teamId } } )
     .populate('deliverable')
     .exec()
     .then( existingTeams => {
       return checkForDuplicateTeamMembers(existingTeams, newTeamMembers);
     })
-    .catch(err => logger.info(err));
+    .catch(err => { return logger.info(err); });
 
   return getTeamsUnderDeliverable
     .then( results => {
-      console.log('ze results' + JSON.stringify(results));
       if (results !== true) {
-        console.log('made it here');
         return updateTeam(teamId, updatedModel)
           .then( t => {
             return t;
-          })
-          .catch(err => 'Cannot create team' + err);
+          });
       }
       throw Error('Cannot add duplicate team members to deliverable.');
     });

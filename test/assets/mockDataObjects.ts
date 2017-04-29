@@ -20,6 +20,7 @@ let COURSE_710: ICourseDocument;
 let COURSE_610: ICourseDocument;
 let DELIVERABLE_1: IDeliverableDocument;
 let DELIVERABLE_2: IDeliverableDocument;
+let TEAM_COMPUTATIONAL_THEORY: ITeamDocument;
 const GITHUB_URL = 'http://www.github.com/ubccpsc/classportal-backend/';
 const TEAM_ID = faker.random.number(9999);
 const TEAM_NAME = 'Computational Theory Group';
@@ -40,10 +41,10 @@ function initializeData() {
     .then(c => { return COURSE_610 = c; });
   let data5 = Deliverable.findOne({ name: 'Assignment 1' })
     .exec()
-    .then(d => { return DELIVERABLE_1 = d; });
+    .then(d => { DELIVERABLE_1 = d; return d; });
   let data6 = Deliverable.findOne({ name: 'Assignment 2' })
     .exec()
-    .then(d => { return DELIVERABLE_1 = d; });
+    .then(d => { DELIVERABLE_1 = d; return d; });
   let data7 = User.findOne({ csid: 'c3c1', fname: 'Agent' })
     .exec()
     .then(c => { return USER_5_AGENT = c; });
@@ -72,12 +73,30 @@ function initializeData() {
     fname: faker.name.firstName(), lname: faker.name.lastName(), courses: new Array(),
     username: faker.internet.userName() })
     .then(c => { c.save(); return RANDOM_STUDENT_4 = c; });
+  let data15 = User.create({ csid: faker.random.number(999999999), snum: faker.random.number(9999999),
+    fname: faker.name.firstName(), lname: faker.name.lastName(), courses: new Array(),
+    username: faker.internet.userName() })
+    .then(c => { c.save(); return RANDOM_STUDENT_4 = c; });
+  let data16 = Deliverable.findOne({ name: 'Assignment 1' })
+    .exec()
+    .then(d => {
+      return Team.findOrCreate({
+        name: 'Computational Theory Group', teamId: faker.random.number(99999),
+        githubUrl: 'http://www.github.com/ubccpsc/classportal-backend/1', deliverable: d._id,
+        admins: new Array(), course: d.courseId, members: [RANDOM_STUDENT_3._id, RANDOM_STUDENT_4._id],
+      })
+       .then( t => { console.log('got into the return' + t); return TEAM_COMPUTATIONAL_THEORY = t; })
+       .catch(err => console.log(err));
+    });
+  let data17 = Deliverable.findOne({ name: 'Assignment 2' })
+    .exec()
+    .then(d => { return d; });
 
-  return Promise.all([data1, data2, data3, data4, data5, data6, data11, data12, data13,
-    data14]);
+  return Promise.all<any>([data1, data2, data3, data4, data5, data6, data11, data12, data13,
+    data14, data15, data16, data17]);
 }
 
 export { initializeData, USER_1_THOMAS, USER_2_CYNTHIA, USER_3_REGIS, USER_4_CONNOR,
   USER_5_AGENT, USER_6_ROGER, COURSE_610, COURSE_710, DELIVERABLE_1, DELIVERABLE_2,
   GITHUB_URL, TEAM_ID, TEAM_NAME, TEAM_ADMINS, RANDOM_STUDENT_1, RANDOM_STUDENT_2,
-  RANDOM_STUDENT_3, RANDOM_STUDENT_4 }
+  RANDOM_STUDENT_3, RANDOM_STUDENT_4, TEAM_COMPUTATIONAL_THEORY }

@@ -145,13 +145,12 @@ UserSchema.statics = {
       .exec()
       .then((user) => {
         if (user) {
-          Promise.resolve(user);
+          return Promise.resolve(user);
         } else {
-          User.create(query)
+          return User.create(query)
             .then((q) => { return q.save(); })
             .catch((err) => { logger.info(err); });
         }
-        return Promise.resolve(user);
       });
   },
 };

@@ -12,6 +12,7 @@ interface ITeamDocument extends mongoose.Document {
 
 interface ITeamModel extends mongoose.Model<ITeamDocument> {
   findByUsername(username: string): Promise<ITeamDocument>;
+  findOrCreate(query: Object): Promise<ITeamDocument>;
 }
 
 const TeamSchema = new mongoose.Schema({
@@ -39,9 +40,6 @@ const TeamSchema = new mongoose.Schema({
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     required: true,
   },
-  admins: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  },
 });
 
 // Methods
@@ -61,13 +59,12 @@ TeamSchema.static({
       .exec()
       .then((team) => {
         if (team) {
-          Promise.resolve(team);
+          return Promise.resolve(team);
         } else {
-          Team.create(query)
+          return Team.create(query)
             .then((q) => { return q.save(); })
             .catch((err) => { logger.info(err); });
         }
-        return Promise.resolve(team);
       });
   },
 });
