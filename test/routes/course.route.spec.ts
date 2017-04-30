@@ -3,9 +3,8 @@ import * as supertest from 'supertest';
 import { app } from '../../server';
 import { logger } from '../../utils/logger';
 import { expect, assert } from 'chai';
-
-
-
+import { studentCookie } from './../assets/auth.agents';
+let agent = supertest.agent(app);
 
 const CLASS_LIST_PATH = __dirname.replace('/build/test/routes', '') + '/test/assets/mockDataCList.csv';
 const COURSE_DATA = {
@@ -19,21 +18,6 @@ const COURSE_DATA = {
   studentsSetTeams : 1,
   admins : ['fred', 'jimmy'],
 };
-let studentAgent = function() {
-  let studentAgent = supertest.agent(app);
-
-  studentAgent
-    .get('/auth/login')
-    .query({ username: 'thekitsch', snum: 5 })
-    .end((err, res) => {
-      // user should be authenticated with session state
-      if (err) {
-        console.log(err);
-      }
-    });
-
-  return studentAgent;
-};
 
 
 describe('PUT admin/:courseId', () => {
@@ -43,7 +27,7 @@ describe('PUT admin/:courseId', () => {
   const ALREADY_EXISTS = { err: 'Course ' + COURSE_DATA.courseId + ' already exists' };
 
   it('should return a successfully added course # response', (done) => {
-    studentAgent()
+    agent
       .put('/admin/' + COURSE_DATA.courseId )
       .send(COURSE_DATA)
       .end((err: any, res: supertest.Response) => {
@@ -59,7 +43,7 @@ describe('PUT admin/:courseId', () => {
 
   it('should result in an error because schema fails', (done) => {
     let randomNum = Math.floor(Math.random() * 99999);
-    studentAgent()
+    agent
       .put('/admin/' + randomNum )
       .send({ classList: 'not an array. faulty data' })
       .end((err: any, res: supertest.Response) => {
@@ -76,7 +60,7 @@ describe('PUT admin/:courseId', () => {
 
 
   it('should return a course # already exists response', (done) => {
-    studentAgent()
+    agent
       .put('/admin/' + COURSE_DATA.courseId )
       .send(COURSE_DATA)
       .end((err: any, res: supertest.Response) => {
@@ -99,7 +83,7 @@ describe('PUT /:courseId/admin/students', () => {
   const SUCCESS_RESULT = { response: 'Successfully updated Class List on course #' + COURSE_DATA.courseId };
 
   it('should return a successfully added class list response', (done) => {
-    studentAgent()
+    agent
       .post('/' + COURSE_DATA.courseId + '/admin/students')
       .attach('classList', CLASS_LIST_PATH)
       .end((err, res) => {
@@ -115,7 +99,7 @@ describe('PUT /:courseId/admin/students', () => {
   });
 
   it('should return an error response as class number does not exist', (done) => {
-    studentAgent()
+    agent
       .post('/' + invalidNum + '/admin/students')
       .attach('classList', CLASS_LIST_PATH)
       .end((err, res) => {

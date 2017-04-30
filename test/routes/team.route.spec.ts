@@ -40,9 +40,7 @@ describe('PUT /:courseId/team', () => {
         }
       });
   });
-});
 
-describe('PUT /:courseId/team', () => {
   it('should not accept new team creation, as Users already exist on Team under Deliverable', (done) => {
     agent
       .put('/710/team')
@@ -87,9 +85,7 @@ describe('POST /:courseId/admin/team', () => {
         }
       });
   });
-});
 
-describe('POST /:courseId/admin/team', () => {
   it('should accept team update with admin team members included in object', (done) => {
     agent
       .post('/710/admin/team')
@@ -110,9 +106,7 @@ describe('POST /:courseId/admin/team', () => {
         }
       });
   });
-});
 
-describe('POST /:courseId/admin/team', () => {
   it('should not accept team update as invalid teamId', (done) => {
     agent
       .post('/710/admin/team')
@@ -135,4 +129,3 @@ describe('POST /:courseId/admin/team', () => {
       });
   });
 });
-
