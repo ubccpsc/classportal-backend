@@ -11,16 +11,19 @@ const SUCCESS_MSG_POST = { response : 'Successfully updated team.' };
 const DUPLICATE_ERROR_MSG = { err : 'Cannot add duplicate team members to deliverable.' };
 const INVALID_TEAM_ID = 'asdc1f23123f12d3qedsf';
 
-let studentAgent = supertest.agent(app);
+let agent = supertest.agent(app);
 let studentCookie: any;
+let adminCookie: any;
+let superAdminCookie: any;
 let bearerToken: any;
 
 mockData.initializeData()
   .then(() => console.log('data initialized'))
   .catch(err => console.log('data initialization error: ' + err));
 
-studentAgent
-  .get('/auth/login?username=' + SNUM_GITHUB_LOGIN.username + '&snum=' + SNUM_GITHUB_LOGIN.snum)
+agent
+  .get('/auth/login?username=' + mockData.LOCAL_STUDENT_LOGIN.username +
+   '&snum=' + mockData.LOCAL_STUDENT_LOGIN.snum)
   .end((err, res: any) => {
     // user should be authenticated with session state
     if (err) {
@@ -29,4 +32,15 @@ studentAgent
     studentCookie = res.headers['set-cookie'];
   });
 
-export { studentCookie };
+agent
+  .get('/auth/login?username=' + mockData.LOCAL_STUDENT_LOGIN.username +
+   '&snum=' + mockData.LOCAL_STUDENT_LOGIN.snum)
+  .end((err, res: any) => {
+    // user should be authenticated with session state
+    if (err) {
+      console.log(err);
+    }
+    studentCookie = res.headers['set-cookie'];
+  });
+
+export { studentCookie, adminCookie, superAdminCookie };
