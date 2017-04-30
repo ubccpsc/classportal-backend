@@ -23,6 +23,7 @@ let DELIVERABLE_2: IDeliverableDocument;
 let TEAM_COMPUTATIONAL_THEORY: ITeamDocument;
 const GITHUB_URL = 'http://www.github.com/ubccpsc/classportal-backend/';
 const TEAM_ID = faker.random.number(9999);
+const LOCAL_STUDENT_LOGIN = { username: 'thekitsch', snum: 5 };
 const TEAM_NAME = 'Computational Theory Group';
 const TEAM_ADMINS = ['brandy', 'sammy', 'tammy'];
 
@@ -99,4 +100,4 @@ function initializeData() {
 export { initializeData, USER_1_THOMAS, USER_2_CYNTHIA, USER_3_REGIS, USER_4_CONNOR,
   USER_5_AGENT, USER_6_ROGER, COURSE_610, COURSE_710, DELIVERABLE_1, DELIVERABLE_2,
   GITHUB_URL, TEAM_ID, TEAM_NAME, TEAM_ADMINS, RANDOM_STUDENT_1, RANDOM_STUDENT_2,
-  RANDOM_STUDENT_3, RANDOM_STUDENT_4, TEAM_COMPUTATIONAL_THEORY }
+  RANDOM_STUDENT_3, RANDOM_STUDENT_4, TEAM_COMPUTATIONAL_THEORY, LOCAL_STUDENT_LOGIN }
