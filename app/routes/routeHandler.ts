@@ -121,7 +121,15 @@ const updateTeam = (req: restify.Request, res: restify.Response, next: restify.N
    .catch((err: any) => res.json(500, { err: err.message }));
 };
 
+const addAdmins = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.addAdmins(req.params)
+   .then((c: ICourseDocument) => res.json(200, { response: 'Successfully updated course admin list on '
+   + c.courseId + '.' }))
+   .catch((err: any) => res.json(500, { err: err.message }));
+};
+
 
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
    getUser, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
-   getGradesAdmin, getGradesStudent, addGrades, addTeam, updateTeam, getStudentNamesFromCourse };
+   getGradesAdmin, getGradesStudent, addGrades, addTeam, updateTeam, getStudentNamesFromCourse,
+   addAdmins };

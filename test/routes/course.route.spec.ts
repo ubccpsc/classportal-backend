@@ -4,6 +4,9 @@ import { app } from '../../server';
 import { logger } from '../../utils/logger';
 import { expect, assert } from 'chai';
 import { studentCookie } from './../assets/auth.agents';
+import { ICourseDocument, Course } from '../../app/models/course.model';
+import * as mockData from '../assets/mockDataObjects';
+
 let agent = supertest.agent(app);
 
 const CLASS_LIST_PATH = __dirname.replace('/build/test/routes', '') + '/test/assets/mockDataCList.csv';
@@ -16,9 +19,95 @@ const COURSE_DATA = {
   customData : {},
   icon: '//cdn.ubc.ca/clf/7.0.5/img/favicon.ico',
   studentsSetTeams : 1,
-  admins : ['fred', 'jimmy'],
+  admins : new Array(),
 };
 
+describe('POST :courseId/admin/admins', () => {
+  before(function(done) {
+    let initialize = mockData.initializeData()
+    .then(() => {
+      Course.findOne({ courseId: mockData.COURSE_710.courseId })
+        .exec()
+        .then( c => {
+          if (c !== null) {
+            Course.update({ courseId: '710' }, { $set: { 'admins': [] } })
+              .exec()
+              .then( () => {
+                done();
+              });
+          }
+        });
+    });
+  });
+
+  const SUCCESS_RESPONSE = { 'response': 'Successfully updated course admin list on 710.' };
+  const ADMIN_ALREADY_EXISTS = { 'err': 'Admin already exists in 710.' };
+  const COURSE_DOES_NOT_EXIST = { 'err': 'Course 293 cannot be found.' };
+  const USER_DOES_NOT_EXIST = { 'err': 'Admin does not exist. Please double-check that payload is correct.' };
+
+  it('should return a successfully added updated admin list response', (done) => {
+
+    agent
+      .post('/' + mockData.COURSE_710.courseId + '/admin/admins')
+      .send(mockData.ADMIN_PAYLOAD_VALID)
+      .end((err: any, res: supertest.Response) => {
+        expect(JSON.stringify(res.body)).to.equal(JSON.stringify(SUCCESS_RESPONSE));
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          done();
+        }
+      });
+  });
+
+  it('should return a successfully added updated admin list response', (done) => {
+
+    agent
+      .post('/' + mockData.COURSE_710.courseId + '/admin/admins')
+      .send(mockData.ADMIN_PAYLOAD_VALID)
+      .end((err: any, res: supertest.Response) => {
+        expect(JSON.stringify(res.body)).to.equal(JSON.stringify(ADMIN_ALREADY_EXISTS));
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          done();
+        }
+      });
+  });
+
+  it('should return a successfully cannot find course response', (done) => {
+    agent
+      .post('/' + mockData.INVALID_COURSE_NUM + '/admin/admins')
+      .send(mockData.ADMIN_PAYLOAD_VALID)
+      .end((err: any, res: supertest.Response) => {
+        expect(JSON.stringify(res.body)).to.equal(JSON.stringify(COURSE_DOES_NOT_EXIST));
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          done();
+        }
+      });
+  });
+
+  it('should return a successfully cannot find admin response', (done) => {
+    agent
+      .post('/' + mockData.COURSE_710.courseId + '/admin/admins')
+      .send(mockData.ADMIN_PAYLOAD_INVALID_USER)
+      .end((err: any, res: supertest.Response) => {
+        expect(JSON.stringify(res.body)).to.equal(JSON.stringify(USER_DOES_NOT_EXIST));
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          done();
+        }
+      });
+  });
+
+});
 
 describe('PUT admin/:courseId', () => {
 

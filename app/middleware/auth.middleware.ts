@@ -92,6 +92,6 @@ const isAdminOrProf = (req: any, res: restify.Response, next: restify.Next) => {
     return next();
   }
   return next(new errors.UnauthorizedError('Permission denied.'));
-}
+};
 
 export { isAuthenticated, adminAuthenticated, superAuthenticated, isAdmin, adminOrProfAuthenticated }

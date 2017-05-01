@@ -11,7 +11,7 @@ interface ICourseDocument extends mongoose.Document {
   classList: Object[];
   deliverables: Object[];
   grades: [Object];
-  admins: string[];
+  admins: [Object];
 }
 
 interface ICourseModel extends mongoose.Model<ICourseDocument> {
@@ -50,9 +50,11 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   },
   deliverables: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }],
+    default: [],
   },
   grades: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Grade' }],
+    default: [],
   },
   studentsSetTeams: {
     type: Boolean,
@@ -61,7 +63,8 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     type: Object,
   },
   admins: {
-    type: [String],
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    default: [],
   },
 });
 

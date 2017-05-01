@@ -7,9 +7,44 @@ import { logger } from '../../utils/logger';
 import { config } from '../../config/env';
 import * as request from '../helpers/request';
 
-function addAdmins(courseId: string, payload: any) {
-  let userQuery = User.findOne({ 'username': payload.githubId }).exec();
-  let courseQuery = Course.findOne({ 'courseId': courseId }).exec();
+function addAdmins(payload: any) {
+  let userQuery = User.findOne({
+     'username': payload.username,
+     'fname' : payload.fname,
+     'lname' : payload.lname,
+    }).exec();
+  let courseQuery = Course.findOne({ 'courseId': payload.courseId }).populate('admins').exec();
+  let user_id: string;
+
+  return courseQuery.then( c => {
+    if ( c === null ) {
+      throw(Error('Course ' + payload.courseId + ' cannot be found.'));
+    }
+
+    return userQuery.then( u => {
+      let throwUserError: boolean;
+      let userAlreadyAdmin: boolean;
+      if (u !== null) {
+        user_id = u._id;
+        userAlreadyAdmin = c.admins.some( function(user: IUserDocument) {
+          console.log('this is runnning ');
+          return user._id.equals(user_id);
+        });
+      } else {
+        throwUserError = true;
+      }
+
+      if (userAlreadyAdmin) {
+        return Promise.reject(Error('Admin already exists in ' + c.courseId + '.'));
+      } else if (throwUserError) {
+        return Promise.reject(Error('Admin does not exist. Please double-check that payload is correct.'));
+      } else {
+        c.admins.push(user_id);
+        c.save();
+      }
+      return Promise.resolve(c);
+    });
+  });
 }
 
 /**
@@ -158,4 +193,4 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
   return next();
 }
 
-export { get, create, update, remove, updateClassList, getClassList, getStudentNamesFromCourse }
+export { get, create, update, remove, updateClassList, getClassList, getStudentNamesFromCourse, addAdmins }
