@@ -7,6 +7,10 @@ import { logger } from '../../utils/logger';
 import { config } from '../../config/env';
 import * as request from '../helpers/request';
 
+function addAdmins(courseId: string, payload: any) {
+  let userQuery = User.findOne({ 'username': payload.githubId }).exec();
+  let courseQuery = Course.findOne({ 'courseId': courseId }).exec();
+}
 
 /**
  * Update a class list

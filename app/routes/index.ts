@@ -1,7 +1,8 @@
 import * as restify from 'restify';
 import * as routeHandler from './routeHandler';
 import * as auth from './auth';
-import { isAuthenticated, adminAuthenticated, superAuthenticated } from '../../app/middleware/auth.middleware';
+import { isAuthenticated, adminAuthenticated, superAuthenticated,
+   adminOrProfAuthenticated } from '../../app/middleware/auth.middleware';
 import { passport } from '../../config/auth';
 import { config } from '../../config/env';
 
@@ -23,7 +24,13 @@ const routes = (server: restify.Server) => {
     ( req: restify.Request, res: any, next: restify.Next) => {
       res.redirect('/', next);
     });
-  // Authentication routes
+
+  // Authenticated routes
+
+  // -- Prof or Admin Routes
+  server.post(':/courseId/admin/admins', adminOrProfAuthenticated, routeHandler.addAdmins)
+
+  // -- Admin or Super Admin Only Routes
   server.put('/admin/:courseId', routeHandler.createCourse);
   server.post('/:courseId/admin/team', routeHandler.updateTeam);
   server.get('/:courseId/admin/students', routeHandler.getStudentList);
