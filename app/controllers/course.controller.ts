@@ -2,10 +2,30 @@ import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
 import { ICourseDocument, Course } from '../models/course.model';
-import { IUserDocument, User } from '../models/user.model';
+import { IUserDocument, User, CourseData } from '../models/user.model';
 import { logger } from '../../utils/logger';
 import { config } from '../../config/env';
 import * as request from '../helpers/request';
+
+let updateUserrole = function(u: IUserDocument, c: ICourseDocument, userrole: string) {
+  for ( let i = 0; i < u.courses.length; i++ ) {
+    if ( u.courses[i].courseId == c._id ) {
+      u.courses[i].role = userrole;
+    }
+  }
+  return u.save();
+};
+
+let addCourseDataToUser = function(user: IUserDocument, course: ICourseDocument) {
+  let courseAlreadyInUser: boolean;
+  courseAlreadyInUser = user.courses.some( function(c: CourseData) {
+    return course._id.equals(c.courseId);
+  });
+  if (!courseAlreadyInUser) {
+    user.courses.push({ courseId: course._id, role: null , team: null, repos: null });
+  }
+  return user.save();
+};
 
 function addAdmins(payload: any) {
   let userQuery = User.findOne({
@@ -13,7 +33,7 @@ function addAdmins(payload: any) {
      'fname' : payload.fname,
      'lname' : payload.lname,
     }).exec();
-  let courseQuery = Course.findOne({ 'courseId': payload.courseId }).populate('admins').exec();
+  let courseQuery = Course.findOne({ 'courseId': payload.courseId }).populate('admins courses').exec();
   let user_id: string;
 
   return courseQuery.then( c => {
@@ -39,8 +59,11 @@ function addAdmins(payload: any) {
       } else if (throwUserError) {
         return Promise.reject(Error('Admin does not exist. Please double-check that payload is correct.'));
       } else {
-        c.admins.push(user_id);
-        c.save();
+        updateUserrole(u, c, payload.userrole)
+          .then( () => {
+            c.admins.push(user_id);
+            c.save();
+          });
       }
       return Promise.resolve(c);
     });
@@ -79,6 +102,10 @@ function updateClassList(classList: any, courseId: string) {
       })
         .then(user => {
           newClassList.push(user);
+          courseQuery
+            .then( c => {
+              return addCourseDataToUser(user, c);
+            });
         })
         .catch( (err) => { logger.info('Error creating user in class controller' + err); });
     }

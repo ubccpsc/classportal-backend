@@ -5,7 +5,7 @@ import { logger } from '../../utils/logger';
 
 
 interface CourseData {
-  courseId: string;
+  courseId: [Object];
   role: string;
   team: number[];
   repos: string[];
@@ -60,12 +60,11 @@ const UserSchema = new mongoose.Schema({
   courses: [
     {
       courseId: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId, ref: 'Course',
         required: true,
       },
       role: {
         type: String,
-        required: true,
       },
       team: {
         type: [Number],
@@ -157,4 +156,4 @@ UserSchema.statics = {
 
 const User: IUserModel = <IUserModel>mongoose.model('User', UserSchema);
 
-export { IUserDocument, User, UserSchema };
+export { IUserDocument, User, UserSchema, CourseData };
