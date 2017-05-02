@@ -30,6 +30,8 @@ const TEAM_ADMINS = ['brandy', 'sammy', 'tammy'];
 const INVALID_COURSE_NUM = 293;
 const ADMIN_PAYLOAD_VALID = { fname: 'Thomas', lname: 'Smith', username: 'thekitsch' };
 const ADMIN_PAYLOAD_INVALID_USER = { fname: 'Jean', lname: 'Grey', username: 'comicbookfan' };
+let INVALID_MIN_TEAM_PAYLOAD: ITeamDocument;
+
 
 function initializeData() {
   let data1 = User.findOne({ csid: 12312321, fname: 'Thomas' })
@@ -49,7 +51,7 @@ function initializeData() {
     .then(d => { DELIVERABLE_1 = d; return d; });
   let data6 = Deliverable.findOne({ name: 'Assignment 2' })
     .exec()
-    .then(d => { DELIVERABLE_1 = d; return d; });
+    .then(d => { DELIVERABLE_2 = d; return d; });
   let data7 = User.findOne({ csid: 'c3c1', fname: 'Agent' })
     .exec()
     .then(c => { return USER_5_AGENT = c; });
@@ -105,4 +107,4 @@ export { initializeData, USER_1_THOMAS, USER_2_CYNTHIA, USER_3_REGIS, USER_4_CON
   USER_5_AGENT, USER_6_ROGER, COURSE_610, COURSE_710, DELIVERABLE_1, DELIVERABLE_2,
   GITHUB_URL, TEAM_ID, TEAM_NAME, TEAM_ADMINS, RANDOM_STUDENT_1, RANDOM_STUDENT_2,
   RANDOM_STUDENT_3, RANDOM_STUDENT_4, TEAM_COMPUTATIONAL_THEORY, LOCAL_STUDENT_LOGIN,
-  ADMIN_PAYLOAD_VALID, ADMIN_PAYLOAD_INVALID_USER, INVALID_COURSE_NUM }
+  ADMIN_PAYLOAD_VALID, ADMIN_PAYLOAD_INVALID_USER, INVALID_COURSE_NUM, INVALID_MIN_TEAM_PAYLOAD }
