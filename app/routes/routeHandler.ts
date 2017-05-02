@@ -6,6 +6,7 @@ import * as delivCtrl from '../controllers/deliverable.controller';
 import * as gradeCtrl from '../controllers/grade.controller';
 import * as teamCtrl from '../controllers/team.controller';
 import * as testCtrl from '../controllers/test.controller';
+import { logger } from '../../utils/logger';
 import { Course, ICourseDocument } from '../models/course.model';
 import { Grade, IGradeDocument } from '../models/grade.model';
 import { User, IUserDocument } from '../models/user.model';
@@ -112,13 +113,21 @@ const addGithubUsername = (req: restify.Request, res: restify.Response, next: re
 const addTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return teamCtrl.add(req)
    .then(() => res.json(200, { response: 'Successfully added a new team.' }))
-   .catch((err: any) => res.json(500, { err: err.message }));
+   .catch((err: any) => {
+     logger.info(err);
+     console.log('routeHandler error: ' + err);
+     res.json(500, { 'err': err.message });
+   });
 };
 
 const updateTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return teamCtrl.update(req)
    .then(() => res.json(200, { response: 'Successfully updated team.' }))
-   .catch((err: any) => res.json(500, { err: err.message }));
+   .catch((err: any) => {
+     logger.info(err);
+     console.log('routeHandler error: ' + err);
+     res.json(500, { 'err': err.message });
+   });
 };
 
 const addAdmins = (req: restify.Request, res: restify.Response, next: restify.Next) => {

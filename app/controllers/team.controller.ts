@@ -6,8 +6,6 @@ import { IUserDocument, User } from '../models/user.model';
 import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
 import * as auth from '../middleware/auth.middleware';
 
-let req: any;
-
 function getTeams(payload: any) {
   return Team.find({ teamId: payload.teamId }).exec();
 }
@@ -36,25 +34,28 @@ function checkForDuplicateTeamMembers(existingTeams: ITeamDocument[], newTeamMem
   return duplicatedMember;
 }
 
-let createTeam = function(course_Id: string) {
+let createTeam = function(course_Id: Object, req: any) {
 
   let deliverable = req.params.deliverable;
   let newTeamMembers = req.params.members;
   let name = req.params.name;
   let githubUrl = req.params.githubUrl;
   let teamId = req.params.teamId;
-  let admins = req.params.admins;
 
-  let teamWithoutAdmins = {
+  let newTeam = {
     'course' : course_Id,
-    'deliverable' : deliverable,
-    'members' : newTeamMembers,
-    'name' : name,
-    'teamId' : teamId,
-    'githubUrl' : githubUrl,
+    'deliverable': deliverable,
+    'members': new Array(),
+    'name': name,
+    'teamId': teamId,
+    'githubUrl': githubUrl,
   };
 
-  return Team.create(teamWithoutAdmins).catch(err => logger.info('Error creating course: ' + err));
+  for ( let i = 0; i < newTeamMembers.length; i++) {
+    newTeam.members.push(newTeamMembers[i]);
+  }
+
+  return Team.create(newTeam).catch(err => logger.info('Error creating course: ' + err));
 };
 
 let updateTeam = function(team_Id: string, updatedModel: ITeamDocument) {
@@ -62,19 +63,24 @@ let updateTeam = function(team_Id: string, updatedModel: ITeamDocument) {
   return Team.findOne({ '_id' : team_Id })
     .exec()
     .then( t => {
+      t.set('members', []);
+      t.set('TAs', []);
       t.deliverable = updatedModel.deliverable;
       t.githubUrl = updatedModel.githubUrl;
-      t.members = updatedModel.members;
+      for (let i = 0; i < updatedModel.members.length; i++) {
+        t.members.push(updatedModel.members[i]);
+      }
       t.name = updatedModel.name;
+      for (let i = 0; i < updatedModel.TAs.length; i++) {
+        t.TAs.push(updatedModel.TAs[i]);
+      }
       return t.save();
-    })
-    .catch(err => { logger.info('Error retrieving team object: ' + err); });
+    });
 };
 
-function update(_req: any) {
-  req = _req;
+function update(req: any) {
   let courseId: string = req.params.courseId;
-  let deliverable: string = req.params.updatedModel.deliverable;
+  let deliverable: string = req.params.deliverable;
   let newTeamMembers: [Object] = req.params.updatedModel.members;
   let teamId: string = req.params.teamId;
   let updatedModel: ITeamDocument = req.params.updatedModel;
@@ -82,19 +88,19 @@ function update(_req: any) {
     .populate('deliverable')
     .exec()
     .then( existingTeams => {
-      return checkForDuplicateTeamMembers(existingTeams, newTeamMembers);
-    })
-    .catch(err => { return logger.info(err); });
+      if (existingTeams !== null) {
+        return Promise.resolve(checkForDuplicateTeamMembers(existingTeams, newTeamMembers));
+      } else {
+        return Promise.reject(Error('Unable to find team with deliverable ' + deliverable + ' in payload.'));
+      }
+    });
 
   return getTeamsUnderDeliverable
     .then( results => {
       if (results !== true) {
-        return updateTeam(teamId, updatedModel)
-          .then( t => {
-            return t;
-          });
+        return updateTeam(teamId, updatedModel);
       }
-      throw Error('Cannot add duplicate team members to deliverable.');
+      return Promise.reject(Error('Cannot add duplicate team members to deliverable.'));
     });
 }
 
@@ -107,15 +113,13 @@ function update(_req: any) {
 //      per deliverable.
 // 3) If no teams with deliverableId found, create new team.
 
-function add(_req: any) {
-  req = _req;
+function add(req: any) {
   let courseId = req.params.courseId;
   let deliverable = req.params.deliverable;
   let newTeamMembers = req.params.members;
   let name = req.params.name;
   let githubUrl = req.params.githubUrl;
   let teamId = req.params.teamId;
-  let admins = req.params.admins;
 
   let getTeamsUnderDeliverable = Team.find({ 'deliverable' : deliverable })
     .populate('deliverable')
@@ -134,11 +138,10 @@ function add(_req: any) {
   return Promise.all([getTeamsUnderDeliverable, courseQuery])
     .then(function(results: any) {
       if (results[0] !== true) {
-        return createTeam(results[1]._id)
+        return createTeam(results[1]._id, req)
           .then( t => {
             return t;
-          })
-          .catch(err => 'Cannot create team' + err);
+          });
       }
       throw Error('Cannot add duplicate team members to deliverable.');
     });

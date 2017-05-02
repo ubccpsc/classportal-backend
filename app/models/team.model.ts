@@ -2,12 +2,13 @@ import * as mongoose from 'mongoose';
 import { logger } from '../../utils/logger';
 
 interface ITeamDocument extends mongoose.Document {
-  course: Object[];
+  course: Object;
   teamId: number;
   members: Object[];
   deliverable: Object;
   name: string;
   githubUrl: string;
+  TAs: Object[];
 }
 
 interface ITeamModel extends mongoose.Model<ITeamDocument> {
@@ -39,6 +40,9 @@ const TeamSchema = new mongoose.Schema({
   members: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     required: true,
+  },
+  TAs: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
 });
 
