@@ -128,8 +128,20 @@ const addAdmins = (req: restify.Request, res: restify.Response, next: restify.Ne
    .catch((err: any) => res.json(500, { err: err.message }));
 };
 
+const getAdmins = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.getAdmins(req.params)
+   .then((course: ICourseDocument) => res.json(200, { response: course.admins }))
+   .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const getTeams = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.getTeams(req.params)
+   .then((teamList: ITeamDocument[]) => res.json(200, { response: teamList }))
+   .catch((err: any) => res.json(500, { err: err.message }));
+};
+
 
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
    getUser, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
    getGradesAdmin, getGradesStudent, addGrades, addTeam, updateTeam, getStudentNamesFromCourse,
-   addAdmins };
+   addAdmins, getAdmins, getTeams };

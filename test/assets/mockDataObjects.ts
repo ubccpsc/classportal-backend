@@ -16,6 +16,7 @@ let RANDOM_STUDENT_1: IUserDocument;
 let RANDOM_STUDENT_2: IUserDocument;
 let RANDOM_STUDENT_3: IUserDocument;
 let RANDOM_STUDENT_4: IUserDocument;
+let COURSE_NO_ADMINS_SERIALIZED: ICourseDocument;
 let COURSE_710: ICourseDocument;
 let COURSE_610: ICourseDocument;
 let DELIVERABLE_1: IDeliverableDocument;

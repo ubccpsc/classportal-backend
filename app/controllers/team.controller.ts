@@ -8,6 +8,10 @@ import * as auth from '../middleware/auth.middleware';
 
 let req: any;
 
+function getTeams(payload: any) {
+  return Team.find({ teamId: payload.teamId }).exec();
+}
+
 function checkForDuplicateTeamMembers(existingTeams: ITeamDocument[], newTeamMembers: [Object]) {
   let duplicateEntry: boolean;
   let duplicatedMember: boolean;
@@ -140,4 +144,4 @@ function add(_req: any) {
     });
 }
 
-export { add, update }
+export { add, update, getTeams }

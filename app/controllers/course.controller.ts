@@ -27,6 +27,20 @@ let addCourseDataToUser = function(user: IUserDocument, course: ICourseDocument)
   return user.save();
 };
 
+function getAdmins(payload: any) {
+  return Course.findOne({ courseId: payload.courseId })
+    .populate({ path: 'admins', select: 'fname lname snum csid username -_id' })
+    .then( c => {
+      if ( c !== null && c.admins.length < 1) {
+        return Promise.reject(Error('There are no admins under course ' + payload.courseId + '.'));
+      } else if ( c !== null ) {
+        return Promise.resolve(c);
+      } else {
+        return Promise.reject(Error('Course ' + payload.courseId + ' does not exist.'));
+      }
+    });
+}
+
 function addAdmins(payload: any) {
   let userQuery = User.findOne({
      'username': payload.username,
@@ -220,4 +234,5 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
   return next();
 }
 
-export { get, create, update, remove, updateClassList, getClassList, getStudentNamesFromCourse, addAdmins }
+export { get, create, update, remove, updateClassList, getClassList, getStudentNamesFromCourse, addAdmins,
+         getAdmins, }

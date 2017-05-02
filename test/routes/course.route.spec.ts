@@ -26,7 +26,7 @@ describe('POST :courseId/admin/admins', () => {
   before(function(done) {
     let initialize = mockData.initializeData()
     .then(() => {
-      Course.findOne({ courseId: mockData.COURSE_710.courseId })
+      Course.findOne({ courseId: '710' })
         .exec()
         .then( c => {
           if (c !== null) {
@@ -107,6 +107,80 @@ describe('POST :courseId/admin/admins', () => {
       });
   });
 
+});
+
+describe('GET :courseId/admin/admins', () => {
+
+  let COURSE_WITH_NO_ADMINS: ICourseDocument;
+
+  before( (done) => {
+    Course.create({ courseId : 8886, minTeamSize : 1, maxTeamSize : 9, studentsSetTeams : true,
+      admins : [], grades : [], deliverables : [], classList : [], modules : [],
+      icon : '//cdn.ubc.ca/clf/7.0.5/img/favicon.ico', name : 'Computer Studies' })
+      .then( (c) => {
+        COURSE_WITH_NO_ADMINS = c;
+        done();
+      });
+  });
+
+  const SUCCESS_RESPONSE = { response : [{ lname : 'Smith', fname: 'Thomas', csid: '555555555', snum: '5',
+    username: 'thekitsch' }] };
+  const COURSE_DOES_NOT_EXIST = { 'err': 'Course 293 does not exist.' };
+  const NO_ADMINS_EXIST = { 'err': 'There are no admins under course 8886.' };
+
+
+  it('should return a list of admins for a course', (done) => {
+    agent
+      .get('/' + mockData.COURSE_710.courseId + '/admin/admins')
+      .send(mockData.ADMIN_PAYLOAD_INVALID_USER)
+      .end((err: any, res: supertest.Response) => {
+        expect(JSON.stringify(res.body)).to.equal(JSON.stringify(SUCCESS_RESPONSE));
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          done();
+        }
+      });
+  });
+
+  it('should return a course does not exist response when getting admin list for a course', (done) => {
+    agent
+      .get('/' + mockData.INVALID_COURSE_NUM + '/admin/admins')
+      .end((err: any, res: supertest.Response) => {
+        expect(JSON.stringify(res.body)).to.equal(JSON.stringify(COURSE_DOES_NOT_EXIST));
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          done();
+        }
+      });
+  });
+
+  it('should return a no admins exist error when getting a list of admins for a course', (done) => {
+    agent
+      .get('/' + COURSE_WITH_NO_ADMINS.courseId + '/admin/admins')
+      .end((err: any, res: supertest.Response) => {
+        expect(JSON.stringify(res.body)).to.equal(JSON.stringify(NO_ADMINS_EXIST));
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          done();
+        }
+      });
+  });
+
+  after( (done) => {
+    Course.find({ courseId : 8886, minTeamSize : 1, maxTeamSize : 9, studentsSetTeams : true,
+      admins : [], grades : [], deliverables : [], classList : [], modules : [],
+      icon : '//cdn.ubc.ca/clf/7.0.5/img/favicon.ico', name : 'Computer Studies' })
+      .remove()
+      .then( () => {
+        done();
+      }) ;
+  });
 });
 
 describe('PUT admin/:courseId', () => {
