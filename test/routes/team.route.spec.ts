@@ -322,3 +322,31 @@ describe('POST /:courseId/admin/team', () => {
       });
   });
 });
+
+describe('GET /:courseId/admin/teams', () => {
+
+  it('should receieve an array of Team objects with correct payload structure', (done) => {
+
+    agent
+      .get('/710/admin/teams')
+      .set('set-cookie', studentCookie)
+      .end((err: any, res: any) => {
+        if (err) {
+          done(err);
+        } else {
+          expect(res.status).to.equal(200);
+          let objects = JSON.parse(res.text);
+          for (let object in objects.response[0]) {
+            expect(objects.response[0][object].madeup).to.be.undefined;
+            expect(objects.response[0][object].name).to.not.be.null;
+            expect(objects.response[0][object].deliverable).to.not.be.null;
+            expect(objects.response[0][object].teamId).to.not.be.null;
+            expect(objects.response[0][object].members).to.not.be.null;
+            expect(objects.response[0][object].githubUrl).to.not.be.null;
+          }
+          done();
+        }
+      });
+  });
+
+});

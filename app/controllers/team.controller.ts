@@ -7,7 +7,25 @@ import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
 import * as auth from '../middleware/auth.middleware';
 
 function getTeams(payload: any) {
-  return Team.find({ teamId: payload.teamId }).exec();
+  return Course.findOne({ courseId: payload.courseId })
+    .exec()
+    .then( c => {
+      return Team.find({ course: c._id })
+      .select('teamId githubUrl TAs name members deliverable')
+      .populate({
+        path: 'TAs',
+        select: 'fname lname csid snum -_id',
+      })
+      .populate({
+        path: 'deliverable',
+        select: 'name url open close -_id',
+      })
+      .populate({
+        path: 'members',
+        select: 'fname lname csid snum -_id',
+      })
+      .exec();
+    });
 }
 
 function checkForDuplicateTeamMembers(existingTeams: ITeamDocument[], newTeamMembers: [Object]) {
@@ -128,6 +146,7 @@ function update(req: any) {
   let deliverable: string = req.params.deliverable;
   let newTeamMembers: [Object] = req.params.updatedModel.members;
   let teamId: string = req.params.teamId;
+  let name: string = req.params.updatedModel.name;
   let updatedModel: ITeamDocument = req.params.updatedModel;
 
   let getTeamsUnderDeliverable = Team.find({ 'deliverable' : deliverable, '_id': { $nin : teamId } } )

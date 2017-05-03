@@ -53,10 +53,6 @@ const UserSchema = new mongoose.Schema({
   lname: {
     type: String,
   },
-  teamUrl: {
-    type: String,
-    default: '',
-  },
   courses: [
     {
       courseId: {
