@@ -35,7 +35,6 @@ function checkForDuplicateTeamMembers(existingTeams: ITeamDocument[], newTeamMem
 }
 
 let createTeam = function(course_Id: any, req: any) {
-  console.log('is it null' + req.params.members.length);
   let newTeam = {
     'course' : course_Id,
     'deliverable': req.params.deliverable,
@@ -46,7 +45,12 @@ let createTeam = function(course_Id: any, req: any) {
   };
 
   for ( let i = 0; i < req.params.members.length; i++) {
-    newTeam.members.push(req.params.members[i]);
+    let duplicateEntry = newTeam.members.some(function(member){
+      return member == req.params.members[i];
+    });
+    if (!duplicateEntry) {
+      newTeam.members.push(req.params.members[i]);
+    }
   }
 
   return Team.create(newTeam);
@@ -64,17 +68,25 @@ let updateTeam = function(team_Id: string, updatedModel: ITeamDocument) {
       if ( t === null) {
         return Promise.reject(Error('Team ID ' + team_Id + ' not found.'));
       }
-
       t.set('members', []);
       t.set('TAs', []);
-      t.deliverable = updatedModel.deliverable;
       t.githubUrl = updatedModel.githubUrl;
       for (let i = 0; i < updatedModel.members.length; i++) {
-        t.members.push(updatedModel.members[i]);
+        let duplicateEntry = t.members.some(function(member) {
+          return member == updatedModel.members[i];
+        });
+        if (!duplicateEntry) {
+          t.members.push(updatedModel.members[i]);
+        }
       }
       t.name = updatedModel.name;
       for (let i = 0; i < updatedModel.TAs.length; i++) {
-        t.TAs.push(updatedModel.TAs[i]);
+        let duplicateEntry = t.TAs.some(function(TA){
+          return TA == updatedModel.TAs[i];
+        });
+        if (!duplicateEntry) {
+          t.TAs.push(updatedModel.TAs[i]);
+        }
       }
       return t.save();
     });

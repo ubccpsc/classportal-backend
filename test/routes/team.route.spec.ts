@@ -140,7 +140,7 @@ describe('PUT /:courseId/team', () => {
 
 describe('POST /:courseId/admin/team', () => {
 
-  it('should accept team update with admin team members included in object', (done) => {
+  it('should accept team update with TA team members included in object', (done) => {
     agent
       .post('/710/admin/team')
       .set('set-cookie', studentCookie)
@@ -148,6 +148,49 @@ describe('POST /:courseId/admin/team', () => {
         teamId: mockData.TEAM_COMPUTATIONAL_THEORY._id,
         updatedModel : { course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_1._id,
           name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url', TAs : new Array(),
+          members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id] },
+      })
+      .end((err: any, res: supertest.Response) => {
+        if (err) {
+          done(err);
+        } else {
+          expect(res.text).to.equal(JSON.stringify(SUCCESS_MSG_POST));
+          expect(res.status).to.equal(200);
+          done();
+        }
+      });
+  });
+
+  it('should accept team update with empty TAs team members included in object', (done) => {
+    agent
+      .post('/710/admin/team')
+      .set('set-cookie', studentCookie)
+      .send({
+        teamId: mockData.TEAM_COMPUTATIONAL_THEORY._id,
+        updatedModel : { course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_1._id,
+          name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url', TAs : new Array(),
+          members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id] },
+      })
+      .end((err: any, res: supertest.Response) => {
+        if (err) {
+          done(err);
+        } else {
+          expect(res.text).to.equal(JSON.stringify(SUCCESS_MSG_POST));
+          expect(res.status).to.equal(200);
+          done();
+        }
+      });
+  });
+
+  it('should accept team update with two TA team members included in object', (done) => {
+    agent
+      .post('/710/admin/team')
+      .set('set-cookie', studentCookie)
+      .send({
+        teamId: mockData.TEAM_COMPUTATIONAL_THEORY._id,
+        updatedModel : { course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_1._id,
+          name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url',
+          TAs : [mockData.RANDOM_STUDENT_1._id, mockData.RANDOM_STUDENT_2._id],
           members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id] },
       })
       .end((err: any, res: supertest.Response) => {
@@ -169,6 +212,28 @@ describe('POST /:courseId/admin/team', () => {
         teamId: mockData.TEAM_COMPUTATIONAL_THEORY._id,
         updatedModel : { course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_1._id,
           name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url', TAs : new Array(),
+          members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id] },
+      })
+      .end((err: any, res: supertest.Response) => {
+        if (err) {
+          done(err);
+        } else {
+          expect(res.status).to.equal(200);
+          expect(res.text).to.equal(JSON.stringify(SUCCESS_MSG_POST));
+          done();
+        }
+      });
+  });
+
+  it('should receive an error when adding same team member twice under team', (done) => {
+    agent
+      .post('/710/admin/team')
+      .set('set-cookie', studentCookie)
+      .send({
+        teamId: mockData.TEAM_COMPUTATIONAL_THEORY._id,
+        updatedModel : { course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_1._id,
+          name : 'Team Name', teamId : 123456, githubUrl : 'http://duplicate/TAs',
+          TAs : [mockData.RANDOM_STUDENT_2._id, mockData.RANDOM_STUDENT_2._id],
           members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id] },
       })
       .end((err: any, res: supertest.Response) => {

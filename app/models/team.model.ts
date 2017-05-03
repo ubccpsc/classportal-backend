@@ -40,9 +40,11 @@ const TeamSchema = new mongoose.Schema({
   members: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     required: true,
+    unique: true,
   },
   TAs: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    unique: true,
   },
 });
 
