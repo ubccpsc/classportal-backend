@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { app } from '../../server';
 import { logger } from '../../utils/logger';
 import { User, IUserDocument } from '../../app/models/user.model';
+import { Team, ITeamDocument } from '../../app/models/team.model';
 import * as mockData from '../assets/mockDataObjects';
 import { studentCookie } from './../assets/auth.agents';
 
@@ -225,7 +226,7 @@ describe('POST /:courseId/admin/team', () => {
       });
   });
 
-  it('should receive an error when adding same team member twice under team', (done) => {
+  it('should not add duplicate team members or TAs when added repeatedly', (done) => {
     agent
       .post('/710/admin/team')
       .set('set-cookie', studentCookie)
@@ -237,13 +238,21 @@ describe('POST /:courseId/admin/team', () => {
           members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id] },
       })
       .end((err: any, res: supertest.Response) => {
-        if (err) {
-          done(err);
-        } else {
-          expect(res.status).to.equal(200);
-          expect(res.text).to.equal(JSON.stringify(SUCCESS_MSG_POST));
-          done();
-        }
+
+        Team.findOne({
+          _id: mockData.TEAM_COMPUTATIONAL_THEORY._id,
+        })
+          .then( t => {
+            if (err) {
+              done(err);
+            } else {
+              expect(t.TAs.length).to.equal(1);
+              expect(t.TAs.length).to.equal(1);
+              expect(res.status).to.equal(200);
+              expect(res.text).to.equal(JSON.stringify(SUCCESS_MSG_POST));
+              done();
+            }
+          });
       });
   });
 

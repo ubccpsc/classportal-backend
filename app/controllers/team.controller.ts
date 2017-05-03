@@ -44,6 +44,7 @@ let createTeam = function(course_Id: any, req: any) {
     'githubUrl': req.params.githubUrl,
   };
 
+  // Only add non-duplicates
   for ( let i = 0; i < req.params.members.length; i++) {
     let duplicateEntry = newTeam.members.some(function(member){
       return member == req.params.members[i];
@@ -71,6 +72,8 @@ let updateTeam = function(team_Id: string, updatedModel: ITeamDocument) {
       t.set('members', []);
       t.set('TAs', []);
       t.githubUrl = updatedModel.githubUrl;
+
+      // Only add non-duplicates
       for (let i = 0; i < updatedModel.members.length; i++) {
         let duplicateEntry = t.members.some(function(member) {
           return member == updatedModel.members[i];
@@ -80,6 +83,8 @@ let updateTeam = function(team_Id: string, updatedModel: ITeamDocument) {
         }
       }
       t.name = updatedModel.name;
+
+      // Only add non-duplicates
       for (let i = 0; i < updatedModel.TAs.length; i++) {
         let duplicateEntry = t.TAs.some(function(TA){
           return TA == updatedModel.TAs[i];
@@ -138,7 +143,7 @@ function update(req: any) {
 
   return getTeamsUnderDeliverable
     .then( results => {
-      if (results !== true) {
+      if (results !== null) {
         return updateTeam(teamId, updatedModel);
       }
       return Promise.reject(Error('Cannot add duplicate team members to deliverable.'));
