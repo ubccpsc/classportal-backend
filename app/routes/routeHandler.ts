@@ -87,8 +87,19 @@ const addGrades = (req: restify.Request, res: restify.Response, next: restify.Ne
 };
 
 const getGradesAdmin = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return gradeCtrl.getAllGradesByCourse(req.params.courseId)
-    .then((course: ICourseDocument) => res.json(200, { response: course.grades }))
+  return gradeCtrl.getAllGradesByCourse(req)
+    .then((grades: any) => {
+      const CSV_HEAD = 'snum,grade';
+      if (grades.startsWith(CSV_HEAD)) {
+        res.writeHead(200, {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': 'attachment; filename=grades.csv',
+        });
+        res.end(grades);
+      } else {
+        res.json(200, { response: grades.grades });
+      }
+    })
     .catch((err: any) => res.json(500, { err: err.message }));
 };
 

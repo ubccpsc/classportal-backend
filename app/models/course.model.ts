@@ -50,11 +50,9 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   },
   deliverables: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }],
-    default: [],
   },
   grades: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Grade' }],
-    default: [],
   },
   studentsSetTeams: {
     type: Boolean,

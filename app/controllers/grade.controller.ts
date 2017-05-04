@@ -5,6 +5,20 @@ import { Deliverable, IDeliverableDocument } from '../models/deliverable.model';
 import { User, IUserDocument } from '../models/user.model';
 import { Grade, IGradeDocument } from '../models/grade.model';
 
+let stringify = require('csv-stringify');
+
+let csvGenerate = function(input: any) {
+  return new Promise((resolve, reject) => {
+    stringify(input, (err: Error, csv: string) => {
+      if (err) {
+        return reject(err);
+      } else {
+        resolve(csv);
+      }
+    });
+  });
+};
+
 function create(payload: any) {
   logger.info('create() in Grades Controller');
   let gradesArray = new Array();
@@ -48,12 +62,41 @@ function create(payload: any) {
     addGradesToCourse(newGrades);
   })
   .catch(err => logger.info(err));
-  return Course.findOne({ courseId : payload.courseId }).populate('grades').exec();
+  return Course.findOne({ courseId : payload.courseId }).populate({
+    path: 'grades',
+    model: 'Grade',
+  }).exec();
 }
 
-function getAllGradesByCourse(courseId: string) {
-  logger.info('getGradesAdmin()');
-  return Course.findOne({ 'courseId' : courseId }).populate('grades').exec();
+function getAllGradesByCourse(req: any) {
+  logger.info('getAllGradesByCourse()');
+  let courseQuery = Course.findOne({ courseId : req.params.courseId })
+  .populate({
+    path: 'grades',
+    model: 'Grade',
+  }).exec();
+
+  if ( req.query !== null && req.query.format == 'csv') {
+    return courseQuery.then( course => {
+      let response: any;
+      let stringify = require('csv-stringify');
+      let arrayOfGradesResponse = new Array();
+      let csvColumns = ['snum', 'grade'];
+
+      arrayOfGradesResponse.push(csvColumns);
+
+      for ( let i = 0; i < course.grades.length; i++ ) {
+        let g: any = course.grades[i];
+        console.log('grade' + JSON.stringify(g));
+        let snum = g.snum;
+        let grade = g.details.finalGrade;
+        arrayOfGradesResponse.push([snum, grade]);
+      }
+
+      return csvGenerate(arrayOfGradesResponse);
+    });
+  }
+  return courseQuery;
 }
 
 function getReleasedGradesByCourse(req: any) {
