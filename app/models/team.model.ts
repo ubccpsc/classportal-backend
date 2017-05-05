@@ -40,11 +40,9 @@ const TeamSchema = new mongoose.Schema({
   members: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     required: true,
-    unique: true,
   },
   TAs: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    unique: true,
   },
 });
 
@@ -64,7 +62,7 @@ TeamSchema.static({
       .findOne(query)
       .exec()
       .then((team) => {
-        if (team) {
+        if (team !== null) {
           return Promise.resolve(team);
         } else {
           return Team.create(query)

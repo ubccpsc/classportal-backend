@@ -2,6 +2,7 @@ import { logger } from '../utils/logger';
 import { User, IUserDocument } from '../app/models/user.model';
 import { Team, ITeamDocument } from '../app/models/team.model';
 import { Deliverable, IDeliverableDocument } from '../app/models/deliverable.model';
+import { Grade, IGradeDocument } from '../app/models/grade.model';
 import { Course, ICourseDocument } from '../app/models/course.model';
 import { config } from '../config/env';
 import { app } from '../config/restify';
@@ -67,6 +68,7 @@ function getChildTables() {
 }
 
 server.onConnect.then( connection => {
+  clearGrades();
   clearUsers();
   clearTeams();
   clearCourses();
@@ -117,6 +119,11 @@ function clearCourses() {
 function clearDeliverables() {
   Deliverable.remove({}).exec();
 }
+
+function clearGrades() {
+  Grade.remove({}).exec();
+}
+
 function seedUsers(): Promise<IUserDocument[]> {
   logger.info('Verifying that users exist in db:');
 
