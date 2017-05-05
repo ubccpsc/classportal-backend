@@ -93,7 +93,7 @@ const getGradesAdmin = (req: restify.Request, res: restify.Response, next: resti
       if (grades.startsWith(CSV_HEAD)) {
         res.writeHead(200, {
           'Content-Type': 'text/csv',
-          'Content-Disposition': 'attachment; filename=grades.csv',
+          'Content-Disposition': 'attachment; filename=Course' + req.params.courseId + 'Grades.csv',
         });
         res.end(grades);
       } else {
