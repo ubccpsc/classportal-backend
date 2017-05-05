@@ -20,6 +20,7 @@ const TeamSchema = new mongoose.Schema({
   teamId: {
     type: Number,
     required: true,
+    unique: true,
   },
   name: {
     type: String,

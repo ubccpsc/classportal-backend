@@ -24,20 +24,17 @@ const COURSE_DATA = {
 
 describe('POST :courseId/admin/admins', () => {
   before(function(done) {
-    let initialize = mockData.initializeData()
-    .then(() => {
-      Course.findOne({ courseId: '710' })
-        .exec()
-        .then( c => {
-          if (c !== null) {
-            Course.update({ courseId: '710' }, { $set: { 'admins': [] } })
-              .exec()
-              .then( () => {
-                done();
-              });
-          }
-        });
-    });
+    Course.findOne({ courseId: '710' })
+      .exec()
+      .then( c => {
+        if (c !== null) {
+          Course.update({ courseId: '710' }, { $set: { 'admins': [] } })
+            .exec()
+            .then( () => {
+              done();
+            });
+        }
+      });
   });
 
   const SUCCESS_RESPONSE = { 'response': 'Successfully updated course admin list on 710.' };

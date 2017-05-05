@@ -82,7 +82,7 @@ const getDeliverables = (req: restify.Request, res: restify.Response, next: rest
 
 const addGrades = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return gradeCtrl.create(req.params)
-    .then((course: any) => res.json(200, { response: course.grades }))
+    .then((course: any) => res.json(200, { response: 'Successfully updated grades.' }))
     .catch((err: any) => res.json(500, { err: err.message }));
 };
 
@@ -90,7 +90,7 @@ const getGradesAdmin = (req: restify.Request, res: restify.Response, next: resti
   return gradeCtrl.getAllGradesByCourse(req)
     .then((grades: any) => {
       const CSV_HEAD = 'snum,grade';
-      if (grades.startsWith(CSV_HEAD)) {
+      if (grades.startsWith != undefined && grades.startsWith(CSV_HEAD)) {
         res.writeHead(200, {
           'Content-Type': 'text/csv',
           'Content-Disposition': 'attachment; filename=Course' + req.params.courseId + 'Grades.csv',

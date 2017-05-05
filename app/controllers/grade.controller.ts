@@ -37,15 +37,17 @@ function create(payload: any) {
         })
         .exec()
         .then( c => {
-          let isInArray = c.grades.some( function(grade: IGradeDocument) {
-            return grade._id !== newGrades[key]._id;
-          });
-          if (!isInArray) {
+          let isInArray: boolean;
+          if (c !== null) {
+            isInArray = c.grades.some( function(grade: IGradeDocument) {
+              return grade._id !== newGrades[key]._id;
+            });
+          }
+          if (c !== null && !isInArray) {
             c.grades.push(newGrades[key]);
           }
           return c.save();
-        })
-        .catch(err => logger.info(err));
+        });
       }
       return c.save();
     });
@@ -55,17 +57,13 @@ function create(payload: any) {
     return Grade.createOrUpdate(g)
       .then( newOrUpdatedGrade => {
         return newOrUpdatedGrade;
-      })
-      .catch(err => logger.info(err));
+      });
   }))
   .then( (newGrades) => {
     addGradesToCourse(newGrades);
-  })
-  .catch(err => logger.info(err));
-  return Course.findOne({ courseId : payload.courseId }).populate({
-    path: 'grades',
-    model: 'Grade',
-  }).exec();
+  });
+
+  return findOrCreateGrades;
 }
 
 function getAllGradesByCourse(req: any) {
@@ -74,6 +72,7 @@ function getAllGradesByCourse(req: any) {
   .populate({
     path: 'grades',
     model: 'Grade',
+    select: '-__v -_id',
   }).exec();
 
   if ( req.query !== null && req.query.format == 'csv') {
@@ -87,7 +86,6 @@ function getAllGradesByCourse(req: any) {
 
       for ( let i = 0; i < course.grades.length; i++ ) {
         let g: any = course.grades[i];
-        console.log('grade' + JSON.stringify(g));
         let snum = g.snum;
         let grade = g.details.finalGrade;
         arrayOfGradesResponse.push([snum, grade]);
