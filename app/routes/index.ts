@@ -39,6 +39,7 @@ const routes = (server: restify.Server) => {
   server.post('/:courseId/admin/students', routeHandler.addStudentList);
   server.post('/:courseId/admin/grades', routeHandler.addGrades);
   server.get('/:courseId/admin/grades', routeHandler.getGradesAdmin);
+  server.post('/:courseId/admin/grades/:delivId', routeHandler.addGradesCSV);
   server.post('/:courseId/admin/deliverables', routeHandler.addDeliverables);
   server.get('/settings', isAuthenticated, routeHandler.getUser);
   server.get('/logout', isAuthenticated, routeHandler.logout);

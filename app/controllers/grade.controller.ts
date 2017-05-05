@@ -4,7 +4,9 @@ import { Course, ICourseDocument } from '../models/course.model';
 import { Deliverable, IDeliverableDocument } from '../models/deliverable.model';
 import { User, IUserDocument } from '../models/user.model';
 import { Grade, IGradeDocument } from '../models/grade.model';
+import * as parse from 'csv-parse';
 
+let fs = require('fs');
 let stringify = require('csv-stringify');
 
 let csvGenerate = function(input: any) {
@@ -18,6 +20,85 @@ let csvGenerate = function(input: any) {
     });
   });
 };
+
+let csvParser = function(filePath: string, options: any) {
+  return new Promise((resolve, reject) => {
+    console.log(filePath);
+    console.log(options);
+    let parser = parse(options, (err: Error, data: any) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+    fs.createReadStream(filePath).pipe(parser);
+  });
+};
+
+function addGradesCSV(req: any) {
+  const options = {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+  };
+
+  csvParser(req.files.grades.path, options).then( (result) => {
+    console.log('anything');
+    console.log(result);
+  })
+  .catch(err => { logger.info(err); });
+
+  let parser = parse(options, (err, data) => {
+    console.log(err);
+    let lastCourseNum = null;
+    let course = null;
+    let newClassList = new Array();
+    let usersRepo = User;
+
+
+    for (let key in data) {
+      let student = data[key];
+      console.log(student);
+    }
+
+    // for (let key in data) {
+    //   let student = data[key];
+    //   logger.info('Parsing student into user model: ' + JSON.stringify(student));
+    //   usersRepo.findOrCreate({
+    //     csid : student.CSID,
+    //     snum : student.SNUM,
+    //     lname : student.LAST,
+    //     fname : student.FIRST,
+    //   })
+    //     .then(user => {
+    //       newClassList.push(user);
+    //       courseQuery
+    //         .then( c => {
+    //           return addCourseDataToUser(user, c);
+    //         });
+    //     })
+    //     .catch( (err) => { logger.info('Error creating user in class controller' + err); });
+    // }
+
+    // let courseQuery = Course.findOne({ 'courseId': courseId });
+
+    // courseQuery
+    //   .exec()
+    //   .then( c => {
+    //     c.classList = newClassList;
+    //     c.save();
+    //     return c;
+    //   })
+    //     .catch((err) => logger.info('Error retrieving course information: ' + err));
+
+    // if (err) {
+    //   throw Error(err);
+    // }
+  });
+
+  return Grade.find({}).exec();
+}
 
 function create(payload: any) {
   logger.info('create() in Grades Controller');
@@ -130,4 +211,4 @@ function update(req: restify.Request, res: restify.Response, next: restify.Next)
 }
 
 
-export { update, getAllGradesByCourse, getReleasedGradesByCourse, create }
+export { update, getAllGradesByCourse, getReleasedGradesByCourse, create, addGradesCSV }

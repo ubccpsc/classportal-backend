@@ -3,7 +3,6 @@ import { logger } from '../../utils/logger';
 
 
 interface IGradeDocument extends mongoose.Document {
-  courseId: string;
   snum: string;
   deliv: string;
   details: Object;
