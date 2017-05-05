@@ -31,7 +31,7 @@ describe('INITIALIZE DATA FOR GRADE TESTS', () => {
 });
 
 describe('POST /:courseId/admin/grades', () => {
-  
+
   const SUCCESS_RESPONSE_ADD_GRADES = {};
   const ERROR_RESPONSE_ADD_GRADES = {};
 
@@ -82,7 +82,7 @@ describe('POST /:courseId/admin/grades', () => {
 });
 
 describe('GET /:courseId/admin/grades', () => {
-  
+
   const SUCCESS_SNUM_GRADES = {};
   const SUCCESS_CSV_BODY = {};
   const SUCCESS_CSV_HEADER = {};

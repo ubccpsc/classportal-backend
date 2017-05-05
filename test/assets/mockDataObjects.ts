@@ -2,6 +2,7 @@ import * as restify from 'restify';
 import { logger } from '../../utils/logger';
 import { ITeamDocument, Team } from '../../app/models/team.model';
 import { ICourseDocument, Course } from '../../app/models/course.model';
+import { IGradeDocument, Grade } from '../../app/models/grade.model';
 import { IUserDocument, User } from '../../app/models/user.model';
 import { IDeliverableDocument, Deliverable } from '../../app/models/deliverable.model';
 
@@ -16,6 +17,8 @@ let RANDOM_STUDENT_1: IUserDocument;
 let RANDOM_STUDENT_2: IUserDocument;
 let RANDOM_STUDENT_3: IUserDocument;
 let RANDOM_STUDENT_4: IUserDocument;
+let RANDOM_GRADE_1: IGradeDocument;
+let RANDOM_GRADE_2: IGradeDocument;
 let COURSE_NO_ADMINS_SERIALIZED: ICourseDocument;
 let COURSE_710: ICourseDocument;
 let COURSE_610: ICourseDocument;
@@ -34,7 +37,7 @@ const ADMIN_PAYLOAD_INVALID_USER = { fname: 'Jean', lname: 'Grey', username: 'co
 let INVALID_MIN_TEAM_PAYLOAD: ITeamDocument;
 
 
-function initializeData() {
+function initializeParentData() {
   let data1 = User.findOne({ csid: 12312321, fname: 'Thomas' })
     .exec()
     .then(c => { return USER_1_THOMAS = c; });
@@ -99,14 +102,40 @@ function initializeData() {
   let data17 = Deliverable.findOne({ name: 'Assignment 2' })
     .exec()
     .then(d => { return d; });
-
   return Promise.all<any>([data1, data2, data3, data4, data5, data6, data11, data12, data13,
     data14, data15, data16, data17]);
 }
+
+function initializeChildData() {
+  let data1 = Grade.create({
+    snum: RANDOM_STUDENT_1.snum,
+    deliv: DELIVERABLE_1.name,
+    details: { finalGrade: '99' },
+  })
+  .then( g => {
+    return RANDOM_GRADE_1 = g;
+  });
+  let data2 = Grade.create({
+    snum: RANDOM_STUDENT_2.snum,
+    deliv: DELIVERABLE_2.name,
+    details: { finalGrade: '01' },
+  })
+  .then( g => {
+    return RANDOM_GRADE_2 = g;
+  });
+  return Promise.all<any>([data1, data2]);
+}
+
+function initializeData() {
+  return initializeParentData().then( () => {
+    return initializeChildData();
+  });
+}
+
 
 export { initializeData, USER_1_THOMAS, USER_2_CYNTHIA, USER_3_REGIS, USER_4_CONNOR,
   USER_5_AGENT, USER_6_ROGER, COURSE_610, COURSE_710, DELIVERABLE_1, DELIVERABLE_2,
   GITHUB_URL, TEAM_ID, TEAM_NAME, TEAM_ADMINS, RANDOM_STUDENT_1, RANDOM_STUDENT_2,
   RANDOM_STUDENT_3, RANDOM_STUDENT_4, TEAM_COMPUTATIONAL_THEORY, LOCAL_STUDENT_LOGIN,
   ADMIN_PAYLOAD_VALID, ADMIN_PAYLOAD_INVALID_USER, INVALID_COURSE_NUM, INVALID_MIN_TEAM_PAYLOAD,
-  REAL_GITHUB_USERNAME }
+  REAL_GITHUB_USERNAME, RANDOM_GRADE_1, RANDOM_GRADE_2 }
