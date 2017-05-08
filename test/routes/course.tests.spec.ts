@@ -9,7 +9,7 @@ import * as mockData from '../assets/mockDataObjects';
 
 let agent = supertest.agent(app);
 
-const CLASS_LIST_PATH = __dirname.replace('/build/test/routes', '') + '/test/assets/mockDataCList.csv';
+const CLASS_LIST_PATH = __dirname.replace('/build/test/routes', '') + '/test/assets/CSVs/classList.csv';
 const COURSE_DATA = {
   courseId : Math.floor(Math.random() * 99999),
   name : 'Computer Studies',

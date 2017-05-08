@@ -3,6 +3,7 @@ import * as supertest from 'supertest';
 import { app } from '../../server';
 import { logger } from '../../utils/logger';
 import { Grade, IGradeDocument } from '../../app/models/grade.model';
+import { Deliverable, IDeliverableModel } from '../../app/models/deliverable.model';
 const expect = chai.expect;
 import { studentCookie } from './../assets/auth.agents';
 import * as mockData from '../assets/mockDataObjects';
@@ -32,6 +33,39 @@ describe('initialize db data and remove Grades in DB', () => {
     .then(() => { return done(); })
     .catch(err => console.log('data initialization error: ' + err));
   });
+});
+
+describe('POST /:courseId/admin/grades/:delivId', () => {
+
+  const GRADES_CSV_FILE = __dirname.replace('/build/test/routes', '') + '/test/assets/CSVs/mockGrades.csv';
+  const SUCCESS_RESPONSE_ADD_GRADES = { response: 'Successfully added CSV list of grades.' };
+
+  let DELIV_ID: string;
+
+  before( (done) => {
+    Deliverable.findOne({ name: 'Assignment 1' })
+      .then( d => {
+        DELIV_ID = d.name;
+        return done();
+      });
+  });
+
+  it('should post a list of grades', (done) => {
+    studentAgent()
+      .post('/710/admin/grades/' + DELIV_ID)
+      .attach('grades', GRADES_CSV_FILE)
+      .end((err, res) => {
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          expect(res.status).to.equal(200);
+          expect(JSON.stringify(res.body)).to.equal(JSON.stringify(SUCCESS_RESPONSE_ADD_GRADES));
+          done();
+        }
+      });
+  });
+
 });
 
 describe('POST /:courseId/admin/grades', () => {
