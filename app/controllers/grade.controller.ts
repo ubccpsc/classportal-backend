@@ -38,10 +38,16 @@ let csvParser = function(filePath: string, options: any) {
   });
 };
 
+// addGradesCSV()
+// Steps:
+// 1) Queries Deliverable with _id in Req to retrieve Deliverable._id
+// 2) Takes CSV in Request and turns it into Array
+// 3) Iterates over array and adds each Grade to the DB linked with the Deliverable._id
 function addGradesCSV(req: any) {
 
   let delivName: string;
 
+  // CSV parser options
   const options = {
     columns: true,
     skip_empty_lines: true,
@@ -57,10 +63,9 @@ function addGradesCSV(req: any) {
       return Promise.resolve(delivName = d.name);
     });
 
+  // Updates grade if exists, creates grade if does not exist.
   csvParser(req.files.grades.path, options).then( (result: any) => {
-    console.log(result);
     for (let i = 0; i < result.length; i++) {
-      console.log(result[i]);
       Grade.findOne({ snum: result[i].snum })
         .then( g => {
           if (g !== null) {
@@ -133,11 +138,11 @@ function create(payload: any) {
 function getAllGradesByCourse(req: any) {
   logger.info('getAllGradesByCourse()');
   let courseQuery = Course.findOne({ courseId : req.params.courseId })
-  .populate({
-    path: 'grades',
-    model: 'Grade',
-    select: '-__v -_id',
-  }).exec();
+    .populate({
+      path: 'grades',
+      model: 'Grade',
+      select: '-__v -_id',
+    }).exec();
 
   if ( req.query !== null && req.query.format == 'csv') {
     return courseQuery.then( course => {
@@ -187,11 +192,4 @@ function getReleasedGradesByCourse(req: any) {
   });
 }
 
-function update(req: restify.Request, res: restify.Response, next: restify.Next) {
-  logger.info('update grades');
-  res.json(200, 'update grades');
-  return next();
-}
-
-
-export { update, getAllGradesByCourse, getReleasedGradesByCourse, create, addGradesCSV }
+export { getAllGradesByCourse, getReleasedGradesByCourse, create, addGradesCSV }

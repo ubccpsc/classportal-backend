@@ -10,8 +10,6 @@ import { logger } from '../../utils/logger';
 function updateDeliverables(course: ICourseDocument, deliverable: any): Promise<IDeliverableDocument> {
   logger.info('updateDeliverables() in Deliverable Controller');
   let deliverableList = new Array;
-  console.log('deliverables' + JSON.stringify(deliverable));
-  console.log('coruseId ' + course);
 
   if (deliverable !== null && course !== null) {
 
@@ -50,8 +48,8 @@ function updateDeliverables(course: ICourseDocument, deliverable: any): Promise<
   return Promise.reject(Error('Insufficient deliverable payload or CourseId does not match'));
 }
 
-// Only add Deliverable to course if it is not already added.
-function addDeliverablesToCourse(course: any, deliverable: any) {
+// Method only adds Deliverable to course if it is not already added.
+function addDeliverablesToCourse(course: any, deliverable: IDeliverableDocument) {
   logger.info('addDeliverablesToCourse() in Deliverable Controller');
   let isntAssigned = (course.deliverables.indexOf(deliverable._id) === -1);
   if (isntAssigned) {
