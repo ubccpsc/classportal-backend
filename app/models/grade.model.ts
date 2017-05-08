@@ -22,6 +22,10 @@ const GradeSchema = new mongoose.Schema({
     required: true,
     type: String,
   },
+  delivId: {
+    required: true,
+    type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable',
+  },
   details: {
     type: Object,
   },

@@ -7,30 +7,44 @@ import { User, IUserDocument } from '../models/user.model';
 import { logger } from '../../utils/logger';
 
 // Retrives and updates Deliverables object.
-function updateDeliverables(course: any, deliverables: any) {
+function updateDeliverables(course: any, deliverable: any) {
   logger.info('updateDeliverables() in Deliverable Controller');
   let deliverableList = new Array;
+  console.log('deliverables' + JSON.stringify(deliverable));
+  console.log('coruseId ' + course);
 
-  if (deliverables && course) {
+  if (deliverable !== null && course !== null) {
 
-    for (let key in deliverables) {
+    let searchParams = { name : deliverable.name, courseId : course._id };
 
-      let searchParams = { name : deliverables[key].name, courseId : course._id };
-
-      Deliverable.findOrCreate(searchParams)
-        .then(d => {
-          console.log('test' + JSON.stringify(d));
-          d.url = deliverables[key].url;
-          d.open = deliverables[key].open;
-          d.close = deliverables[key].close;
-          d.gradesReleased = deliverables[key].close;
+    return Deliverable.findOne(searchParams)
+      .then(d => {
+        if (d !== null) {
+          d.url = deliverable.url;
+          d.open = deliverable.open;
+          d.close = deliverable.close;
+          d.gradesReleased = deliverable.close;
           d.courseId = course._id;
           d.save();
-          addDeliverablesToCourse(course, d);
-        })
-        .catch((err) => logger.info('Error assigning deliverables to ' + course.courseId + ': ' + err));
-    }
+        } else {
+          return Deliverable.create({
+            url: deliverable.url,
+            open: deliverable.open,
+            close: deliverable.close,
+            gradesreleased: deliverable.gradesReleased,
+            courseId: course._id,
+          }).then( d => {
+            return d;
+          });
+        }
+        console.log('inside here deliverable ' + deliverable.url);
+
+        return addDeliverablesToCourse(course, d);
+      });
   }
+  logger.info(Error('updateDeliverables(): Insufficient deliverable payload or CourseId' +
+  ' does not match'));
+  return Promise.reject(Error('Insufficient deliverable payload or CourseId does not match'));
 }
 
 // Only add Deliverable to course if it is not already added.
@@ -49,12 +63,11 @@ function create(payload: any) {
     .exec()
     .then( c => {
       if (c) {
-        return Promise.resolve(updateDeliverables(c, payload.deliverables));
+        return Promise.resolve(updateDeliverables(c, payload));
       } else {
         return Promise.reject(Error('Error assigning deliverables to course' + c.courseId));
       }
-    })
-    .catch((err) => logger.info('Course does not exist: ' + err));
+    });
 }
 
 function read(payload: any) {

@@ -5,8 +5,8 @@ interface IDeliverableDocument extends mongoose.Document {
   courseId: string;
   name: string;
   url: string;
-  open: string;
-  close: string;
+  open: Date;
+  close: Date;
   gradesReleased: Boolean;
 }
 
@@ -20,7 +20,6 @@ const DeliverableSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    unique: true,
   },
   url: {
     type: String,

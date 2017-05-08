@@ -9,6 +9,7 @@ import * as parse from 'csv-parse';
 let fs = require('fs');
 let stringify = require('csv-stringify');
 
+// Promisify csv-stringify
 let csvGenerate = function(input: any) {
   return new Promise((resolve, reject) => {
     stringify(input, (err: Error, csv: string) => {
@@ -21,6 +22,7 @@ let csvGenerate = function(input: any) {
   });
 };
 
+// Promisify csv-parse
 let csvParser = function(filePath: string, options: any) {
   return new Promise((resolve, reject) => {
     console.log(filePath);
@@ -61,40 +63,6 @@ function addGradesCSV(req: any) {
       let student = data[key];
       console.log(student);
     }
-
-    // for (let key in data) {
-    //   let student = data[key];
-    //   logger.info('Parsing student into user model: ' + JSON.stringify(student));
-    //   usersRepo.findOrCreate({
-    //     csid : student.CSID,
-    //     snum : student.SNUM,
-    //     lname : student.LAST,
-    //     fname : student.FIRST,
-    //   })
-    //     .then(user => {
-    //       newClassList.push(user);
-    //       courseQuery
-    //         .then( c => {
-    //           return addCourseDataToUser(user, c);
-    //         });
-    //     })
-    //     .catch( (err) => { logger.info('Error creating user in class controller' + err); });
-    // }
-
-    // let courseQuery = Course.findOne({ 'courseId': courseId });
-
-    // courseQuery
-    //   .exec()
-    //   .then( c => {
-    //     c.classList = newClassList;
-    //     c.save();
-    //     return c;
-    //   })
-    //     .catch((err) => logger.info('Error retrieving course information: ' + err));
-
-    // if (err) {
-    //   throw Error(err);
-    // }
   });
 
   return Grade.find({}).exec();
