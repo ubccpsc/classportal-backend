@@ -39,31 +39,46 @@ let csvParser = function(filePath: string, options: any) {
 };
 
 function addGradesCSV(req: any) {
+
+  let delivName: string;
+
   const options = {
     columns: true,
     skip_empty_lines: true,
     trim: true,
   };
 
-  csvParser(req.files.grades.path, options).then( (result) => {
-    console.log('anything');
+  let deliverableQuery = Deliverable.findOne(({ _id: req.params.delivId }))
+    .exec()
+    .then( d => {
+      if (d === null) {
+        return Promise.reject('Cannot find Deliverable ID ' + req.params.delivId + '.');
+      }
+      return Promise.resolve(delivName = d.name);
+    });
+
+  csvParser(req.files.grades.path, options).then( (result: any) => {
     console.log(result);
+    for (let i = 0; i < result.length; i++) {
+      console.log(result[i]);
+      Grade.findOne({ snum: result[i].snum })
+        .then( g => {
+          if (g !== null) {
+            g.details = { finalGrade: result[i].grade };
+            return g.save();
+          } else {
+            return Grade.create({
+              snum: result[i].snum,
+              deliv: delivName,
+              delivId: req.params.delivId,
+              details: { finalGrade: result[i].grade },
+            });
+          }
+        });
+    }
+    return Promise.reject(Error('Error reading grades. Please check that grades exist in CSV'));
   })
   .catch(err => { logger.info(err); });
-
-  let parser = parse(options, (err, data) => {
-    console.log(err);
-    let lastCourseNum = null;
-    let course = null;
-    let newClassList = new Array();
-    let usersRepo = User;
-
-
-    for (let key in data) {
-      let student = data[key];
-      console.log(student);
-    }
-  });
 
   return Grade.find({}).exec();
 }
