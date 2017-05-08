@@ -20,6 +20,7 @@ const DeliverableSchema = new mongoose.Schema({
   },
   name: {
     type: String,
+    required: true,
   },
   url: {
     type: String,
@@ -34,6 +35,9 @@ const DeliverableSchema = new mongoose.Schema({
     type: Boolean,
   },
 });
+
+// Deliverable Name must be unique per Course
+DeliverableSchema.index({ courseId: 1, name: 1 }, { unique: true });
 
 DeliverableSchema.static({
 

@@ -7,7 +7,7 @@ import { User, IUserDocument } from '../models/user.model';
 import { logger } from '../../utils/logger';
 
 // Retrives and updates Deliverables object.
-function updateDeliverables(course: any, deliverable: any) {
+function updateDeliverables(course: ICourseDocument, deliverable: any): Promise<IDeliverableDocument> {
   logger.info('updateDeliverables() in Deliverable Controller');
   let deliverableList = new Array;
   console.log('deliverables' + JSON.stringify(deliverable));
@@ -25,21 +25,24 @@ function updateDeliverables(course: any, deliverable: any) {
           d.close = deliverable.close;
           d.gradesReleased = deliverable.close;
           d.courseId = course._id;
-          d.save();
+          return d.save();
         } else {
           return Deliverable.create({
             url: deliverable.url,
             open: deliverable.open,
+            name: deliverable.name,
             close: deliverable.close,
             gradesreleased: deliverable.gradesReleased,
             courseId: course._id,
           }).then( d => {
+            course.deliverables.push(d);
+            course.save();
             return d;
+          })
+          .then(() => {
+            return addDeliverablesToCourse(course, d);
           });
         }
-        console.log('inside here deliverable ' + deliverable.url);
-
-        return addDeliverablesToCourse(course, d);
       });
   }
   logger.info(Error('updateDeliverables(): Insufficient deliverable payload or CourseId' +
@@ -63,9 +66,9 @@ function create(payload: any) {
     .exec()
     .then( c => {
       if (c) {
-        return Promise.resolve(updateDeliverables(c, payload));
+        return updateDeliverables(c, payload);
       } else {
-        return Promise.reject(Error('Error assigning deliverables to course' + c.courseId));
+        return Promise.reject(Error('Error assigning deliverables to course #' + payload.courseId + '.'));
       }
     });
 }

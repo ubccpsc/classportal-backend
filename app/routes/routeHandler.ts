@@ -10,6 +10,7 @@ import { logger } from '../../utils/logger';
 import { Course, ICourseDocument } from '../models/course.model';
 import { Grade, IGradeDocument } from '../models/grade.model';
 import { User, IUserDocument } from '../models/user.model';
+import { Deliverable, IDeliverableDocument } from '../models/deliverable.model';
 import { Team, ITeamDocument } from '../models/team.model';
 
 
@@ -70,7 +71,7 @@ const oauthCallback = (req: restify.Request, res: restify.Response, next: restif
 
 const addDeliverables = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return delivCtrl.create(req.params)
-    .then((q) => res.json(200, { response: q }))
+    .then((d: IDeliverableDocument) => res.json(200, { response: 'Successfully updated/added Deliverable.' }))
     .catch((err: any) => res.json(500, { err: err.message }));
 };
 

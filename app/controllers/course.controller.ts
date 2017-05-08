@@ -158,7 +158,7 @@ function getClassList(courseId: string) {
 
   return courseQuery.then(result => {
     if ( result === null ) {
-      return Promise.reject(Error('Course #' + courseId + ' does not exist'));
+      return Promise.reject(Error('Course #' + courseId + ' does not exist.'));
     } else {
       return Promise.resolve(result.classList);
     }
