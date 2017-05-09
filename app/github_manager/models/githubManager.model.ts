@@ -4,9 +4,9 @@ import { config } from '../../../config/env';
 let rp = require('request-promise-native');
 
 class GithubManager {
-  private GITHUB_AUTH_TOKEN: string = config.github_callback_url;
-  private GITHUB_USER_NAME: string = config.github_callback_url;
-  private DELAY_SEC: number = 5000; // I will try to avoid using this for simplicity.
+  private GITHUB_AUTH_TOKEN = config.github_auth_token;
+  private GITHUB_USER_NAME = config.github_user_name;
+  private DELAY_SEC: number = 5000; // Used due to a callback on the github api returning too early
   private orgName: string;
 
   constructor(orgName: string) {
@@ -14,18 +14,15 @@ class GithubManager {
   }
 
   public createTeam(teamName: string, permission: string): Promise<Object> {
-    let GithubManager = this;
-
+    let ctx = this;
     logger.info('GithubManager::createTeam(..) - start');
     return new Promise(function (fulfill, reject) {
-      console.log('auth token' + GithubManager.GITHUB_AUTH_TOKEN);
-      console.log('username' + GithubManager.GITHUB_USER_NAME);
       let options = {
         'method': 'POST',
-        'uri': 'https://api.github.com/orgs/' + GithubManager.orgName + '/teams',
+        'uri': 'https://api.github.com/orgs/' + ctx.orgName + '/teams',
         'headers': {
-          'Authorization': GithubManager.GITHUB_AUTH_TOKEN,
-          'User-Agent': GithubManager.GITHUB_USER_NAME,
+          'Authorization': 'token ' + ctx.GITHUB_AUTH_TOKEN,
+          'User-Agent': ctx.GITHUB_USER_NAME,
           'Accept': 'application/json',
         },
         'body': {

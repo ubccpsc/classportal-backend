@@ -3,13 +3,18 @@ import { logger } from '../../utils/logger';
 import { ITeamDocument, Team } from '../models/team.model';
 import { ICourseDocument, Course } from '../models/course.model';
 import { IUserDocument, User } from '../models/user.model';
-import { GithubManager } from '../github_manager/models/githubManager.model';
 import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
+import { GithubManager } from '../github_manager/models/githubManager.model';
 import * as auth from '../middleware/auth.middleware';
 
 function createGithubTeam(payload: any): Promise<Object> {
-  let githubManager = new GithubManager('TEST_ORG_NAME');
-  return githubManager.createTeam('Test_Team_Name', 'admin');
+  let githubManager = new GithubManager(payload.orgName);
+  return githubManager.createTeam(payload.teamName, payload.permissions);
+}
+
+function createGithubRepo(payload: any): Promise<Object> {
+  let githubManager = new GithubManager(payload.orgName);
+  return githubManager.createTeam(payload.teamName, payload.permissions);
 }
 
 function getTeams(payload: any) {
