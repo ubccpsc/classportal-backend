@@ -1,7 +1,9 @@
 May 4, 2017
 ------------
 
-Installation of:
+-- Running on CentOs --
+
+Installation Log  of:
 
 - Node v6.10.3 LTS 
  { 1) sudo curl -sL https://rpm.nodesource.com/setup_6.x | sudo -E bash -
