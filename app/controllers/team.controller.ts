@@ -3,8 +3,14 @@ import { logger } from '../../utils/logger';
 import { ITeamDocument, Team } from '../models/team.model';
 import { ICourseDocument, Course } from '../models/course.model';
 import { IUserDocument, User } from '../models/user.model';
+import { GithubManager } from '../github_manager/models/githubManager.model';
 import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
 import * as auth from '../middleware/auth.middleware';
+
+function createGithubTeam(payload: any): Promise<Object> {
+  let githubManager = new GithubManager('TEST_ORG_NAME');
+  return githubManager.createTeam('Test_Team_Name', 'admin');
+}
 
 function getTeams(payload: any) {
   return Course.findOne({ courseId: payload.courseId })
@@ -214,4 +220,4 @@ function add(req: any) {
     });
 }
 
-export { add, update, getTeams }
+export { add, update, getTeams, createGithubTeam }

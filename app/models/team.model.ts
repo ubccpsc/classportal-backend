@@ -45,6 +45,10 @@ const TeamSchema = new mongoose.Schema({
   TAs: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
+  org: {
+    type: String,
+    default: null,
+  },
 });
 
 // Methods

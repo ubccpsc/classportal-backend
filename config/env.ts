@@ -17,6 +17,8 @@ const config = {
   super_admin: process.env.DEV_SUPER_ADMIN,
   admins: process.env.DEV_ADMINS.split(' '),
   auth_strategy: 'github',
+  github_auth_token: process.env.github_auth_token,
+  github_user_name: process.env.github_user_name,
 };
 
 // specific to test config

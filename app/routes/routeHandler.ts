@@ -167,7 +167,13 @@ const addGradesCSV = (req: restify.Request, res: restify.Response, next: restify
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
+const createGithubTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.createGithubTeam(req)
+  .then((addGrades: Object) => res.json(200, { response: 'Successfully added CSV list of grades.' }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
    getUser, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
    getGradesAdmin, getGradesStudent, addGrades, addTeam, updateTeam, getStudentNamesFromCourse,
-   addAdmins, getAdmins, getTeams, addGradesCSV };
+   addAdmins, getAdmins, getTeams, addGradesCSV, createGithubTeam };

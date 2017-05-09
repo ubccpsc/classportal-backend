@@ -16,6 +16,7 @@
     "@types/mongoose": "^4.7.5",
     "@types/node-fetch": "^1.6.7",
     "@types/passport": "^0.3.3",
+    "@types/request-promise-native": "^1.0.5",
     "@types/restify": "^2.0.39",
     "@types/restify-plugins": "^1.5.4",
     "@types/sinon": "^1.16.35",
@@ -29,6 +30,8 @@
     "node-fetch": "^1.6.3",
     "passport": "^0.3.2",
     "passport-github": "^1.1.0",
+    "request": "^2.81.0",
+    "request-promise-native": "^1.0.4",
     "restify": "^4.1.1",
     "restify-cookies": "^0.2.2",
     "restify-errors": "^4.3.0"

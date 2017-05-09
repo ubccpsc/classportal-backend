@@ -33,6 +33,7 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/admin/teams', routeHandler.getTeams);
 
   // -- Admin or Super Admin Only Routes
+  server.put('/:courseId/admin/github/team', routeHandler.createGithubTeam);
   server.put('/admin/:courseId', routeHandler.createCourse);
   server.post('/:courseId/admin/team', routeHandler.updateTeam);
   server.get('/:courseId/admin/students', routeHandler.getStudentList);
