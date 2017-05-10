@@ -9,12 +9,12 @@ import * as auth from '../middleware/auth.middleware';
 
 function createGithubTeam(payload: any): Promise<Object> {
   let githubManager = new GithubManager(payload.orgName);
-  return githubManager.createTeam(payload.teamName, payload.permissions);
+  return githubManager.createTeam(payload.teamName, payload.permissions, payload.repo_names);
 }
 
 function createGithubRepo(payload: any): Promise<Object> {
   let githubManager = new GithubManager(payload.orgName);
-  return githubManager.createTeam(payload.teamName, payload.permissions);
+  return githubManager.createTeam(payload.teamName, payload.permissions, payload.repo_names);
 }
 
 function getTeams(payload: any) {
