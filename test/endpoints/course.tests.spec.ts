@@ -8,8 +8,10 @@ import { ICourseDocument, Course } from '../../app/models/course.model';
 import * as mockData from '../assets/mockDataObjects';
 
 let agent = supertest.agent(app);
+let class_list_path = String(__dirname);
 
-const CLASS_LIST_PATH = __dirname.replace('/build/test/routes', '') + '/test/assets/CSVs/classList.csv';
+const CLASS_LIST_PATH = String(__dirname).replace('/build/test/endpoints', '/test/assets/CSVs/classList.csv');
+console.log('the new class' + CLASS_LIST_PATH);
 const COURSE_DATA = {
   courseId : Math.floor(Math.random() * 99999),
   name : 'Computer Studies',
