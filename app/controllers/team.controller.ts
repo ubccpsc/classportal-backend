@@ -7,9 +7,12 @@ import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
 import GitHubManager from '../github/githubManager';
 import * as auth from '../middleware/auth.middleware';
 
-function createGithubTeam(payload: any): Promise<Object> {
+function createGithubTeam(payload: any): Promise<number> {
   let githubManager = new GitHubManager(payload.orgName);
-  return githubManager.createTeam(payload.teamName, payload.permission);
+  return githubManager.createTeam(payload.teamName, payload.permission)
+    .then( (newTeam) => {
+      return githubManager.addMembersToTeam(newTeam.teamId, payload.members);
+    });
 }
 
 function createGithubRepo(payload: any): Promise<Object> {

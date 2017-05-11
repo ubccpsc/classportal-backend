@@ -517,7 +517,7 @@ export default class GitHubManager {
      * @param permission 'admin', 'pull', 'push'
      * @returns {Promise<{}>}
      */
-    public createTeam(teamName: string, permission: string): Promise<number> {
+    public createTeam(teamName: string, permission: string): Promise<any> {
         let ctx = this;
         logger.info("GitHubManager::createTeam(..) - start");
         return new Promise(function (fulfill, reject) {
