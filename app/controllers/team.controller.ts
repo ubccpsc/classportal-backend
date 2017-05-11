@@ -4,17 +4,17 @@ import { ITeamDocument, Team } from '../models/team.model';
 import { ICourseDocument, Course } from '../models/course.model';
 import { IUserDocument, User } from '../models/user.model';
 import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
-import { GithubManager } from '../github_manager/models/githubManager.model';
+import GitHubManager from '../github/githubManager';
 import * as auth from '../middleware/auth.middleware';
 
 function createGithubTeam(payload: any): Promise<Object> {
-  let githubManager = new GithubManager(payload.orgName);
-  return githubManager.createTeam(payload.teamName, payload.permissions, payload.repo_names);
+  let githubManager = new GitHubManager(payload.orgName);
+  return githubManager.createTeam(payload.teamName, payload.permission);
 }
 
 function createGithubRepo(payload: any): Promise<Object> {
-  let githubManager = new GithubManager(payload.orgName);
-  return githubManager.createTeam(payload.teamName, payload.permissions, payload.repo_names);
+  let githubManager = new GitHubManager(payload.orgName);
+  return githubManager.createTeam(payload.teamName, payload.permission);
 }
 
 function getTeams(payload: any) {
