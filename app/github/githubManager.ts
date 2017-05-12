@@ -263,6 +263,38 @@ export default class GitHubManager {
     }
 
     /**
+     * Gets a list of repos that are in an organization.
+     *
+     * @param orgName
+     * @returns {Promise<[object]>}
+     */
+    public getRepos(orgName: string): Promise<[object]> {
+        let ctx = this;
+        logger.info("GitHubManager::getRepos( " + orgName + " ) - start");
+        return new Promise(function (fulfill, reject) {
+            var options = {
+                method: 'GET',
+                uri: 'https://api.github.com/orgs/' + orgName + '/repos',
+                headers: {
+                    'Authorization': ctx.GITHUB_AUTH_TOKEN,
+                    'User-Agent': ctx.GITHUB_USER_NAME,
+                    'Accept': 'application/json'
+                },
+                json: true
+            };
+
+            rp(options).then(function (body: any) {
+                logger.info("GitHubManager::getRepos(..) - success; gotRepos():");
+                fulfill(body);
+            }).catch(function (err: any) {
+                logger.error("GitHubManager::getRepos(..) - ERROR: " + JSON.stringify(err));
+                reject(err);
+            });
+
+        });
+    }
+
+    /**
      * Creates a given repo and returns its url. Will fail if the repo already exists.
      *
      * @param repoName

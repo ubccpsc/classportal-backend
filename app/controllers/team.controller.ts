@@ -7,6 +7,11 @@ import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
 import GitHubManager from '../github/githubManager';
 import * as auth from '../middleware/auth.middleware';
 
+function getRepos(orgName: string): Promise<[Object]> {
+  let githubManager = new GitHubManager(orgName);
+  return githubManager.getRepos(orgName);
+}
+
 function createGithubTeam(payload: any): Promise<number> {
   let githubManager = new GitHubManager(payload.orgName);
   return githubManager.createTeam(payload.teamName, payload.permission)
@@ -278,4 +283,4 @@ function add(req: any) {
     });
 }
 
-export { add, update, getTeams, createGithubTeam, createGithubRepo }
+export { add, update, getTeams, createGithubTeam, createGithubRepo, getRepos }
