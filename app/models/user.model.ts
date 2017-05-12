@@ -42,7 +42,6 @@ const UserSchema = new mongoose.Schema({
   snum: {
     type: String,
     required: true,
-    unique: true,
   },
   csid: {
     type: String,
