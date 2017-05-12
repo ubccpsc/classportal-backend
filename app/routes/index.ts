@@ -36,6 +36,7 @@ const routes = (server: restify.Server) => {
   server.put('/:courseId/admin/github/team', routeHandler.createGithubTeam);
   server.put('/:courseId/admin/github/repo', routeHandler.createGithubRepo);
   server.get('/:courseId/admin/github/repos/:orgName', routeHandler.getRepos);
+  server.del('/:courseId/admin/github/repos/:orgName', routeHandler.deleteRepos);
   server.put('/admin/:courseId', routeHandler.createCourse);
   server.post('/:courseId/admin/team', routeHandler.updateTeam);
   server.get('/:courseId/admin/students', routeHandler.getStudentList);

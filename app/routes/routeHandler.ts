@@ -6,6 +6,7 @@ import * as delivCtrl from '../controllers/deliverable.controller';
 import * as gradeCtrl from '../controllers/grade.controller';
 import * as teamCtrl from '../controllers/team.controller';
 import * as testCtrl from '../controllers/test.controller';
+import * as githubCtrl from '../controllers/github.controller';
 import { logger } from '../../utils/logger';
 import { Course, ICourseDocument } from '../models/course.model';
 import { Grade, IGradeDocument } from '../models/grade.model';
@@ -168,19 +169,25 @@ const addGradesCSV = (req: restify.Request, res: restify.Response, next: restify
 };
 
 const createGithubTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return teamCtrl.createGithubTeam(req.params)
+  return githubCtrl.createGithubTeam(req.params)
   .then((githubResponse: Object) => res.json(200, { response: 'Successfully created team with members.' }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
 const createGithubRepo = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return teamCtrl.createGithubRepo(req.params)
+  return githubCtrl.createGithubRepo(req.params)
   .then((githubResponse: Object) => res.json(200, { response: 'Successfully created repo with teams and members.' }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
 const getRepos = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return teamCtrl.getRepos(req.params.orgName)
+  return githubCtrl.getRepos(req.params.orgName)
+  .then((reposList: [Object]) => res.json(200, { response: reposList }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const deleteRepos = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return githubCtrl.deleteRepos(req.params)
   .then((reposList: [Object]) => res.json(200, { response: reposList }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };
@@ -188,4 +195,5 @@ const getRepos = (req: restify.Request, res: restify.Response, next: restify.Nex
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
    getUser, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
    getGradesAdmin, getGradesStudent, addGrades, addTeam, updateTeam, getStudentNamesFromCourse,
-   addAdmins, getAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepo, getRepos };
+   addAdmins, getAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepo, getRepos,
+   deleteRepos };
