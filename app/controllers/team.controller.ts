@@ -16,8 +16,58 @@ function createGithubTeam(payload: any): Promise<number> {
 }
 
 function createGithubRepo(payload: any): Promise<Object> {
+
+  const ADMIN = 'admin';
+  const PULL = 'pull';
+  const PUSH = 'push';
+
   let githubManager = new GitHubManager(payload.orgName);
-  return githubManager.createTeam(payload.teamName, payload.permission);
+
+  return githubManager.createRepo(payload.name)
+    .then( (newRepoName) => {
+      if (payload.importUrl != '') {
+        return githubManager.importRepoToNewRepo(payload.name, payload.importUrl)
+          .then( (results) => {
+            return results;
+          });
+      }
+      return newRepoName;
+    })
+    .then((newRepoName: string) => {
+
+      // As repo is now created, add teams and members in Promise.All()
+
+      let adminTeamNumbers = Promise.all(payload.adminTeams.map((teamName: string) => {
+        return githubManager.getTeamNumber(teamName);
+      }));
+      let memberTeamNumbers = Promise.all(payload.memberTeams.map((teamName: string) => {
+        return githubManager.getTeamNumber(teamName);
+      }));
+      let addAdmins = Promise.all(payload.admins.map((admin: string) => {
+        return githubManager.addCollaboratorToRepo(admin, payload.name, ADMIN);
+      }));
+      let addMembers = Promise.all(payload.members.map((member: string) => {
+        return githubManager.addCollaboratorToRepo(member, payload.name, PUSH);
+      }));
+
+      let addTeamsAndMembers = [adminTeamNumbers, memberTeamNumbers, addMembers, addAdmins];
+
+      adminTeamNumbers.then( teamNums => {
+        return Promise.all(teamNums.map( (teamNum: number) => {
+          console.log('Adding admin teamNum to repo: ' + teamNum);
+          return githubManager.addTeamToRepo(teamNum, payload.name, ADMIN);
+        }));
+      });
+
+      memberTeamNumbers.then( teamNums => {
+        return Promise.all(teamNums.map( (teamNum: number) => {
+          console.log('Adding member teamNum to repo: ' + teamNum);
+          return githubManager.addTeamToRepo(teamNum, payload.name, PUSH);
+        }));
+      });
+
+      return Promise.all(addTeamsAndMembers);
+    });
 }
 
 function getTeams(payload: any) {
@@ -228,4 +278,4 @@ function add(req: any) {
     });
 }
 
-export { add, update, getTeams, createGithubTeam }
+export { add, update, getTeams, createGithubTeam, createGithubRepo }

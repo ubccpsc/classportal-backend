@@ -283,7 +283,8 @@ export default class GitHubManager {
                 },
                 body: {
                     name: repoName,
-                    private: true,
+                    // In Dev and Test, Github free Org Repos cannot be private. 
+                    private: config.env === 'production' ? true : false,
                     has_issues: true,
                     has_wiki: false,
                     has_downloads: false,

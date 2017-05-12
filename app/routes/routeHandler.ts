@@ -173,7 +173,13 @@ const createGithubTeam = (req: restify.Request, res: restify.Response, next: res
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
+const createGithubRepo = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.createGithubRepo(req.params)
+  .then((githubResponse: Object) => res.json(200, { response: 'Successfully created repo with teams and members.' }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
    getUser, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
    getGradesAdmin, getGradesStudent, addGrades, addTeam, updateTeam, getStudentNamesFromCourse,
-   addAdmins, getAdmins, getTeams, addGradesCSV, createGithubTeam };
+   addAdmins, getAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepo };
