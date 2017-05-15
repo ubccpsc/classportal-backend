@@ -7,12 +7,14 @@ import { Team, ITeamDocument } from '../../app/models/team.model';
 import * as mockData from '../assets/mockDataObjects';
 import { studentCookie } from './../assets/auth.agents';
 
+
 let agent = supertest.agent(app);
 let faker = require('faker');
 let repoNames = new Array();
 
 const TEST_ORG = 'ubccpsc-githubtest';
 const TEST_REPO_DELIN = 'test_';
+const SUCCESS_RESPONSE_CREATE = { 'response': 'Successfully created repo with teams and members.' };
 const NEW_TEST_REPO = {
   'orgName' : 'ubccpsc-githubtest',
   'name' : 'test_repo_name_instance_' + faker.random.number(9999),
@@ -26,39 +28,6 @@ const REAL_GITHUB_USER = 'thekitsch';
 
 
 describe('GET /:courseId/admin/github/repos/:org', () => {
-
-  before('Get all repos created that begin with "test_"', (done) => {
-    agent
-      .get('/710/admin/github/repos/' + TEST_ORG)
-      .set('set-cookie', studentCookie)
-      .end((err: any, res: supertest.Response) => {
-        if (err) console.log(err);
-        let repoResults = JSON.parse(res.text).response;
-        for ( let key in repoResults) {
-          if (repoResults[key].name.startsWith(TEST_REPO_DELIN)) {
-            repoNames.push(repoResults[key].name);
-          }
-        }
-        return repoResults;
-      });
-    done();
-  });
-
-  before('Remove all repos created that begin with "test_', (done) => {
-    // Remove TEST repos based on list above
-    let repoNamesReq = { 'repoNames': repoNames };
-    agent
-      .del('/710/admin/github/repos/' + TEST_ORG)
-      .set('set-cookie', studentCookie)
-      .send(repoNamesReq)
-      .end((err: any, res: supertest.Response) => {
-        if (err) {
-          console.log(err);
-        }
-        return res;
-      });
-    done();
-  });
 
   it('should not find any TEST_ repos', (done) => {
     agent
@@ -94,7 +63,7 @@ describe('GET /:courseId/admin/github/repos/:org', () => {
         if (err) {
           done(err);
         } else {
-          expect(res.text).to.equal(JSON.stringify('test'));
+          expect(res.text).to.equal(JSON.stringify(SUCCESS_RESPONSE_CREATE));
           done();
         }
       });

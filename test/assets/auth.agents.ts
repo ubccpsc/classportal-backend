@@ -17,10 +17,6 @@ let adminCookie: any;
 let superAdminCookie: any;
 let bearerToken: any;
 
-mockData.initializeData()
-  .then(() => console.log('data initialized'))
-  .catch(err => console.log('data initialization error: ' + err));
-
 agent
   .get('/auth/login?username=' + mockData.LOCAL_STUDENT_LOGIN.username +
   '&snum=' + mockData.LOCAL_STUDENT_LOGIN.snum)

@@ -6,6 +6,7 @@ import { IGradeDocument, Grade } from '../../app/models/grade.model';
 import { IUserDocument, User } from '../../app/models/user.model';
 import { IDeliverableDocument, Deliverable } from '../../app/models/deliverable.model';
 
+let context = this;
 let faker = require('faker');
 let USER_1_THOMAS: IUserDocument;
 let USER_2_CYNTHIA: IUserDocument;
@@ -125,7 +126,7 @@ function initializeChildData() {
 function initializeData() {
   return initializeParentData()
     .then( () => {
-      return initializeChildData();
+      return context;
     });
 }
 
