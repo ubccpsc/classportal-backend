@@ -51,7 +51,6 @@ describe('/:courseId/admin/github/repos/:org', () => {
     }
 
     let repoNamesReq = { 'repoNames': reposToDelete };
-    console.log('the delete names' + JSON.stringify(repoNamesReq));
     return agent
       .del('/710/admin/github/repos/' + TEST_ORG)
       .set('set-cookie', studentCookie)
@@ -81,7 +80,6 @@ describe('/:courseId/admin/github/repos/:org', () => {
               repoNames.push(repoResults[key].name);
             }
           }
-          console.log('the length' + repoNames);
           expect(repoNames.length).to.be.below(1);
           done();
         }
@@ -123,7 +121,6 @@ describe('/:courseId/admin/github/repos/:org', () => {
               repoNames.push(repoResults[key].name);
             }
           }
-          console.log('repo result' + repoResults);
           expect(repoNames.length).to.equal(1);
           done();
         }
