@@ -23,7 +23,7 @@ mockData.initializeData()
 
 agent
   .get('/auth/login?username=' + mockData.LOCAL_STUDENT_LOGIN.username +
-   '&snum=' + mockData.LOCAL_STUDENT_LOGIN.snum)
+  '&snum=' + mockData.LOCAL_STUDENT_LOGIN.snum)
   .end((err, res: any) => {
     // user should be authenticated with session state
     if (err) {
@@ -34,7 +34,7 @@ agent
 
 agent
   .get('/auth/login?username=' + mockData.LOCAL_STUDENT_LOGIN.username +
-   '&snum=' + mockData.LOCAL_STUDENT_LOGIN.snum)
+  '&snum=' + mockData.LOCAL_STUDENT_LOGIN.snum)
   .end((err, res: any) => {
     // user should be authenticated with session state
     if (err) {
@@ -42,5 +42,7 @@ agent
     }
     studentCookie = res.headers['set-cookie'];
   });
+
+
 
 export { studentCookie, adminCookie, superAdminCookie };

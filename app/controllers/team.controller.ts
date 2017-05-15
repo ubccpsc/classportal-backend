@@ -59,14 +59,12 @@ function createGithubRepo(payload: any): Promise<Object> {
 
       adminTeamNumbers.then( teamNums => {
         return Promise.all(teamNums.map( (teamNum: number) => {
-          console.log('Adding admin teamNum to repo: ' + teamNum);
           return githubManager.addTeamToRepo(teamNum, payload.name, ADMIN);
         }));
       });
 
       memberTeamNumbers.then( teamNums => {
         return Promise.all(teamNums.map( (teamNum: number) => {
-          console.log('Adding member teamNum to repo: ' + teamNum);
           return githubManager.addTeamToRepo(teamNum, payload.name, PUSH);
         }));
       });
@@ -101,7 +99,6 @@ function checkForDuplicateTeamMembers(existingTeams: ITeamDocument[], newTeamMem
   let duplicateEntry: boolean;
   let duplicatedMember: boolean;
   let userCompiliation = new Array();
-  console.log('existing teams' + JSON.stringify(existingTeams));
   // Push each team member into an array to cross-check that member is not added
   // to more than one Team per Deliverable.
   for ( let team in existingTeams ) {

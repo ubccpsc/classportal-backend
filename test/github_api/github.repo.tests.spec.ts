@@ -7,53 +7,60 @@ import { Team, ITeamDocument } from '../../app/models/team.model';
 import * as mockData from '../assets/mockDataObjects';
 import { studentCookie } from './../assets/auth.agents';
 
-const TEST_ORG = 'ubccpsc-githubtest';
-const TEST_REPO_DELIN = 'test';
-const REAL_GITHUB_USER = 'thekitsch';
-
 let agent = supertest.agent(app);
 let faker = require('faker');
+let repoNames = new Array();
+
+const TEST_ORG = 'ubccpsc-githubtest';
+const TEST_REPO_DELIN = 'test_';
+const NEW_TEST_REPO = {
+  'orgName' : 'ubccpsc-githubtest',
+  'name' : 'test_repo_name_instance_' + faker.random.number(9999),
+  'members' : ['thekitsch'],
+  'memberTeams' : ['Member_team_1', 'Member_team_2'],
+  'admins' : ['thekitsch'],
+  'adminTeams' : ['push_team_1'],
+  'importUrl' : 'https://github.com/ubccpsc-githubtest/import_respository_example',
+};
+const REAL_GITHUB_USER = 'thekitsch';
 
 
 describe('GET /:courseId/admin/github/repos/:org', () => {
 
-  before('Remove all repos created that begin with "test_"', (done) => {
-    return agent
+  before('Get all repos created that begin with "test_"', (done) => {
+    agent
       .get('/710/admin/github/repos/' + TEST_ORG)
       .set('set-cookie', studentCookie)
       .end((err: any, res: supertest.Response) => {
+        if (err) console.log(err);
         let repoResults = JSON.parse(res.text).response;
-        let repoNames = new Array();
         for ( let key in repoResults) {
           if (repoResults[key].name.startsWith(TEST_REPO_DELIN)) {
             repoNames.push(repoResults[key].name);
           }
-          console.log('repo names ' + repoNames);
         }
+        return repoResults;
+      });
+    done();
+  });
+
+  before('Remove all repos created that begin with "test_', (done) => {
+    // Remove TEST repos based on list above
+    let repoNamesReq = { 'repoNames': repoNames };
+    agent
+      .del('/710/admin/github/repos/' + TEST_ORG)
+      .set('set-cookie', studentCookie)
+      .send(repoNamesReq)
+      .end((err: any, res: supertest.Response) => {
         if (err) {
           console.log(err);
         }
-        return repoNames;
-      })
-      .then( (repoNames) => {
-        let repoNamesReq = { 'repoNames': 'bla' };
-        return agent
-          .del('/710/admin/github/repos/' + TEST_ORG)
-          .send(repoNamesReq)
-          .end((err: any, res: supertest.Response) => {
-            if (err) {
-              done(err);
-            } else {
-              console.log('Successfully cleaned Organization of "Test_" Repos');
-              done();
-            }
-          });
+        return res;
       });
-
-
+    done();
   });
 
-  it('api test: should create a team with team members', (done) => {
+  it('should not find any TEST_ repos', (done) => {
     agent
       .get('/710/admin/github/repos/' + TEST_ORG)
       .set('set-cookie', studentCookie)
@@ -61,11 +68,63 @@ describe('GET /:courseId/admin/github/repos/:org', () => {
         if (err) {
           done(err);
         } else {
-          // expect(res.text).to.equal(JSON.stringify('Something'));
-          // expect(JSON.parse(res.text).response.to.equal(200));
+          let repoResults = JSON.parse(res.text).response;
+          repoNames = new Array(0);
+          for ( let key in repoResults) {
+            if (repoResults[key].name.startsWith(TEST_REPO_DELIN)) {
+              console.log('found test repo' + repoResults[key].name);
+              repoNames.push(repoResults[key].name);
+            }
+          }
+          console.log('the length' + repoNames);
+          expect(repoNames.length).to.be.below(1);
           done();
         }
       });
   });
+
+  // describe('PUT /:courseId/admin/github/repo/', () => {
+  it('should create TEST_ repos', (done) => {
+
+    agent
+      .put('/710/admin/github/repo')
+      .set('set-cookie', studentCookie)
+      .send(NEW_TEST_REPO)
+      .end((err: any, res: supertest.Response) => {
+        if (err) {
+          done(err);
+        } else {
+          expect(res.text).to.equal(JSON.stringify('test'));
+          done();
+        }
+      });
+  });
+  // });
+
+
+  // describe('GET /:courseId/admin/github/repos/:orgName', () => {
+  it('should get TEST_ repos', (done) => {
+
+    agent
+      .get('/710/admin/github/repos/' + TEST_ORG)
+      .set('set-cookie', studentCookie)
+      .end((err: any, res: supertest.Response) => {
+        if (err) {
+          done(err);
+        } else {
+          let repoResults = JSON.parse(res.text).response;
+          let repoNames = new Array();
+          for ( let key in repoResults) {
+            if (repoResults[key].name.startsWith(TEST_REPO_DELIN)) {
+              repoNames.push(repoResults[key].name);
+            }
+          }
+          console.log('repo result' + repoResults);
+          expect(repoNames.length).to.equal(1);
+          done();
+        }
+      });
+  });
+// });
 
 });
