@@ -10,7 +10,6 @@ import { studentCookie } from './../assets/auth.agents';
 
 let agent = supertest.agent(app);
 let faker = require('faker');
-let repoNames = new Array();
 
 const TEST_ORG = 'ubccpsc-githubtest';
 const TEST_REPO_DELIN = 'test_';
@@ -26,10 +25,48 @@ const NEW_TEST_REPO = {
 };
 const REAL_GITHUB_USER = 'thekitsch';
 
+describe('/:courseId/admin/github/repos/:org', () => {
+  let testReposList: any;
 
-describe('GET /:courseId/admin/github/repos/:org', () => {
+  it('should get status 200 on GET list of TEST_ repos', done => {
+    agent
+      .get('/710/admin/github/repos/' + TEST_ORG)
+      .set('set-cookie', studentCookie)
+      .end((err: any, res: supertest.Response) => {
+        if (err) {
+          console.log(err);
+        }
+        testReposList = JSON.parse(res.text).response;
+        expect(res.status).to.equal(200);
+        done();
+      });
+  });
+
+  it('should get success 200 on DELETE TEST_ repos', done => {
+    // Remove TEST repos based on list above
+    let reposToDelete = new Array();
+
+    for (let key in testReposList) {
+      reposToDelete.push(testReposList[key].name);
+    }
+
+    let repoNamesReq = { 'repoNames': reposToDelete };
+    console.log('the delete names' + JSON.stringify(repoNamesReq));
+    return agent
+      .del('/710/admin/github/repos/' + TEST_ORG)
+      .set('set-cookie', studentCookie)
+      .send(repoNamesReq)
+      .end((err: any, res: supertest.Response) => {
+        if (err) {
+          console.log(err);
+        }
+        expect(res.status).to.equal(200);
+        done();
+      });
+  });
 
   it('should not find any TEST_ repos', (done) => {
+    let repoNames = new Array(0);
     agent
       .get('/710/admin/github/repos/' + TEST_ORG)
       .set('set-cookie', studentCookie)
@@ -38,7 +75,6 @@ describe('GET /:courseId/admin/github/repos/:org', () => {
           done(err);
         } else {
           let repoResults = JSON.parse(res.text).response;
-          repoNames = new Array(0);
           for ( let key in repoResults) {
             if (repoResults[key].name.startsWith(TEST_REPO_DELIN)) {
               console.log('found test repo' + repoResults[key].name);
@@ -73,7 +109,7 @@ describe('GET /:courseId/admin/github/repos/:org', () => {
 
   // describe('GET /:courseId/admin/github/repos/:orgName', () => {
   it('should get TEST_ repos', (done) => {
-
+    let repoNames = new Array();
     agent
       .get('/710/admin/github/repos/' + TEST_ORG)
       .set('set-cookie', studentCookie)
@@ -82,7 +118,6 @@ describe('GET /:courseId/admin/github/repos/:org', () => {
           done(err);
         } else {
           let repoResults = JSON.parse(res.text).response;
-          let repoNames = new Array();
           for ( let key in repoResults) {
             if (repoResults[key].name.startsWith(TEST_REPO_DELIN)) {
               repoNames.push(repoResults[key].name);
