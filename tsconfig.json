@@ -11,11 +11,6 @@
     "outDir": "./build"
   },
   "filesGlob": [
-    "/app",
-    "/config",
-    "/test",
-    "/utils",
-    "server.ts"
   ],
   "exclude": [
     "node_modules"
