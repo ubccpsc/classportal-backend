@@ -24,7 +24,7 @@ function consoleLogRequest(req: restify.Request) {
  * @returns {string} the logged in username
  */
 function getUser(req: any, res: any, next: any) {
-  return Promise.resolve(res.json(200, { user: req.user }))
+  return Promise.resolve(res.json(200, { user: req.user, headers: req.headers }))
     .catch((err) => { logger.info('Error loading user info: ' + err); });
 }
 
