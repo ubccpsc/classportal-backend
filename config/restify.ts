@@ -13,11 +13,13 @@ const app = restify.createServer({
 });
 
 // allow cors
-app.use(restify.CORS());
+app.use(restify.CORS({
+  origins: ['http://localhost:3000', 'http://localhost:5000'],
+  credentials: true,
+}));
 
 // set cors options
 app.opts(/.*/, (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', req.header('Access-Control-Request-Method'));
   res.header('Access-Control-Allow-Headers', req.header('Access-Control-Request-Headers'));
   res.send(200);

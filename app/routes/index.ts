@@ -19,10 +19,10 @@ const routes = (server: restify.Server) => {
   // OAuth routes by logged-in users only
   server.put('/register/username', routeHandler.addGithubUsername);
   server.post('/logout', auth.loadUser, routeHandler.logout);
-  server.get('/auth/login', passport.authenticate(config.auth_strategy), routeHandler.getUser);
+  server.get('/auth/login', passport.authenticate(config.auth_strategy), routeHandler.getCurrentUserInfo);
   server.get('/auth/login/return', passport.authenticate(config.auth_strategy, { failureRedirect: '/failed' }),
     ( req: restify.Request, res: any, next: restify.Next) => {
-      res.redirect('http://localhost:3000/loggedIn', next);
+      res.redirect('http://localhost:3000/postLogin', next);
     });
 
   // Authenticated routes
@@ -39,13 +39,13 @@ const routes = (server: restify.Server) => {
   server.del('/:courseId/admin/github/repos/:orgName', routeHandler.deleteRepos);
   server.put('/admin/:courseId', routeHandler.createCourse);
   server.post('/:courseId/admin/team', routeHandler.updateTeam);
-  server.get('/:courseId/admin/students', routeHandler.getStudentList);
+  server.get('/:courseId/admin/students', adminAuthenticated, routeHandler.getStudentList);
   server.post('/:courseId/admin/students', routeHandler.addStudentList);
   server.post('/:courseId/admin/grades', routeHandler.addGrades);
   server.get('/:courseId/admin/grades', routeHandler.getGradesAdmin);
   server.post('/:courseId/admin/grades/:delivId', routeHandler.addGradesCSV);
   server.post('/:courseId/admin/deliverables', routeHandler.addDeliverables);
-  server.get('/settings', isAuthenticated, routeHandler.getUser);
+  server.get('/settings', isAuthenticated, routeHandler.getCurrentUserInfo);
   server.get('/logout', isAuthenticated, routeHandler.logout);
 };
 

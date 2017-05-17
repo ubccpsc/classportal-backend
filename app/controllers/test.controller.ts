@@ -23,10 +23,10 @@ function consoleLogRequest(req: restify.Request) {
  * @param {restify.Next}
  * @returns {string} the logged in username
  */
-function getUser(req: any, res: any, next: any) {
+function getCurrentUserInfo(req: any, res: any, next: any) {
   return Promise.resolve(res.json(200, { user: req.user, headers: req.headers }))
     .catch((err) => { logger.info('Error loading user info: ' + err); });
 }
 
-export { consoleLogRequest, getUser };
+export { consoleLogRequest, getCurrentUserInfo };
 

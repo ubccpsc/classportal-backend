@@ -59,8 +59,8 @@ const logout = (req: restify.Request, res: restify.Response, next: restify.Next)
     .catch((err: any) => res.json(500, { err: err.errmsg }));
 };
 
-const getUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return testCtrl.getUser(req, res, next)
+const getCurrentUserInfo = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return testCtrl.getCurrentUserInfo(req, res, next)
     .catch((err: any) => res.json(500, { err: err.errmsg }));
 };
 
@@ -193,7 +193,7 @@ const deleteRepos = (req: restify.Request, res: restify.Response, next: restify.
 };
 
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
-   getUser, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
+   getCurrentUserInfo, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
    getGradesAdmin, getGradesStudent, addGrades, addTeam, updateTeam, getStudentNamesFromCourse,
    addAdmins, getAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepo, getRepos,
    deleteRepos };
