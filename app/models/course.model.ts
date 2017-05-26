@@ -12,6 +12,7 @@ interface ICourseDocument extends mongoose.Document {
   deliverables: Object[];
   grades: [Object];
   admins: [Object];
+  teamMustBeInSameLab: Boolean;
 }
 
 interface ICourseModel extends mongoose.Model<ICourseDocument> {
@@ -63,6 +64,9 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   admins: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     default: [],
+  },
+  teamMustBeInSameLab: {
+    type: Boolean,
   },
 });
 

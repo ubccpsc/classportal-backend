@@ -192,8 +192,14 @@ const deleteRepos = (req: restify.Request, res: restify.Response, next: restify.
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
+const getUserRole = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return authCtrl.getUserRole(req, res, next)
+  .then((userRole: string) => res.json(200, { response: userRole }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
 export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
    getCurrentUserInfo, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
    getGradesAdmin, getGradesStudent, addGrades, addTeam, updateTeam, getStudentNamesFromCourse,
    addAdmins, getAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepo, getRepos,
-   deleteRepos };
+   deleteRepos, getUserRole };

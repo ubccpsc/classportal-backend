@@ -38,6 +38,20 @@ function oauthCallback(req: any, res: any, next: restify.Next) {
 }
 
 /**
+ * Gets user role
+* @param {restify.Request} restify request object
+* @param {restify.Response} restify response object
+* @param {restify.Next} restify next object
+* @returns {string} that holds username in string
+ */
+function getUserRole(req: any, res: any, next: any) {
+  return Promise.resolve(res.json(200, { user: req.user.role }))
+    .catch((err) => { logger.info('Error loading user info: ' + err); });
+}
+
+
+
+/**
 * Gets logged in username
 * @param {restify.Request} restify request object
 * @param {restify.Response} restify response object
@@ -49,4 +63,4 @@ function getUser(req: any, res: any, next: any) {
     .catch((err) => { logger.info('Error loading user info: ' + err); });
 }
 
-export { logout, getUser, oauthCallback };
+export { logout, getUser, oauthCallback, getUserRole };
