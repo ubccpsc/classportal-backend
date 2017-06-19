@@ -11,6 +11,7 @@ const config = {
   db: process.env.DEV_DB,
   ssl_key_path: process.env.SSL_KEY_PATH,
   ssl_cert_path: process.env.SSL_CERT_PATH,
+  ssl_int_cert_path: process.env.SSL_INT_CERT_PATH,
   github_client_id: process.env.GITHUB_CLIENT_ID,
   github_client_secret: process.env.GITHUB_CLIENT_SECRET,
   github_callback_url: 'http://localhost:5000/auth/login/return',

@@ -5,11 +5,15 @@ import { routes } from '../app/routes';
 import { logger } from '../utils/logger';
 import { session, CookieParser, passport } from './auth';
 
+let sslIntCert = fs.readFileSync(config.ssl_int_cert_path);
+
+
 // create https server
 const app = restify.createServer({
   name: config.app_name,
   key: fs.readFileSync(config.ssl_key_path),
   certificate: fs.readFileSync(config.ssl_cert_path),
+  ca: fs.readFileSync(config.ssl_int_cert_path).toString(),
 });
 
 // set cors options
