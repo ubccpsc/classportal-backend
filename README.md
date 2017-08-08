@@ -114,3 +114,46 @@ under construction
 [restify]: <http://restify.com>
 [mongoose]: <http://mongoosejs.com/>
 [mongodb]: <https://mongodb.org>
+
+
+ENV structure:
+
+# Instructions:
+# 1. Copy and rename this file to '.env'
+# 2. Set env variables - eg. APP_NAME=ClassPortal
+# 3. Update this example file with new env variables as necessary.
+#
+# Warning: DO NOT set TEST_DB to the same value as PROD_DB, because the test suite overwrites TEST_DB multiple times.
+
+# Common
+APP_NAME="UBC Original Class Portal https://github.com/ubccpsc/classportal"
+GITHUB_CLIENT_ID="999999999999999999"
+GITHUB_CLIENT_SECRET="999999999999999999999999999999999999"
+SSL_KEY_PATH="/path/to/key.key"
+SSL_CERT_PATH="/path/to/crt.crt"
+SSL_INT_CERT_PATH="/path/to/ca-cacerts.pem"
+GITHUB_AUTH_TOKEN="token 999999999999999999999999999999999999111"
+GITHUB_USER_NAME="username"
+
+# Development
+DEV_HOST=localhost
+DEV_PORT=5000
+DEV_DB=mongodb://localhost:27017/development
+DEV_ADMINS=admin1 admin2 admin3
+DEV_SUPER_ADMIN=superadmin1
+NODE_TLS_REJECT_UNAUTHORIZED=1
+
+# Test
+TEST_HOST=localhost
+TEST_PORT=9000
+TEST_DB=mongodb://localhost:27017/test
+TEST_ADMINS=admin1 admin2 admin3
+TEST_SUPER_ADMIN=superadmin1
+NODE_TLS_REJECT_UNAUTHORIZED=0
+
+# Production
+PROD_HOST=localhost
+PROD_PORT=8080
+PROD_DB=mongodb://localhost:27017/production
+PROD_ADMINS=admin1 admin2 admin3
+PROD_SUPER_ADMIN=superadmin1
