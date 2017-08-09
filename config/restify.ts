@@ -7,7 +7,6 @@ import { session, CookieParser, passport } from './auth';
 
 let sslIntCert = fs.readFileSync(config.ssl_int_cert_path);
 
-
 // create https server
 const app = restify.createServer({
   name: config.app_name,
@@ -26,7 +25,7 @@ app.opts(/.*/, (req: restify.Request, res: restify.Response, next: restify.Next)
 
 // allow cors
 app.use(restify.CORS({
-  origins: ['http://localhost:3000', 'http://localhost:5000'],
+  origins: ['https://localhost:3000', 'https://localhost:5000'],
   credentials: true,
 }));
 

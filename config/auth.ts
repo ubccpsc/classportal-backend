@@ -2,6 +2,7 @@ import { app } from './restify';
 import { config } from '../config/env';
 import { User, IUserDocument } from '../app/models/user.model';
 import { logger } from '../utils/logger';
+
 let passport = require('passport');
 let session = require('cookie-session');
 let CookieParser = require('restify-cookies');
