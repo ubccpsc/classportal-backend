@@ -23,6 +23,13 @@ const createCourse = (req: restify.Request, res: restify.Response) => {
     .catch((err: Error) => res.json(500, { 'err': err.message }));
 };
 
+
+const addTokenToDB = (req: restify.Request, res: restify.Response) => {
+  return authCtrl.addTokenToDB(req, res)
+    .then(() => res.json(200, { response: 'Added token to DB' }))
+    .catch((err: Error) => res.json(500, { 'err': err.message }));
+};
+
 const getCourseList = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.get(req.params)
     .then((courseList) => res.json(200, { response: courseList }))
@@ -192,9 +199,15 @@ const deleteRepos = (req: restify.Request, res: restify.Response, next: restify.
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-const getUserRole = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return authCtrl.getUserRole(req, res, next)
-  .then((userRole: string) => res.json(200, { response: userRole }))
+const getCurrentUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return authCtrl.getCurrentUser(req, res, next)
+  .then((currentUser: object) => res.json(200, { response: currentUser }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const isAuthenticated = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return authCtrl.isAuthenticated(req, res, next)
+  .then((authStatus: boolean) => res.json(200, { response: authStatus }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
@@ -202,4 +215,4 @@ export { pong, createCourse, getCourseList, logout, addStudentList, getStudentLi
    getCurrentUserInfo, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
    getGradesAdmin, getGradesStudent, addGrades, addTeam, updateTeam, getStudentNamesFromCourse,
    addAdmins, getAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepo, getRepos,
-   deleteRepos, getUserRole };
+   deleteRepos, getCurrentUser, addTokenToDB, isAuthenticated };

@@ -44,12 +44,24 @@ function oauthCallback(req: any, res: any, next: restify.Next) {
 * @param {restify.Next} restify next object
 * @returns {string} that holds username in string
  */
-function getUserRole(req: any, res: any, next: any) {
+function addTokenToDB(req: any, res: any): Promise<string> {
+  console.log('addTokenToDB:: - ' + req.user);
+  console.log('is authenticated? : ' + req.isAuthenticated());
   return Promise.resolve(res.json(200, { user: req.user.role }))
     .catch((err) => { logger.info('Error loading user info: ' + err); });
 }
 
-
+/**
+ * Gets user role
+* @param {restify.Request} restify request object
+* @param {restify.Response} restify response object
+* @param {restify.Next} restify next object
+* @returns a User object
+ */
+function getCurrentUser(req: any, res: any, next: any): Promise<object> {
+  return Promise.resolve(res.json(200, { user: req.user }))
+    .catch((err) => { logger.info('Error loading user info: ' + err); });
+}
 
 /**
 * Gets logged in username
@@ -63,4 +75,25 @@ function getUser(req: any, res: any, next: any) {
     .catch((err) => { logger.info('Error loading user info: ' + err); });
 }
 
-export { logout, getUser, oauthCallback, getUserRole };
+
+/**
+* Gets logged in username
+* @param {restify.Request} restify request object
+* @param {restify.Response} restify response object
+* @param {restify.Next} restify next object
+* @returns {boolean} true value if valid CSID/SNUM aka. real user in database
+**/
+function isAuthenticated(req: any, res: any, next: any): Promise<boolean> {
+  return User.findOne({ username: req.user.username })
+    .then((user: IUserDocument) => {
+      if (user) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+}
+
+
+
+export { logout, getUser, oauthCallback, getCurrentUser, addTokenToDB, isAuthenticated };

@@ -14,7 +14,7 @@ const config = {
   ssl_int_cert_path: process.env.SSL_INT_CERT_PATH,
   github_client_id: process.env.GITHUB_CLIENT_ID,
   github_client_secret: process.env.GITHUB_CLIENT_SECRET,
-  github_callback_url: 'https://localhost:5000/auth/login/return',
+  github_callback_url: process.env.GITHUB_OAUTH_CALLBACK,
   super_admin: process.env.DEV_SUPER_ADMIN,
   admins: process.env.DEV_ADMINS.split(' '),
   auth_strategy: 'github',

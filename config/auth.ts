@@ -17,7 +17,10 @@ passport.use(new Strategy({
     logger.info(profile.username + 'logged in');
 
     // Github username taken and lookup for that user in our DB.
-    User.find({ username: profile.username }, function(err, user) {
+    User.findOne({ username: String(profile.username).toLowerCase() }, function(err, user) {
+      console.log(user);
+      user.token = accessToken;
+      user.save();
       return cb(err, user);
     });
   }),

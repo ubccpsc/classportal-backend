@@ -9,20 +9,22 @@ import { config } from '../../config/env';
 const routes = (server: restify.Server) => {
   // Accessible by anyone
   server.get('/ping', routeHandler.pong);
-  server.get('/courses', routeHandler.getCourseList);
-  server.get('/test', routeHandler.testRoute);
-  server.get('/userRole', routeHandler.getUserRole);
-  server.get('/:courseId/deliverables', routeHandler.getDeliverables);
-  server.get('/:courseId/grades', routeHandler.getGradesStudent);
-  server.put('/register', routeHandler.validateRegistration);
-  server.put('/:courseId/team', routeHandler.addTeam);
-  server.get('/:courseId/students', routeHandler.getStudentNamesFromCourse);
+  server.get('/courses', isAuthenticated, routeHandler.getCourseList);
+  server.get('/test', isAuthenticated, routeHandler.testRoute);
+  server.get('/isAuthenticated', isAuthenticated, routeHandler.isAuthenticated);
+  server.get('/currentUser', isAuthenticated, routeHandler.getCurrentUser);
+  server.get('/:courseId/deliverables', isAuthenticated, routeHandler.getDeliverables);
+  server.get('/:courseId/grades', isAuthenticated, routeHandler.getGradesStudent);
+  server.put('/register', isAuthenticated, routeHandler.validateRegistration);
+  server.put('/:courseId/team', isAuthenticated, routeHandler.addTeam);
+  server.get('/:courseId/students', isAuthenticated, routeHandler.getStudentNamesFromCourse);
   // OAuth routes by logged-in users only
-  server.put('/register/username', routeHandler.addGithubUsername);
+  server.put('/register/username', isAuthenticated, routeHandler.addGithubUsername);
   server.post('/logout', auth.loadUser, routeHandler.logout);
   server.get('/auth/login', passport.authenticate(config.auth_strategy), routeHandler.getCurrentUserInfo);
   server.get('/auth/login/return', passport.authenticate(config.auth_strategy, { failureRedirect: '/failed' }),
-    ( req: restify.Request, res: any, next: restify.Next) => {
+    ( req: any, res: any, next: restify.Next) => {
+      console.log(req.cookies.session);
       res.redirect('https://localhost:3000/postLogin', next);
     });
 
