@@ -11,7 +11,7 @@ const routes = (server: restify.Server) => {
   server.get('/ping', routeHandler.pong);
   server.get('/courses', isAuthenticated, routeHandler.getCourseList);
   server.get('/test', isAuthenticated, routeHandler.testRoute);
-  server.get('/isAuthenticated', isAuthenticated, routeHandler.isAuthenticated);
+  server.get('/isAuthenticated', routeHandler.isAuthenticated);
   server.get('/currentUser', isAuthenticated, routeHandler.getCurrentUser);
   server.get('/:courseId/deliverables', isAuthenticated, routeHandler.getDeliverables);
   server.get('/:courseId/grades', isAuthenticated, routeHandler.getGradesStudent);
