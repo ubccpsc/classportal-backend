@@ -24,7 +24,6 @@ const routes = (server: restify.Server) => {
   server.get('/auth/login', passport.authenticate(config.auth_strategy), routeHandler.getCurrentUserInfo);
   server.get('/auth/login/return', passport.authenticate(config.auth_strategy, { failureRedirect: '/failed' }),
     ( req: any, res: any, next: restify.Next) => {
-      console.log(req.cookies.session);
       res.redirect('https://localhost:3000/postLogin', next);
     });
 

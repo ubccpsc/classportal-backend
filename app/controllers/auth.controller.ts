@@ -84,14 +84,18 @@ function getUser(req: any, res: any, next: any) {
 * @returns {boolean} true value if valid CSID/SNUM aka. real user in database
 **/
 function isAuthenticated(req: any, res: any, next: any): Promise<boolean> {
-  return User.findOne({ username: req.user.username })
-    .then((user: IUserDocument) => {
-      if (user) {
-        return true;
-      } else {
-        return false;
-      }
-    });
+  if (typeof req.user !== 'undefined') {
+    return User.findOne({ username: req.user.username })
+      .then((user: IUserDocument) => {
+        if (user) {
+          return true;
+        } else {
+          return false;
+        }
+      });
+  } else {
+    return Promise.resolve(false);
+  }
 }
 
 

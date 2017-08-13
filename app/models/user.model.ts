@@ -16,6 +16,7 @@ interface IUserDocument extends mongoose.Document {
   snum: string;
   csid: string;
   username: string;
+  userrole: string;
   fname: string;
   lname: string;
   courses: CourseData[];
@@ -52,6 +53,10 @@ const UserSchema = new mongoose.Schema({
   },
   lname: {
     type: String,
+  },
+  userrole: {
+    type: String,
+    default: 'student',
   },
   courses: [
     {
