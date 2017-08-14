@@ -16,7 +16,7 @@ let updateUserrole = function(u: IUserDocument, c: ICourseDocument, userrole: st
   return u.save();
 };
 
-let addCourseDataToUser = function(user: IUserDocument, course: ICourseDocument) {
+let addCourseDataToUser = function(user: IUserDocument, course: ICourseDocument): Promise<ICourseDocument> {
   let courseAlreadyInUser: boolean;
   courseAlreadyInUser = user.courses.some( function(c: CourseData) {
     return course._id.equals(c.courseId);
@@ -24,7 +24,9 @@ let addCourseDataToUser = function(user: IUserDocument, course: ICourseDocument)
   if (!courseAlreadyInUser) {
     user.courses.push({ courseId: course._id, role: null , team: null, repos: null });
   }
-  return user.save();
+  return user.save().then(() => {
+    return course;
+  });
 };
 
 function getAdmins(payload: any) {
@@ -89,20 +91,21 @@ function addAdmins(payload: any) {
  * Input: CSV
  */
 
-function updateClassList(classList: any, courseId: string) {
-
+function updateClassList(reqFiles: any, courseId: string) {
+  console.log(reqFiles['classList']);
   const options = {
     columns: true,
     skip_empty_lines: true,
     trim: true,
   };
 
-  let rs = fs.createReadStream(classList.path);
+  let rs = fs.createReadStream(reqFiles['classList'].path);
   let parser = parse(options, (err, data) => {
-
+    
+    let courseQuery = Course.findOne({ 'courseId': courseId });
     let lastCourseNum = null;
     let course = null;
-    let newClassList = new Array();
+    let newClassList = new Array<object>();
     let usersRepo = User;
 
     for (let key in data) {
@@ -113,28 +116,30 @@ function updateClassList(classList: any, courseId: string) {
         snum : student.SNUM,
         lname : student.LAST,
         fname : student.FIRST,
+        username : student.USERNAME,
       })
         .then(user => {
           newClassList.push(user);
           courseQuery
             .then( c => {
+              // add new Course information to User object
               return addCourseDataToUser(user, c);
+            })
+            .then(() => {
+              return courseQuery
+                .exec()
+                .then( c => {
+                  c.classList = newClassList;
+                  c.save();
+                  return c;
+                });
             });
         })
-        .catch( (err) => { logger.info('Error creating user in class controller' + err); });
+        .catch( (err) => { 
+          logger.error(`CourseController::updateClassList ERROR ${err}`);
+        });
     }
-
-    let courseQuery = Course.findOne({ 'courseId': courseId });
-
-    courseQuery
-      .exec()
-      .then( c => {
-        c.classList = newClassList;
-        c.save();
-        return c;
-      })
-        .catch((err) => logger.info('Error retrieving course information: ' + err));
-
+    
     if (err) {
       throw Error(err);
     }
