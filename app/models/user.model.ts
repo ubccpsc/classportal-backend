@@ -39,13 +39,16 @@ const UserSchema = new mongoose.Schema({
   username: {
     type: String,
     default: '',
+    unique: true,
   },
   snum: {
     type: String,
+    unique: true,
     required: true,
   },
   csid: {
     type: String,
+    unique: true,
     required: true,
   },
   fname: {
@@ -61,11 +64,12 @@ const UserSchema = new mongoose.Schema({
   courses: [
     {
       courseId: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'Course',
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
         required: true,
       },
       role: {
         type: String,
+        default: 'student',
       },
       team: {
         type: [Number],
@@ -145,7 +149,8 @@ UserSchema.statics = {
       .exec()
       .then((user) => {
         if (user) {
-          return Promise.resolve(user);
+          console.log('test of course' + user.username);
+          return user;
         } else {
           return User.create(query)
             .then((q) => { return q.save(); })

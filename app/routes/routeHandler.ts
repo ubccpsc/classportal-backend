@@ -42,7 +42,7 @@ const addStudentList = (req: restify.Request, res: restify.Response) => {
     .catch((err: any) => res.json(500, { 'err': err.message }));
 };
 
-const getStudentList = (req: restify.Request, res: restify.Response) => {
+const getClassList = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.getClassList(req.params.courseId)
     .then((classList) => res.json(200, { response: classList }))
     .catch((err: Error) => res.json(500, { err: err.message }));
@@ -211,7 +211,7 @@ const isAuthenticated = (req: restify.Request, res: restify.Response, next: rest
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
+export { pong, createCourse, getCourseList, logout, addStudentList, getClassList, testRoute,
    getCurrentUserInfo, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
    getGradesAdmin, getGradesStudent, addGrades, addTeam, updateTeam, getStudentNamesFromCourse,
    addAdmins, getAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepo, getRepos,

@@ -16,6 +16,7 @@ let updateUserrole = function(u: IUserDocument, c: ICourseDocument, userrole: st
   return u.save();
 };
 
+// checks to see if course already on user. If not, then adds Course reference under User object.
 let addCourseDataToUser = function(user: IUserDocument, course: ICourseDocument): Promise<ICourseDocument> {
   let courseAlreadyInUser: boolean;
   courseAlreadyInUser = user.courses.some( function(c: CourseData) {
@@ -31,7 +32,7 @@ let addCourseDataToUser = function(user: IUserDocument, course: ICourseDocument)
 
 function getAdmins(payload: any) {
   return Course.findOne({ courseId: payload.courseId })
-    .populate({ path: 'admins', select: 'fname lname snum csid username -_id' })
+    .populate({ path: 'admins', select: 'fname lname snum csid username _id' })
     .then( c => {
       if ( c !== null && c.admins.length < 1) {
         return Promise.reject(Error('There are no admins under course ' + payload.courseId + '.'));
@@ -126,13 +127,13 @@ function updateClassList(reqFiles: any, courseId: string) {
               return addCourseDataToUser(user, c);
             })
             .then(() => {
-              return courseQuery
-                .exec()
-                .then( c => {
-                  c.classList = newClassList;
-                  c.save();
-                  return c;
-                });
+              courseQuery
+              .exec()
+              .then( c => {
+                c.classList = newClassList;
+                c.save();
+                return c;
+              });
             });
         })
         .catch( (err) => { 
@@ -159,7 +160,8 @@ function updateClassList(reqFiles: any, courseId: string) {
 
 function getClassList(courseId: string) {
   let courseQuery = Course.findOne({ 'courseId': courseId })
-    .populate({ path: 'classList', select: 'snum fname lname teamUrl' }).exec();
+    .populate({ path: 'classList', select: 'snum csid fname lname username userrole id' })
+    .exec();
 
   return courseQuery.then(result => {
     if ( result === null ) {
