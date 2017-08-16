@@ -10,6 +10,7 @@ const routes = (server: restify.Server) => {
   // Accessible by anyone
   server.get('/ping', routeHandler.pong);
   server.get('/courses', isAuthenticated, routeHandler.getCourseList);
+  server.get('/studentCourseList', isAuthenticated, routeHandler.getStudentCourseList);
   server.get('/test', isAuthenticated, routeHandler.testRoute);
   server.get('/isAuthenticated', routeHandler.isAuthenticated);
   server.get('/currentUser', isAuthenticated, routeHandler.getCurrentUser);
@@ -33,6 +34,7 @@ const routes = (server: restify.Server) => {
   server.post('/:courseId/admin/admins', /* adminOrProfAuthenticated, */ routeHandler.addAdmins);
   server.get('/:courseId/admin/admins', routeHandler.getAdmins);
   server.get('/:courseId/admin/teams', routeHandler.getTeams);
+  server.post('/admin/classList', routeHandler.getClassList);
 
   // -- Admin or Super Admin Only Routes
   server.put('/:courseId/admin/github/team', routeHandler.createGithubTeam);

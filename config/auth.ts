@@ -6,8 +6,8 @@ import { logger } from '../utils/logger';
 let passport = require('passport-restify');
 let session = require('cookie-session');
 let CookieParser = require('restify-cookies');
-let Strategy = require('passport-github').Strategy; // must update links in package
-
+// must update links in 'passport-github' package to Github Enterprise
+let Strategy = require('passport-github').Strategy; 
 
 passport.use(new Strategy({
   clientID: config.github_client_id,
@@ -17,6 +17,7 @@ passport.use(new Strategy({
   function(accessToken: any, refreshToken: any, profile: any, cb: any) {
 
     let username = String(profile.username).toLowerCase();
+    console.log('debug username' + username);
 
     // Github username taken to look-up user in our DB.
     // Create SuperAdmin if it does not exist in DB
@@ -32,6 +33,8 @@ passport.use(new Strategy({
         } 
         // If user is a student/admin role and found in the DB
         else {
+          console.log('debug in else statement');
+          console.log(user);
           return cb(err, user);
         }
       } catch (err) {

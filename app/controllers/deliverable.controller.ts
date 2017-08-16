@@ -72,11 +72,13 @@ function create(payload: any) {
 }
 
 function read(payload: any) {
+  console.log(payload);
   logger.info('read() in Deliverable Controller');
   let searchParams = { courseId : payload.courseId };
   let populateParams = { path: 'deliverables', select: 'id name url open close isReleased' };
 
-  return Course.findOne(searchParams).populate(populateParams)
+  return Course.findOne(searchParams)
+    .populate(populateParams)
     .exec()
     .then( c => {
       if (c) {

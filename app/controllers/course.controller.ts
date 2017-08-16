@@ -159,17 +159,18 @@ function updateClassList(reqFiles: any, courseId: string) {
 }
 
 function getClassList(courseId: string) {
-  let courseQuery = Course.findOne({ 'courseId': courseId })
-    .populate({ path: 'classList', select: 'snum csid fname lname username userrole id' })
-    .exec();
-
-  return courseQuery.then(result => {
-    if ( result === null ) {
-      return Promise.reject(Error('Course #' + courseId + ' does not exist.'));
-    } else {
-      return Promise.resolve(result.classList);
-    }
-  });
+  return Course.findOne({ 'courseId': courseId })
+    .populate({ path: 'classList', 
+      select: 'snum csid fname lname username userrole id courses' })
+    .exec()
+    .then(course => {
+      if (!course) {
+        console.log(course);
+        return Promise.reject(Error('Course #' + courseId + ' does not exist.'));
+      } else {
+        return Promise.resolve(course.classList);
+      }
+    });
 }
 
 function getStudentNamesFromCourse(courseId: string) {
@@ -202,6 +203,23 @@ function get(req: restify.Request) {
     }
   });
 }
+
+/**
+ * Gets user role
+* @param {restify.Request} restify request object
+* @param {restify.Response} restify response object
+* @returns an array of Courses for user
+ */
+function getStudentCourseList(req: any): Promise<object[]> {
+
+  return User.findOne({ username: req.user.username })
+    .populate({ path: 'courses.courseId', select: 'courseId name icon' })
+    .exec()
+    .then((user: IUserDocument) => {
+      return user.courses;
+    });
+}
+
 
 /**
  * Create a team
@@ -242,4 +260,4 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
 }
 
 export { get, create, update, remove, updateClassList, getClassList, getStudentNamesFromCourse, addAdmins,
-         getAdmins, }
+         getAdmins, getStudentCourseList }
