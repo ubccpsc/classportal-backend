@@ -28,7 +28,8 @@ ssl/
 
 # Dotenv file
 .env
-
+#env2 just for temporary setting configurations
+.env2
 # Build folder
 build/*
 
