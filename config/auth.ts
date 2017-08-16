@@ -6,7 +6,8 @@ import { logger } from '../utils/logger';
 let passport = require('passport-restify');
 let session = require('cookie-session');
 let CookieParser = require('restify-cookies');
-let Strategy = require('passport-github').Strategy;
+let Strategy = require('passport-github').Strategy; // must update links in package
+
 
 passport.use(new Strategy({
   clientID: config.github_client_id,
@@ -95,6 +96,7 @@ passport.serializeUser(function(user: IUserDocument, cb: any) {
 passport.deserializeUser(function(obj: any, cb: any) {
   logger.info('Deserializing object : ' + JSON.stringify(obj, null, 2));
   try {
+    console.log(obj);
     User.findById(obj)
       .exec()
       .then((user) => { cb(null, user); })
