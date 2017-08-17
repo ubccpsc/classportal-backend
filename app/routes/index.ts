@@ -34,6 +34,7 @@ const routes = (server: restify.Server) => {
   server.post('/:courseId/admin/admins', /* adminOrProfAuthenticated, */ routeHandler.addAdmins);
   server.get('/:courseId/admin/admins', routeHandler.getAdmins);
   server.get('/:courseId/admin/teams', routeHandler.getTeams);
+  server.get('/:courseId/admin/courseSettings', routeHandler.getCourseSettings);
   server.post('/admin/classList', routeHandler.getClassList);
 
   // -- Admin or Super Admin Only Routes

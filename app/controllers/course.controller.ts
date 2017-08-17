@@ -193,7 +193,8 @@ function getStudentNamesFromCourse(courseId: string) {
  */
 function get(req: restify.Request) {
   logger.info('get() in Courses Controller');
-  let query = Course.find({}, 'courseId icon name -_id').sort({ courseId: -1 }).exec();
+  let query = Course.find({}, 'courseId minTeamSize maxTeamSize studentsSetTeams description icon name -_id')
+    .sort({ courseId: -1 }).exec();
 
   return query.then( result => {
     if ( result === null ) {
@@ -213,7 +214,7 @@ function get(req: restify.Request) {
 function getStudentCourseList(req: any): Promise<object[]> {
 
   return User.findOne({ username: req.user.username })
-    .populate({ path: 'courses.courseId', select: 'courseId name icon' })
+    .populate({ path: 'courses.courseId', select: 'courseId name icon description' })
     .exec()
     .then((user: IUserDocument) => {
       return user.courses;
@@ -247,6 +248,22 @@ function update(req: restify.Request, res: restify.Response, next: restify.Next)
   return next();
 }
 
+/**
+* Gets logged in username
+* @param {restify.Request} restify request object
+* @returns {boolean} true value if valid CSID/SNUM aka. real user in database
+**/
+function getCourseSettings(req: restify.Request): Promise<object> {
+  let courseId = req.params.courseId;
+  return Course.findOne({ courseId: req.params.courseId })
+    .then((course: ICourseDocument) => {
+      if (course) {
+        return Promise.resolve(course.settings);
+      } else {
+        return Promise.reject(`CourseController::GetCourseSettings Could not find course ${courseId}`);
+      }
+    });
+} 
 
 
 
@@ -260,4 +277,4 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
 }
 
 export { get, create, update, remove, updateClassList, getClassList, getStudentNamesFromCourse, addAdmins,
-         getAdmins, getStudentCourseList }
+         getAdmins, getStudentCourseList, getCourseSettings }
