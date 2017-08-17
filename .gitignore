@@ -30,6 +30,8 @@ ssl/
 .env
 #env2 just for temporary setting configurations
 .env2
+.env-backup
+
 # Build folder
 build/*
 
