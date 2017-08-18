@@ -20,8 +20,41 @@ function createGithubTeam(payload: any): Promise<number> {
     });
 }
 
+function getCourseTeamsPerUser(req: restify.Request): Promise<ITeamDocument[]> {
+  let courseId = req.params.courseId;
+  let userId = req.params.userId;
+  if (!req.params.courseId || !req.params.userId) {
+    return Promise.reject(Error(`TeamController::getCourseTeamsPerUser
+     courseId ${courseId} or userId ${userId} not in parameter.`));
+  }
+  let courseQuery = Course.findOne({ courseId }).exec();
+
+  return courseQuery.then((course: ICourseDocument) => {
+    let teamQueryObject: any = new Object();
+    if (course) {
+      teamQueryObject.course = course._id;
+      teamQueryObject.members = userId;
+      return Team.find(teamQueryObject)
+        .populate('members deliverable course TAs')
+        .exec()
+        .then((teams: ITeamDocument[]) => {
+          if (!teams) {
+            return Promise.reject(Error(`TeamController::getCourseTeamsPerUser No teams were found under
+            Course Number ${courseId} and User ${userId}`));
+          }
+          return Promise.resolve(teams);
+        });
+    }
+    else {
+      return Promise.reject(Error(`TeamController::getCourseTeamsPerUser Course was not 
+      found under Course Number ${courseId} and User ${userId}`));
+    }
+  });
+}
+
 function createGithubRepo(payload: any): Promise<Object> {
 
+  const SUPERADMIN = 'superadmin';
   const ADMIN = 'admin';
   const PULL = 'pull';
   const PUSH = 'push';
@@ -280,4 +313,4 @@ function add(req: any) {
     });
 }
 
-export { add, update, getTeams, createGithubTeam, createGithubRepo, getRepos }
+export { add, update, getTeams, createGithubTeam, createGithubRepo, getRepos, getCourseTeamsPerUser }

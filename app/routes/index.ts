@@ -17,6 +17,7 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/deliverables', isAuthenticated, routeHandler.getDeliverables);
   server.get('/:courseId/grades', isAuthenticated, routeHandler.getGradesStudent);
   server.put('/register', isAuthenticated, routeHandler.validateRegistration);
+  server.get('/:courseId/:userId/teams', isAuthenticated, routeHandler.getCourseTeamsPerUser);
   server.put('/:courseId/team', isAuthenticated, routeHandler.addTeam);
   server.get('/:courseId/students', isAuthenticated, routeHandler.getStudentNamesFromCourse);
   // OAuth routes by logged-in users only
