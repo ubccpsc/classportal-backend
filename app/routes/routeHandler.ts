@@ -90,7 +90,7 @@ const addDeliverables = (req: restify.Request, res: restify.Response, next: rest
 };
 
 const getDeliverables = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return delivCtrl.read(req.params)
+  return delivCtrl.getDeliverablesByCourse(req.params)
     .then((deliverables) => res.json(200, { response: deliverables }))
     .catch((err: any) => res.json(500, { err: err.message }));
 };

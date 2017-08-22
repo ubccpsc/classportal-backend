@@ -67,16 +67,6 @@ const UserSchema = new mongoose.Schema({
         type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
         required: true,
       },
-      role: {
-        type: String,
-        default: 'student',
-      },
-      team: {
-        type: [Number],
-      },
-      repos: {
-        type: [String],
-      },
     },
   ],
 });

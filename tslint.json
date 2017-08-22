@@ -97,7 +97,7 @@
       "check-whitespace"
     ],
     "quotemark": [
-      true,
+      false,
       "single"
     ],
     "semicolon": [
@@ -134,7 +134,7 @@
       "check-accessor"
     ],
     "trailing-comma": [
-      true,
+      false,
       {
         "multiline": "always",
         "singleline": "never"

@@ -20,10 +20,11 @@ function createGithubTeam(payload: any): Promise<number> {
     });
 }
 
-function getCourseTeamsPerUser(req: restify.Request): Promise<ITeamDocument[]> {
+function getCourseTeamsPerUser(req: any): Promise<ITeamDocument[]> {
   let courseId = req.params.courseId;
-  let userId = req.params.userId;
-  if (!req.params.courseId || !req.params.userId) {
+  let userId = req.user._id;
+  if (typeof req.params.courseId === undefined ||
+      typeof req.user._id === undefined) {
     return Promise.reject(Error(`TeamController::getCourseTeamsPerUser
      courseId ${courseId} or userId ${userId} not in parameter.`));
   }
@@ -35,7 +36,8 @@ function getCourseTeamsPerUser(req: restify.Request): Promise<ITeamDocument[]> {
       teamQueryObject.course = course._id;
       teamQueryObject.members = userId;
       return Team.find(teamQueryObject)
-        .populate('members deliverable course TAs')
+        .populate('deliverable course TAs')
+        .populate({ path: 'members', select: 'fname lname' })
         .exec()
         .then((teams: ITeamDocument[]) => {
           if (!teams) {

@@ -6,7 +6,7 @@ import { Course, ICourseDocument } from '../models/course.model';
 import { User, IUserDocument } from '../models/user.model';
 import { logger } from '../../utils/logger';
 
-// Retrives and updates Deliverables object.
+// Retrieves and updates Deliverables object.
 function updateDeliverables(course: ICourseDocument, deliverable: any): Promise<IDeliverableDocument> {
   logger.info('updateDeliverables() in Deliverable Controller');
   let deliverableList = new Array;
@@ -71,11 +71,15 @@ function create(payload: any) {
     });
 }
 
-function read(payload: any) {
+function getDeliverablesByCourse(payload: any) {
   console.log(payload);
-  logger.info('read() in Deliverable Controller');
+  logger.info('DeliverableController::getDeliverablesByCourse() in Deliverable Controller');
   let searchParams = { courseId : payload.courseId };
-  let populateParams = { path: 'deliverables', select: 'id name url open close isReleased' };
+  let populateParams = { 
+    path: 'deliverables', 
+    select: 'id name url open close isReleased', 
+    options: { sort: { name: 1 } } 
+  };
 
   return Course.findOne(searchParams)
     .populate(populateParams)
@@ -90,4 +94,4 @@ function read(payload: any) {
     .catch((err) => logger.info('Error retrieving deliverable: ' + err));
 }
 
-export { create, read }
+export { create, getDeliverablesByCourse }

@@ -23,7 +23,7 @@ let addCourseDataToUser = function(user: IUserDocument, course: ICourseDocument)
     return course._id.equals(c.courseId);
   });
   if (!courseAlreadyInUser) {
-    user.courses.push({ courseId: course._id, role: null , team: null, repos: null });
+    user.courses.push(course._id);
   }
   return user.save().then(() => {
     return course;

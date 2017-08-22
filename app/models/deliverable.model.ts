@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { logger } from '../../utils/logger';
+import { ITeamDocument } from './team.model';
 
 interface IDeliverableDocument extends mongoose.Document {
   courseId: string;
@@ -22,8 +23,17 @@ const DeliverableSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  githubOrg: {
+    type: String,
+  },
   url: {
     type: String,
+  },
+  team: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'Team',
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'User',
   },
   open: {
     type: Date,
