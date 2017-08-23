@@ -8,6 +8,7 @@ interface ITeamDocument extends mongoose.Document {
   deliverable: Object;
   name: string;
   githubUrl: string;
+  githubOrg: string;
   TAs: Object[];
 }
 
@@ -17,37 +18,31 @@ interface ITeamModel extends mongoose.Model<ITeamDocument> {
 }
 
 const TeamSchema = new mongoose.Schema({
-  teamId: {
-    type: Number,
-    required: true,
-    unique: true,
-  },
   name: {
     type: String,
     required: true,
   },
+  githubOrg: {
+    type: String,
+    default: null,
+  },
   githubUrl: {
     type: String,
-    required: true,
   },
-  course: {
+  courseId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
     required: true,
   },
-  deliverable: {
+  deliverableId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable',
     required: true,
   },
   members: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    required: true,
+    default: [],
   },
   TAs: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  },
-  org: {
-    type: String,
-    default: null,
   },
 });
 

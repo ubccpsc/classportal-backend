@@ -11,6 +11,8 @@ const routes = (server: restify.Server) => {
   server.get('/ping', routeHandler.pong);
   server.get('/courses', isAuthenticated, routeHandler.getCourseList);
   server.get('/studentCourseList', isAuthenticated, routeHandler.getStudentCourseList);
+  server.get('/:courseId/labSections', isAuthenticated, routeHandler.getLabSectionsFromCourse);
+  server.get('/:courseId/:labId/labList', isAuthenticated, routeHandler.getCourseLabSectionList);
   server.get('/test', isAuthenticated, routeHandler.testRoute);
   server.get('/isAuthenticated', routeHandler.isAuthenticated);
   server.get('/currentUser', isAuthenticated, routeHandler.getCurrentUser);
@@ -18,7 +20,7 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/grades', isAuthenticated, routeHandler.getGradesStudent);
   server.put('/register', isAuthenticated, routeHandler.validateRegistration);
   server.get('/:courseId/:userId/teams', isAuthenticated, routeHandler.getCourseTeamsPerUser);
-  server.put('/:courseId/team', isAuthenticated, routeHandler.addTeam);
+  server.put('/:courseId/team', routeHandler.createTeam);
   server.get('/:courseId/students', isAuthenticated, routeHandler.getStudentNamesFromCourse);
   // OAuth routes by logged-in users only
   server.put('/register/username', isAuthenticated, routeHandler.addGithubUsername);
@@ -47,6 +49,7 @@ const routes = (server: restify.Server) => {
   server.post('/:courseId/admin/team', routeHandler.updateTeam);
   server.get('/:courseId/admin/students', adminAuthenticated, routeHandler.getClassList);
   server.post('/:courseId/admin/students', routeHandler.addStudentList);
+  server.post('/:courseId/admin/labList', routeHandler.addLabList);
   server.post('/:courseId/admin/grades', routeHandler.addGrades);
   server.get('/:courseId/admin/grades', routeHandler.getGradesAdmin);
   server.post('/:courseId/admin/grades/:delivId', routeHandler.addGradesCSV);

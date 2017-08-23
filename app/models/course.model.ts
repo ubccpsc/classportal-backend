@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import { UserSchema } from '../models/user.model';
+import { UserSchema, IUserDocument } from '../models/user.model';
 import { logger } from '../../utils/logger';
 
 interface ICourseDocument extends mongoose.Document {
@@ -11,7 +11,9 @@ interface ICourseDocument extends mongoose.Document {
   classList: Object[];
   deliverables: Object[];
   grades: [Object];
+  labSections: [Object];
   admins: [Object];
+  githubOrgs: [String];
   teamMustBeInSameLab: Boolean;
   settings: CourseSettings;
 }
@@ -64,18 +66,33 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   grades: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Grade' }],
   },
+  admins: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    default: [],
+  },
+  labSections: [
+    {
+      users: {
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        default: [],
+      },
+      labId: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
   studentsSetTeams: {
     type: Boolean,
   },
   customData: {
     type: Object,
   },
-  admins: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    default: [],
-  },
   teamMustBeInSameLab: {
     type: Boolean,
+  },
+  githubOrgs: {
+    type: [String],
   },
   settings: {
     type: Object,

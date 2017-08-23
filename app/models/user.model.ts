@@ -61,14 +61,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: 'student',
   },
-  courses: [
-    {
-      courseId: {
-        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
-        required: true,
-      },
-    },
-  ],
+  courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true }],
 });
 
 UserSchema.methods = {
@@ -146,6 +139,9 @@ UserSchema.statics = {
             .then((q) => { return q.save(); })
             .catch((err) => { logger.info(err); });
         }
+      })
+      .catch((err) => {
+        logger.error('UserModel::findOrCreate() ERROR' + err);
       });
   },
 };

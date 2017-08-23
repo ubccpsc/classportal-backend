@@ -62,7 +62,7 @@
       }
     ],
     "ter-indent": [
-      true,
+      false,
       2
     ],
     "ter-max-len": [

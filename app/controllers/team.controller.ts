@@ -20,6 +20,82 @@ function createGithubTeam(payload: any): Promise<number> {
     });
 }
 
+/**
+@param <ICourseDocument> Course model that contains valid Github Org Names
+@param <string> a Github Org Name to test for validity
+@return <bool> true if valid
+**/
+function validGithubOrg(course: ICourseDocument, testOrgName: string): Boolean {
+  console.log(course.githubOrgs.indexOf(testOrgName) >= 0);
+  if (course.githubOrgs.indexOf(testOrgName) >= 0) {
+    console.log('is valid');
+    return true;
+  } else { return false; }
+}
+
+ /**
+ ** Note: params in Payload
+ @param <ICourseDocument> Course model that contains valid Github Org Names
+ @param <string> a Github Org Name to test for validity
+ @param <string> a Deliverable name, ie. 'd1'
+ @return <bool> true if valid
+ Queries course, then queries deliverable, then creates Team.
+ **/
+function createTeam(req: any): Promise<ITeamDocument> {
+  let payload = req.params;
+  let newTeam: any = new Object();
+  let delivQueryObject: any = { name: payload.deliverableName };
+  newTeam.githubOrg = payload.githubOrg;
+  newTeam.members = [];
+
+  let courseQuery = Course.findOne({ courseId: payload.courseId })
+    .exec()
+    .then((course: ICourseDocument) => {
+      if (course) {
+        newTeam.courseId = course._id;
+      } else {
+        throw `Could not find course ${payload.courseId}`;
+      }
+
+      let isValidOrg: Boolean = validGithubOrg(course, payload.githubOrg);
+
+      if (isValidOrg) {
+        return course;
+      } else {
+        throw `Invalid Github Organization submitted`;
+      }
+    })
+    .catch(err => {
+      logger.error(`courseQuery() ERROR ${err}`);
+    });
+
+  function deliverableQuery() {
+    return Deliverable.findOne({ name: payload.deliverableName, courseId: newTeam.courseId })
+      .exec()
+      .then((deliverable: IDeliverableDocument) => {
+        if (deliverable) {
+          newTeam.deliverableId = deliverable._id;
+          return deliverable;
+        }
+        throw `Could not find deliverable ${payload.deliverableName}`;
+      })
+      .catch(err => {
+        logger.error(`deliverableQuery() ERROR ${err}`);
+      });
+  }
+
+  return courseQuery
+    .then((course) => {
+      return deliverableQuery();
+    })
+    .then(() => {
+      return Promise.resolve(Team.findOrCreate(newTeam));
+    })
+    .catch(err => {
+      logger.error(`TeamController::createTeam() Promise.all() ERROR ${err}`);
+    });
+}
+
 function getCourseTeamsPerUser(req: any): Promise<ITeamDocument[]> {
   let courseId = req.params.courseId;
   let userId = req.user._id;
@@ -153,28 +229,28 @@ function checkForDuplicateTeamMembers(existingTeams: ITeamDocument[], newTeamMem
   return duplicatedMember;
 }
 
-let createTeam = function(course_Id: any, req: any) {
-  let newTeam = {
-    'course' : course_Id,
-    'deliverable': req.params.deliverable,
-    'members': new Array(),
-    'name': req.params.name,
-    'teamId': req.params.teamId,
-    'githubUrl': req.params.githubUrl,
-  };
+// let createTeam = function(course_Id: any, req: any) {
+//   let newTeam = {
+//     'course' : course_Id,
+//     'deliverable': req.params.deliverable,
+//     'members': new Array(),
+//     'name': req.params.name,
+//     'teamId': req.params.teamId,
+//     'githubUrl': req.params.githubUrl,
+//   };
 
-  // Only add non-duplicates
-  for ( let i = 0; i < req.params.members.length; i++) {
-    let duplicateEntry = newTeam.members.some(function(member){
-      return member == req.params.members[i];
-    });
-    if (!duplicateEntry) {
-      newTeam.members.push(req.params.members[i]);
-    }
-  }
+//   // Only add non-duplicates
+//   for ( let i = 0; i < req.params.members.length; i++) {
+//     let duplicateEntry = newTeam.members.some(function(member){
+//       return member == req.params.members[i];
+//     });
+//     if (!duplicateEntry) {
+//       newTeam.members.push(req.params.members[i]);
+//     }
+//   }
 
-  return Team.create(newTeam);
-};
+//   return Team.create(newTeam);
+// };
 
 let updateTeam = function(team_Id: string, updatedModel: ITeamDocument) {
 
@@ -279,40 +355,40 @@ function update(req: any) {
 //      per deliverable.
 // 3) If no teams with deliverableId found, create new team.
 
-function add(req: any) {
-  let courseId = req.params.courseId;
-  let deliverable = req.params.deliverable;
-  let newTeamMembers = req.params.members;
-  let name = req.params.name;
-  let githubUrl = req.params.githubUrl;
-  let teamId = req.params.teamId;
-  let teamSize: number;
+// function add(req: any) {
+//   let courseId = req.params.courseId;
+//   let deliverable = req.params.deliverable;
+//   let newTeamMembers = req.params.members;
+//   let name = req.params.name;
+//   let githubUrl = req.params.githubUrl;
+//   let teamId = req.params.teamId;
+//   let teamSize: number;
 
 
-  let getTeamsUnderDeliverable = Team.find({ 'deliverable' : deliverable })
-    .populate('deliverable')
-    .exec()
-    .then( existingTeams => {
-      return checkForDuplicateTeamMembers(existingTeams, newTeamMembers);
-    })
-    .catch(err => logger.info(err));
+//   let getTeamsUnderDeliverable = Team.find({ 'deliverable' : deliverable })
+//     .populate('deliverable')
+//     .exec()
+//     .then( existingTeams => {
+//       return checkForDuplicateTeamMembers(existingTeams, newTeamMembers);
+//     })
+//     .catch(err => logger.info(err));
 
-  let courseQuery = getTeamsUnderDeliverable.then( duplicateMembers => {
-      return Course.findOne({ 'courseId' : courseId })
-        .exec();
-  })
-  .catch(err => logger.info(err));
+//   let courseQuery = getTeamsUnderDeliverable.then( duplicateMembers => {
+//       return Course.findOne({ 'courseId' : courseId })
+//         .exec();
+//   })
+//   .catch(err => logger.info(err));
 
-  return Promise.all([getTeamsUnderDeliverable, courseQuery])
-    .then(function(results: any) {
-      if (results[0] !== true) {
-        return isWithinTeamSize(results[1]._id, req.params.members.length)
-          .then( () => {
-            return createTeam(results[1]._id, req);
-          });
-      }
-      throw Error('Cannot add duplicate team members to deliverable.');
-    });
-}
+//   return Promise.all([getTeamsUnderDeliverable, courseQuery])
+//     .then(function(results: any) {
+//       if (results[0] !== true) {
+//         return isWithinTeamSize(results[1]._id, req.params.members.length)
+//           .then( () => {
+//             return createTeam(results[1]._id, req);
+//           });
+//       }
+//       throw Error('Cannot add duplicate team members to deliverable.');
+//     });
+// }
 
-export { add, update, getTeams, createGithubTeam, createGithubRepo, getRepos, getCourseTeamsPerUser }
+export { createTeam, update, getTeams, createGithubTeam, createGithubRepo, getRepos, getCourseTeamsPerUser }

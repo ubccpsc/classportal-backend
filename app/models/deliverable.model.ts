@@ -44,6 +44,10 @@ const DeliverableSchema = new mongoose.Schema({
   gradesReleased: {
     type: Boolean,
   },
+  reposCreated: {
+    type: Boolean,
+    default: false,
+  }
 });
 
 // Deliverable Name must be unique per Course

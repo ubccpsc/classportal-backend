@@ -42,6 +42,24 @@ const getStudentCourseList = (req: restify.Request, res: restify.Response) => {
     .catch((err: Error) => res.json(500, { 'err': err.message }));
 };
 
+const getLabSectionsFromCourse = (req: restify.Request, res: restify.Response) => {
+  return courseCtrl.getLabSectionsFromCourse(req)
+    .then((courseList) => res.json(200, { response: courseList }))
+    .catch((err: Error) => res.json(500, { 'err': err.message }));
+};
+
+const getCourseLabSectionList = (req: restify.Request, res: restify.Response) => {
+  return courseCtrl.getCourseLabSectionList(req)
+    .then((courseList) => res.json(200, { response: courseList }))
+    .catch((err: Error) => res.json(500, { 'err': err.message }));
+};
+
+const addLabList = (req: restify.Request, res: restify.Response) => {
+return courseCtrl.addLabList(req.files, req.params.courseId)
+    .then((course: ICourseDocument) => res.json(200, { response: course.labSections }))
+    .catch((err: Error) => res.json(500, { 'err': err.message }));
+};
+
 const addStudentList = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.updateClassList(req.files, req.params.courseId)
     .then(() => res.json(200, { response: 'Successfully updated Class List on course #' + req.params.courseId }))
@@ -136,12 +154,11 @@ const addGithubUsername = (req: restify.Request, res: restify.Response, next: re
    .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-const addTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return teamCtrl.add(req)
-   .then(() => res.json(200, { response: 'Successfully added a new team.' }))
+const createTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.createTeam(req)
+   .then((team: ITeamDocument) => res.json(200, { response: `Successfully added new team ${team.githubOrg}` }))
    .catch((err: any) => {
      logger.info(err);
-     console.log('routeHandler error: ' + err);
      res.json(500, { 'err': err.message });
    });
 };
@@ -233,7 +250,8 @@ const getCourseTeamsPerUser = (req: restify.Request, res: restify.Response, next
 
 export { pong, createCourse, getCourseList, logout, addStudentList, getClassList, testRoute,
    getCurrentUserInfo, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
-   getGradesAdmin, getGradesStudent, addGrades, addTeam, updateTeam, getStudentNamesFromCourse,
+   getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
    addAdmins, getAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepo, getRepos,
    deleteRepos, getCurrentUser, addTokenToDB, isAuthenticated, getStudentCourseList,
-   getCourseSettings, getCourseTeamsPerUser };
+   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
+   addLabList };

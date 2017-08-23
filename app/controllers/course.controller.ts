@@ -19,9 +19,8 @@ let updateUserrole = function(u: IUserDocument, c: ICourseDocument, userrole: st
 // checks to see if course already on user. If not, then adds Course reference under User object.
 let addCourseDataToUser = function(user: IUserDocument, course: ICourseDocument): Promise<ICourseDocument> {
   let courseAlreadyInUser: boolean;
-  courseAlreadyInUser = user.courses.some( function(c: CourseData) {
-    return course._id.equals(c.courseId);
-  });
+  courseAlreadyInUser = user.courses.indexOf(course._id) >= 0 ? true : false;
+
   if (!courseAlreadyInUser) {
     user.courses.push(course._id);
   }
@@ -86,6 +85,103 @@ function addAdmins(payload: any) {
     });
   });
 }
+
+function addLabList(reqFiles: any, courseId: string) {
+  console.log(reqFiles);
+  const options = {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+  };
+
+  let rs = fs.createReadStream(reqFiles['labList'].path);
+  let parser = parse(options, (err, data) => {
+    
+    let courseQuery = Course.findOne({ 'courseId': courseId }).exec();
+    let usersRepo = User;
+    let newLabSections: any = [];
+
+    Object.keys(data).forEach((key: string) => {
+      let student = data[key];
+      logger.info('Parsing student into user model: ' + JSON.stringify(student));
+      usersRepo.findOne({
+        csid : student.CSID,
+        snum : student.SNUM,
+      })
+        .then(user => {
+          courseQuery
+            .then((course: ICourseDocument) => {
+
+              let labSectionExists: Boolean = false;
+
+              let random = course.labSections.some( function(labSection: any) {
+                if (labSection.labId === student.LAB) {
+                  labSectionExists = true;
+                }
+                return labSection.labId === student.LAB;
+              });
+
+              // creates lab section if it does not exist
+              if (!labSectionExists) {
+                console.log('CREATES Lab SECTION');
+                newLabSections.push({ 'labId' : student.LAB, 'users': new Array() });
+              }
+
+              for (let i = 0; i < newLabSections.length; i++) {
+                if (student.LAB === newLabSections[i].labId && newLabSections[i].users.indexOf(user._id) < 0) {
+                  newLabSections[i].users.push(user._id);
+                }
+              }
+
+              course.labSections = newLabSections;
+              course.save();
+              return course;
+            });
+        })
+        .catch( (err) => { 
+          logger.error(`CourseController::updateLabList ERROR ${err}`);
+        });
+      });
+    
+    if (err) {
+      throw Error(err);
+    }
+  });
+
+  rs.pipe(parser);
+
+  return Course.findOne({ courseId })
+    .populate({ path: 'labSections.courses' })
+    .exec()
+    .then(( course: ICourseDocument) => {
+      return course;
+    })
+    .catch(err => {
+      logger.error(`CourseController::addLabList ERROR ${err}`);
+    });
+}
+
+
+function getLabSectionsFromCourse(req: any): Promise<object> {
+  return Course.findOne({ courseId: req.params.courseId })
+    .populate({ path: 'labSections.courses', select: 'labSections' })
+    .exec()
+    .then((course: ICourseDocument) => {
+      return course;
+    });
+}
+
+
+function getCourseLabSectionList(req: any): Promise<object> {
+  return Course.findOne({ courseId: req.params.courseId })
+    .populate({ path: 'labSections.courses', select: 'fname lname' })
+    .exec()
+    .then((course: ICourseDocument) => {
+      return course;
+    });
+}
+
+
 
 /**
  * Update a class list
@@ -276,5 +372,6 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
   return next();
 }
 
-export { get, create, update, remove, updateClassList, getClassList, getStudentNamesFromCourse, addAdmins,
-         getAdmins, getStudentCourseList, getCourseSettings }
+export { get, create, update, updateClassList, remove, addLabList, getClassList, getStudentNamesFromCourse, 
+         addAdmins, getAdmins, getStudentCourseList, getCourseSettings, getLabSectionsFromCourse, 
+         getCourseLabSectionList }
