@@ -9,8 +9,8 @@ import { config } from '../../config/env';
 const routes = (server: restify.Server) => {
   // Accessible by anyone
   server.get('/ping', routeHandler.pong);
-  server.get('/courses', isAuthenticated, routeHandler.getCourseList);
-  server.get('/studentCourseList', isAuthenticated, routeHandler.getStudentCourseList);
+  server.get('/courses', isAuthenticated, routeHandler.getAllCourses);
+  server.get('/myCourses', isAuthenticated, routeHandler.getMyCourses);
   server.get('/:courseId/labSections', isAuthenticated, routeHandler.getLabSectionsFromCourse);
   server.get('/:courseId/:labId/labList', isAuthenticated, routeHandler.getCourseLabSectionList);
   server.get('/test', isAuthenticated, routeHandler.testRoute);
@@ -35,7 +35,7 @@ const routes = (server: restify.Server) => {
 
   // -- Prof or Admin Routes
   server.post('/:courseId/admin/admins', /* adminOrProfAuthenticated, */ routeHandler.addAdmins);
-  server.get('/:courseId/admin/admins', routeHandler.getAdmins);
+  server.get('/:courseId/admin/admins', routeHandler.getAllAdmins);
   server.get('/:courseId/admin/teams', routeHandler.getTeams);
   server.get('/:courseId/admin/courseSettings', routeHandler.getCourseSettings);
   server.post('/admin/classList', routeHandler.getClassList);
@@ -53,7 +53,8 @@ const routes = (server: restify.Server) => {
   server.post('/:courseId/admin/grades', routeHandler.addGrades);
   server.get('/:courseId/admin/grades', routeHandler.getGradesAdmin);
   server.post('/:courseId/admin/grades/:delivId', routeHandler.addGradesCSV);
-  server.post('/:courseId/admin/deliverables', routeHandler.addDeliverables);
+  server.post('/:courseId/admin/deliverable', routeHandler.updateDeliverable);
+  server.put('/:courseId/admin/deliverable', routeHandler.addDeliverable);
   server.get('/settings', isAuthenticated, routeHandler.getCurrentUserInfo);
   server.get('/logout', isAuthenticated, routeHandler.logout);
 };

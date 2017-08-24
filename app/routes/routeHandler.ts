@@ -30,14 +30,14 @@ const addTokenToDB = (req: restify.Request, res: restify.Response) => {
     .catch((err: Error) => res.json(500, { 'err': err.message }));
 };
 
-const getCourseList = (req: restify.Request, res: restify.Response) => {
-  return courseCtrl.get(req.params)
+const getAllCourses = (req: restify.Request, res: restify.Response) => {
+  return courseCtrl.getAllCourses(req.params)
     .then((courseList) => res.json(200, { response: courseList }))
     .catch((err: Error) => res.json(500, { 'err': err.message }));
 };
 
-const getStudentCourseList = (req: restify.Request, res: restify.Response) => {
-  return courseCtrl.getStudentCourseList(req)
+const getMyCourses = (req: restify.Request, res: restify.Response) => {
+  return courseCtrl.getMyCourses(req)
     .then((courseList) => res.json(200, { response: courseList }))
     .catch((err: Error) => res.json(500, { 'err': err.message }));
 };
@@ -101,8 +101,14 @@ const oauthCallback = (req: restify.Request, res: restify.Response, next: restif
     .catch((err: any) => res.json(500, { err: err.errmsg }));
 };
 
-const addDeliverables = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return delivCtrl.create(req.params)
+const updateDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return delivCtrl.updateDeliverable(req.params)
+    .then((d: IDeliverableDocument) => res.json(200, { response: 'Successfully updated/added Deliverable.' }))
+    .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const addDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return delivCtrl.addDeliverable(req.params)
     .then((d: IDeliverableDocument) => res.json(200, { response: 'Successfully updated/added Deliverable.' }))
     .catch((err: any) => res.json(500, { err: err.message }));
 };
@@ -180,8 +186,8 @@ const addAdmins = (req: restify.Request, res: restify.Response, next: restify.Ne
    .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-const getAdmins = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return courseCtrl.getAdmins(req.params)
+const getAllAdmins = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.getAllAdmins(req.params)
    .then((course: ICourseDocument) => res.json(200, { response: course.admins }))
    .catch((err: any) => res.json(500, { err: err.message }));
 };
@@ -248,10 +254,10 @@ const getCourseTeamsPerUser = (req: restify.Request, res: restify.Response, next
 
 
 
-export { pong, createCourse, getCourseList, logout, addStudentList, getClassList, testRoute,
-   getCurrentUserInfo, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
+export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
+   getCurrentUserInfo, validateRegistration, addGithubUsername, updateDeliverable, getDeliverables,
    getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
-   addAdmins, getAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepo, getRepos,
-   deleteRepos, getCurrentUser, addTokenToDB, isAuthenticated, getStudentCourseList,
+   addAdmins, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepo, getRepos,
+   deleteRepos, getCurrentUser, addTokenToDB, isAuthenticated, getMyCourses,
    getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
-   addLabList };
+   addLabList, addDeliverable };

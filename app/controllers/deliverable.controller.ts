@@ -6,8 +6,8 @@ import { Course, ICourseDocument } from '../models/course.model';
 import { User, IUserDocument } from '../models/user.model';
 import { logger } from '../../utils/logger';
 
-// Retrieves and updates Deliverables object.
-function updateDeliverables(course: ICourseDocument, deliverable: any): Promise<IDeliverableDocument> {
+// Retrieves and updates Deliverable object.
+function queryAndUpdateDeliverable(course: ICourseDocument, deliverable: any): Promise<IDeliverableDocument> {
   logger.info('updateDeliverables() in Deliverable Controller');
   let deliverableList = new Array;
 
@@ -58,17 +58,51 @@ function addDeliverablesToCourse(course: any, deliverable: IDeliverableDocument)
   return course.save();
 }
 
-function create(payload: any) {
-  logger.info('create() in Deliverable Controller');
+function updateDeliverable(payload: any) {
+  logger.info('updateDeliverable() in Deliverable Controller');
   return Course.findOne({ 'courseId' : payload.courseId })
     .exec()
     .then( c => {
       if (c) {
-        return updateDeliverables(c, payload);
+        return queryAndUpdateDeliverable(c, payload);
       } else {
         return Promise.reject(Error('Error assigning deliverables to course #' + payload.courseId + '.'));
       }
     });
+}
+
+// Adds a deliverable. Rejects if Deliverable exists with same Course Name and Course._id
+// Adds Deliverable reference to Course object
+function addDeliverable(payload: any): Promise<IDeliverableDocument> {
+  logger.info('DeliverableController::addDeliverable() in Deliverable Controller');
+
+  let newDeliverable = payload.deliverable;
+  let courseQuery = { courseId: newDeliverable.courseId };
+
+  return Course.findOne(courseQuery)
+    .then((course: ICourseDocument) => {
+      return findDelivWithCourse(payload.name, course._id);
+    })
+    .then(() => {      
+      return Deliverable.findOrCreate(newDeliverable)
+        .then((newDeliv: IDeliverableDocument) => {
+          return Promise.resolve(newDeliv);
+        });
+    });
+
+  function findDelivWithCourse(name: string, course_id: string) {
+    let delivQuery = { name: payload.name, _id: course_id };
+    return Deliverable.findOne(delivQuery)
+      .then((deliv: IDeliverableDocument) => {
+        if (deliv) {
+          throw `Deliverable with same Name and CourseId already exist.`;
+        }
+        return;
+      })
+      .catch(err => {
+        logger.error(`DeliverableController::findDelivWithCourse() ERROR ${err}`);
+      });
+  }
 }
 
 function getDeliverablesByCourse(payload: any) {
@@ -94,4 +128,4 @@ function getDeliverablesByCourse(payload: any) {
     .catch((err) => logger.info('Error retrieving deliverable: ' + err));
 }
 
-export { create, getDeliverablesByCourse }
+export { updateDeliverable, getDeliverablesByCourse, addDeliverable }

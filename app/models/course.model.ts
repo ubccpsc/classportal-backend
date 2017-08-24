@@ -90,6 +90,8 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   },
   teamMustBeInSameLab: {
     type: Boolean,
+    required: true,
+    default: true,
   },
   githubOrgs: {
     type: [String],

@@ -29,7 +29,7 @@ let addCourseDataToUser = function(user: IUserDocument, course: ICourseDocument)
   });
 };
 
-function getAdmins(payload: any) {
+function getAllAdmins(payload: any) {
   return Course.findOne({ courseId: payload.courseId })
     .populate({ path: 'admins', select: 'fname lname snum csid username _id' })
     .then( c => {
@@ -287,9 +287,10 @@ function getStudentNamesFromCourse(courseId: string) {
  * Get a list of courses
  * @return Course[] All courses in DB
  */
-function get(req: restify.Request) {
+function getAllCourses(req: restify.Request) {
   logger.info('get() in Courses Controller');
-  let query = Course.find({}, 'courseId minTeamSize maxTeamSize studentsSetTeams description icon name -_id')
+  let query = Course.find({}, `courseId minTeamSize maxTeamSize studentsSetTeams description
+  teamsMustBeInSameLab icon name -_id`)
     .sort({ courseId: -1 }).exec();
 
   return query.then( result => {
@@ -302,21 +303,36 @@ function get(req: restify.Request) {
 }
 
 /**
+ * Gets user role from perspective of a student
+* @param {restify.Request} restify request object
+* @param {restify.Response} restify response object
+* @returns an array of Courses for user
+ */
+function getMyCourses(req: any): Promise<object[]> {
+
+  return User.findOne({ username: req.user.username })
+    .populate({ path: 'courses', select: 'courseId studentsSetTeams teamsMustBeInSameLab' })
+    .exec()
+    .then((user: any) => {
+      return user.courses;
+    });
+}
+
+/**
  * Gets user role
 * @param {restify.Request} restify request object
 * @param {restify.Response} restify response object
 * @returns an array of Courses for user
  */
-function getStudentCourseList(req: any): Promise<object[]> {
-
-  return User.findOne({ username: req.user.username })
-    .populate({ path: 'courses.courseId', select: 'courseId name icon description' })
-    .exec()
-    .then((user: IUserDocument) => {
-      return user.courses;
-    });
-}
-
+// function getAdminCourseList(req: any): Promise<object[]> {
+//   // should find all admins, and the courses that they are in.
+//   return Course.find({ username: req.user.username })
+//     .populate({ path: 'courses.courseId', select: 'courseId name icon description' })
+//     .exec()
+//     .then((user: IUserDocument) => {
+//       return user.courses;
+//     });
+// }
 
 /**
  * Create a team
@@ -372,6 +388,6 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
   return next();
 }
 
-export { get, create, update, updateClassList, remove, addLabList, getClassList, getStudentNamesFromCourse, 
-         addAdmins, getAdmins, getStudentCourseList, getCourseSettings, getLabSectionsFromCourse, 
+export { getAllCourses, create, update, updateClassList, remove, addLabList, getClassList, getStudentNamesFromCourse, 
+         addAdmins, getAllAdmins, getMyCourses, getCourseSettings, getLabSectionsFromCourse, 
          getCourseLabSectionList }
