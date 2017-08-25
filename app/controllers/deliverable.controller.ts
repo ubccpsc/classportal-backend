@@ -124,7 +124,7 @@ function getDeliverablesByCourse(payload: any) {
   let searchParams = { courseId : payload.courseId };
   let populateParams = { 
     path: 'deliverables', 
-    select: 'id name url open close isReleased', 
+    select: 'id name url open close isReleased gradesReleased reposCreated', 
     options: { sort: { name: 1 } } 
   };
 
