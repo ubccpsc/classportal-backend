@@ -42,7 +42,8 @@ const routes = (server: restify.Server) => {
 
   // -- Admin or Super Admin Only Routes
   server.put('/:courseId/admin/github/team', routeHandler.createGithubTeam);
-  server.put('/:courseId/admin/github/repo', routeHandler.createGithubRepo);
+  server.put('/:courseId/admin/github/repo/team', routeHandler.createGithubRepoForTeam);
+  server.put('/:courseId/admin/github/repo/user', routeHandler.createGithubRepoForUser);
   server.post('/:courseId/admin/teamGeneration', routeHandler.randomlyGenerateTeamsPerCourse);
   server.get('/:courseId/admin/github/repos/:orgName', routeHandler.getRepos);
   server.del('/:courseId/admin/github/repos/:orgName', routeHandler.deleteRepos);

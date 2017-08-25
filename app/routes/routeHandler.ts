@@ -210,11 +210,18 @@ const createGithubTeam = (req: restify.Request, res: restify.Response, next: res
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-const createGithubRepo = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+const createGithubRepoForTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return githubCtrl.createGithubRepo(req.params)
   .then((githubResponse: Object) => res.json(200, { response: 'Successfully created repo with teams and members.' }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };
+
+const createGithubRepoForUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return githubCtrl.createGithubRepo(req.params)
+  .then((githubResponse: Object) => res.json(200, { response: 'Successfully created repo with teams and members.' }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
 
 const getRepos = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return githubCtrl.getRepos(req.params.orgName)
@@ -263,7 +270,7 @@ const randomlyGenerateTeamsPerCourse = (req: restify.Request, res: restify.Respo
 export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
    getCurrentUserInfo, validateRegistration, addGithubUsername, updateDeliverable, getDeliverables,
    getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
-   addAdmins, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepo, getRepos,
+   addAdmins, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepoForTeam, getRepos,
    deleteRepos, getCurrentUser, addTokenToDB, isAuthenticated, getMyCourses,
    getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
-   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse };
+   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubRepoForUser };

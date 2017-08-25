@@ -29,14 +29,19 @@ const TeamSchema = new mongoose.Schema({
   githubUrl: {
     type: String,
   },
-  courseId: {
+  multiDeliverableRepo: {
+    type: Boolean,
+  },
+  course: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
     required: true,
   },
   deliverableId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable',
-    required: true,
   },
+  deliverablesIds: [
+    { type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }
+  ],
   members: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     default: [],

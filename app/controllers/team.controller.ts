@@ -216,9 +216,12 @@ function getTeams(payload: any) {
 }
 
 
-
+// if markByBatch is true in CourseSettings property, then
+// teams will be created with multiple Deliverables.
+// if inverse, Teams will be created with a single Deliverable property.
 function randomlyGenerateTeamsPerCourse(payload: any) {
   let course_id: string;
+  let course: ICourseDocument;
 
   return Course.findOne({ courseId: payload.courseId })
     .exec()
@@ -237,38 +240,88 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
     });
 
     function createTeamForEachTeamList(sortedTeamIdList: string[][]) {
-      return getDeliverable(payload.deliverableName, course_id)
-        .then((deliv: IDeliverableDocument) => {
-          let bulkInsertArray = new Array();
-          if (deliv) {
-            for ( let i = 0; i < sortedTeamIdList.length; i++) {
-              let teamObject = {
-                course: course_id,
-                deliverable: deliv._id,
-                members: sortedTeamIdList[i],
-              };
-              bulkInsertArray.push(teamObject);
-            }
-          } else {
-            throw `Could not find Deliverable for ${payload.deliverableName} and ${course_id}`;
-          }
-          return Team.collection.insertMany(bulkInsertArray)
-            .then((documents: any) => {
-              console.log(documents);
-              return documents;
-            })
-            .catch(err => {
-              logger.error(`TeamController::bulkInsertOp ERROR ${err}`);
-            });
+    let bulkInsertArray: any;
+      if (course.settings.markDelivsByBatch) {
+        bulkInsertArray = createTeamObjectsForBatchMarking();
+      } else {
+        bulkInsertArray = createTeamObjectsForSingleDelivMarking();
+      }
+
+      return Team.collection.insertMany(bulkInsertArray)
+        .then((documents: any) => {
+          console.log(documents);
+          return documents;
         })
         .catch(err => {
-          logger.error(`TeamController::createTeamForEachTeamList ERROR ${err}`);
+          logger.error(`TeamController::bulkInsertOp ERROR ${err}`);
         });
+
+      function createTeamObjectsForSingleDelivMarking() {
+        return getDeliverable(payload.name, course._id)
+          .then((deliv: IDeliverableDocument) => {
+            let bulkInsertArray = new Array();
+            if (deliv) {
+              
+              for ( let i = 0; i < sortedTeamIdList.length; i++) {
+                let teamObject = {
+                  courseId: course_id,
+                  deliverableIds: deliv._id,
+                  members: sortedTeamIdList[i],
+                };
+                bulkInsertArray.push(teamObject);
+              }
+            } else {
+              throw `Could not find Deliverable for ${payload.deliverableName} and ${course._id}`;
+            }
+            return bulkInsertArray;
+          })
+          .catch(err => {
+            logger.error(`TeamController::createTeamForEachTeamList ERROR ${err}`);
+          });
+      }
+
+      function createTeamObjectsForBatchMarking() {
+        return getDeliverables(course._id)
+          .then((delivs: IDeliverableDocument[]) => {
+            let bulkInsertArray = new Array();
+            if (delivs) {
+              let deliverableIds = new Array();
+
+              for (let i = 0; i < delivs.length; i++) {
+                deliverableIds.push(delivs[i]._id);
+              }
+              
+              for ( let i = 0; i < sortedTeamIdList.length; i++) {
+                let teamObject = {
+                  courseId: course_id,
+                  deliverableIds,
+                  members: sortedTeamIdList[i],
+                };
+                bulkInsertArray.push(teamObject);
+              }
+            } else {
+              throw `Could not find Deliverable for ${payload.deliverableName} and ${course._id}`;
+            }
+            return bulkInsertArray;
+          })
+          .catch(err => {
+            logger.error(`TeamController::createTeamForEachTeamList ERROR ${err}`);
+          });
+      }
     }
 
-    function getDeliverable(deliverableName: string, course_id: string) {
+    // Gets CourseSettings to see if markByBatch flag enabled, and then gets Deliverable(s) 
+    // based markByBatch flag.
+    function getDeliverables(course: ICourseDocument) {
+      return Deliverable.find({ courseId: course_id }).exec();
+    }
+
+    // Gets CourseSettings to see if markByBatch flag enabled, and then gets Deliverable(s) 
+    // based markByBatch flag.
+    function getDeliverable(deliverableName: string, course: ICourseDocument) {
       return Deliverable.findOne({ name: deliverableName, courseId: course_id }).exec();
     }
+
 
     function splitUsersIntoArrays(course: ICourseDocument): Promise<Object[]> {
       let sorted: any = { teams: new Array() };
