@@ -130,6 +130,15 @@ function getCourseTeamsPerUser(req: any): Promise<ITeamDocument[]> {
   });
 }
 
+// function updateMembersOnTeam(payload: any) {
+//   let teamQuery = { courseId : }
+//   Team.findOne()
+// }
+
+// function updateMembersOnTeamByBatch(payload: any) {
+
+// }
+
 function createGithubRepo(payload: any): Promise<Object> {
 
   const SUPERADMIN = 'superadmin';
@@ -204,6 +213,54 @@ function getTeams(payload: any) {
       })
       .exec();
     });
+}
+
+
+
+function randomlyGenerateTeamsPerCourse(payload: any) {
+  return Course.findOne({ courseId: payload.courseId })
+    .exec()
+    .then((course: ICourseDocument) => {
+      if (course) {
+        return splitUsersIntoArrays(course);
+      }
+      throw `Could not find course ${payload.courseId}`;
+    })
+    .catch(err => {
+      logger.error(`TeamController::randomlyGenerateTeamsPerCourse ERROR ${err}`);
+    });
+
+    function splitUsersIntoArrays(course: ICourseDocument): Promise<Object[]> {
+      let sorted: any = { teams: new Array() };
+
+      // divides number of teams needed and rounds up
+      const numberOfTeams = Math.ceil(course.classList.length / course.maxTeamSize + 1);
+      console.log('number of teams: ' + numberOfTeams);
+
+      // creates arrays for e
+      for (let i = 0; i < numberOfTeams; i++) {
+        sorted.teams.push(new Array());
+      }
+      console.log('made it here');
+
+      let maxTeamSize = course.maxTeamSize;
+      let teamNumber = 0;
+      
+      for (let i = 0; i < course.classList.length; i++) {
+        sorted.teams[teamNumber].push(course.classList[i]);
+        teamNumber++;
+        if (teamNumber % numberOfTeams == 0) { 
+            teamNumber = 0;
+          }
+      }
+      console.log(sorted.teams);
+
+      return sorted.teams;
+    }
+}
+
+function randomlyGenerateTeamsPerLab() {
+
 }
 
 function checkForDuplicateTeamMembers(existingTeams: ITeamDocument[], newTeamMembers: [Object]) {
@@ -391,4 +448,5 @@ function update(req: any) {
 //     });
 // }
 
-export { createTeam, update, getTeams, createGithubTeam, createGithubRepo, getRepos, getCourseTeamsPerUser }
+export { createTeam, update, getTeams, createGithubTeam, createGithubRepo, getRepos, getCourseTeamsPerUser,
+         randomlyGenerateTeamsPerCourse }

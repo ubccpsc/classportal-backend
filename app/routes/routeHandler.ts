@@ -252,6 +252,12 @@ const getCourseTeamsPerUser = (req: restify.Request, res: restify.Response, next
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
+const randomlyGenerateTeamsPerCourse = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.randomlyGenerateTeamsPerCourse(req.params)
+  .then((teams: ITeamDocument[]) => res.json(200, { response: teams }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
 
 
 export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
@@ -260,4 +266,4 @@ export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList
    addAdmins, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepo, getRepos,
    deleteRepos, getCurrentUser, addTokenToDB, isAuthenticated, getMyCourses,
    getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
-   addLabList, addDeliverable };
+   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse };
