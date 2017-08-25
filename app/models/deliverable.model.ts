@@ -69,8 +69,8 @@ DeliverableSchema.static({
           return deliverable;
         } else {
           return Deliverable.create(query)
-            .then((q) => {
-              return q.save();
+            .then((d) => {
+              return d.save();
             })
             .catch((err) => { logger.info(err); });
         }

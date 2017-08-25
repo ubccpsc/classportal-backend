@@ -86,7 +86,7 @@ const testRoute = (req: restify.Request, res: restify.Response) => {
 
 const logout = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return authCtrl.logout(req, res, next)
-    .then(() => res.json(200, { response: 'Successfully logged out' }))
+    .then(() => res.json(200, { response: 'Successfully logged out.' }))
     .catch((err: any) => res.json(500, { err: err.errmsg }));
 };
 
@@ -97,19 +97,19 @@ const getCurrentUserInfo = (req: restify.Request, res: restify.Response, next: r
 
 const oauthCallback = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return authCtrl.oauthCallback(req, res, next)
-    .then(() => res.json(200, { response: 'Successfully authenticated user' }))
+    .then(() => res.json(200, { response: 'Successfully authenticated user.' }))
     .catch((err: any) => res.json(500, { err: err.errmsg }));
 };
 
 const updateDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return delivCtrl.updateDeliverable(req.params)
-    .then((d: IDeliverableDocument) => res.json(200, { response: 'Successfully updated/added Deliverable.' }))
+    .then((d: IDeliverableDocument) => res.json(200, { response: 'Successfully updated Deliverable.' }))
     .catch((err: any) => res.json(500, { err: err.message }));
 };
 
 const addDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return delivCtrl.addDeliverable(req.params)
-    .then((d: IDeliverableDocument) => res.json(200, { response: 'Successfully updated/added Deliverable.' }))
+  return delivCtrl.addDeliverable(req)
+    .then((d: IDeliverableDocument) => res.json(200, { response: 'Successfully added Deliverable.' }))
     .catch((err: any) => res.json(500, { err: err.message }));
 };
 

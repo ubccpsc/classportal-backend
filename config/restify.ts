@@ -15,6 +15,12 @@ const app = restify.createServer({
   ca: fs.readFileSync(config.ssl_int_cert_path).toString(),
 });
 
+// allow cors
+app.use(restify.CORS({
+  origins: ['https://localhost:3000', 'https://localhost:5000'],
+  credentials: true,
+}));
+
 // set cors options
 app.opts(/.*/, (req: restify.Request, res: restify.Response, next: restify.Next) => {
   res.header('Access-Control-Allow-Methods', req.header('Access-Control-Request-Method'));
@@ -22,12 +28,6 @@ app.opts(/.*/, (req: restify.Request, res: restify.Response, next: restify.Next)
   res.send(200);
   return next();
 });
-
-// allow cors
-app.use(restify.CORS({
-  origins: ['https://localhost:3000', 'https://localhost:5000'],
-  credentials: true,
-}));
 
 // parse the http query string into req.query, but not into req.params
 app.use(restify.queryParser({ mapParams: false }));

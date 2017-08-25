@@ -75,29 +75,42 @@ function updateDeliverable(payload: any) {
 // Adds Deliverable reference to Course object
 function addDeliverable(payload: any): Promise<IDeliverableDocument> {
   logger.info('DeliverableController::addDeliverable() in Deliverable Controller');
-
-  let newDeliverable = payload.deliverable;
+  console.log(payload.params);
+  let newDeliverable = payload.params.deliverable;
   let courseQuery = { courseId: newDeliverable.courseId };
-
+  let queriedCourse: ICourseDocument;
   return Course.findOne(courseQuery)
     .then((course: ICourseDocument) => {
-      return findDelivWithCourse(payload.name, course._id);
+      // replace "310" courseId with a refernece to _id object
+      newDeliverable.courseId = course._id;
+      queriedCourse = course;
+      return findDelivWithCourse(newDeliverable.name, course._id);
     })
     .then(() => {      
       return Deliverable.findOrCreate(newDeliverable)
         .then((newDeliv: IDeliverableDocument) => {
-          return Promise.resolve(newDeliv);
+          return newDeliv;
+        })
+        .then((createdDeliv: IDeliverableDocument) => {
+          queriedCourse.deliverables.push(createdDeliv._id);
+          return queriedCourse.save()
+            .then(() => {
+              return createdDeliv;
+            });
         });
+    })
+    .catch(err => {
+      logger.error(`DeliverableController::addDeliverable ERROR ${err}`);
     });
 
   function findDelivWithCourse(name: string, course_id: string) {
-    let delivQuery = { name: payload.name, _id: course_id };
+    let delivQuery = { name: newDeliverable.name, courseId: course_id };
     return Deliverable.findOne(delivQuery)
       .then((deliv: IDeliverableDocument) => {
         if (deliv) {
           throw `Deliverable with same Name and CourseId already exist.`;
         }
-        return;
+        return deliv;
       })
       .catch(err => {
         logger.error(`DeliverableController::findDelivWithCourse() ERROR ${err}`);
