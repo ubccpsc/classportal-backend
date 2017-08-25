@@ -218,17 +218,57 @@ function getTeams(payload: any) {
 
 
 function randomlyGenerateTeamsPerCourse(payload: any) {
+  let course_id: string;
+
   return Course.findOne({ courseId: payload.courseId })
     .exec()
     .then((course: ICourseDocument) => {
       if (course) {
+        course_id = course._id;
         return splitUsersIntoArrays(course);
       }
       throw `Could not find course ${payload.courseId}`;
     })
+    .then((sortedTeamIdList: string[][]) => {
+      return createTeamForEachTeamList(sortedTeamIdList);
+    })
     .catch(err => {
       logger.error(`TeamController::randomlyGenerateTeamsPerCourse ERROR ${err}`);
     });
+
+    function createTeamForEachTeamList(sortedTeamIdList: string[][]) {
+      return getDeliverable(payload.deliverableName, course_id)
+        .then((deliv: IDeliverableDocument) => {
+          let bulkInsertArray = new Array();
+          if (deliv) {
+            for ( let i = 0; i < sortedTeamIdList.length; i++) {
+              let teamObject = {
+                course: course_id,
+                deliverable: deliv._id,
+                members: sortedTeamIdList[i],
+              };
+              bulkInsertArray.push(teamObject);
+            }
+          } else {
+            throw `Could not find Deliverable for ${payload.deliverableName} and ${course_id}`;
+          }
+          return Team.collection.insertMany(bulkInsertArray)
+            .then((documents: any) => {
+              console.log(documents);
+              return documents;
+            })
+            .catch(err => {
+              logger.error(`TeamController::bulkInsertOp ERROR ${err}`);
+            });
+        })
+        .catch(err => {
+          logger.error(`TeamController::createTeamForEachTeamList ERROR ${err}`);
+        });
+    }
+
+    function getDeliverable(deliverableName: string, course_id: string) {
+      return Deliverable.findOne({ name: deliverableName, courseId: course_id }).exec();
+    }
 
     function splitUsersIntoArrays(course: ICourseDocument): Promise<Object[]> {
       let sorted: any = { teams: new Array() };
@@ -245,7 +285,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
 
       let maxTeamSize = course.maxTeamSize;
       let teamNumber = 0;
-      
+
       for (let i = 0; i < course.classList.length; i++) {
         sorted.teams[teamNumber].push(course.classList[i]);
         teamNumber++;
