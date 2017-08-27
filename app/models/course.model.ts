@@ -13,7 +13,7 @@ interface ICourseDocument extends mongoose.Document {
   grades: [Object];
   labSections: [Object];
   admins: [Object];
-  githubOrgs: [String];
+  githubOrg: string;
   teamMustBeInSameLab: Boolean;
   settings: CourseSettings;
 }
@@ -93,8 +93,8 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     required: true,
     default: true,
   },
-  githubOrgs: {
-    type: [String],
+  githubOrg: {
+    type: String,
   },
   settings: {
     type: Object,

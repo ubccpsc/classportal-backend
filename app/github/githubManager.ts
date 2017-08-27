@@ -9,6 +9,7 @@ import { link } from "fs";
 
 let async = require('async');
 let _ = require('lodash');
+let apiPath = config.github_api_path;
 
 /**
  * Represents a complete team that has been formed and where all members
@@ -233,13 +234,15 @@ export default class GitHubManager {
     public setGithubUrl(teamId: number, url: string): Promise<string> {
         logger.trace("AdminController::setGithubUrl| Updating team " + teamId + " with url: " + url);
         return new Promise(function (fulfill, reject) {
-            Helper.updateEntry("teams.json", {'id': teamId}, {'url': url}, function (error: any) {
-                if (!error) {
+            // Helper.updateEntry("teams.json", {'id': teamId}, {'url': url}, function (error: any) {
+            //     if (!error) {
+                console.log('set github URL ()');
+                console.log(url);
                     fulfill(url);
-                } else {
+                // } else {
                     reject('URL not assigned for: ' + url);
-                }
-            });
+                // }
+            // });
         });
     }
 
@@ -274,7 +277,7 @@ export default class GitHubManager {
         return new Promise(function (fulfill, reject) {
             var options = {
                 method: 'GET',
-                uri: 'https://github.ubc.ca/api/v3/orgs/' + orgName + '/repos',
+                uri: `${apiPath}/orgs/` + orgName + '/repos',
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
                     'User-Agent': ctx.GITHUB_USER_NAME,
@@ -307,7 +310,7 @@ export default class GitHubManager {
         return new Promise(function (fulfill, reject) {
             var options = {
                 method: 'POST',
-                uri: 'https://github.ubc.ca/api/v3/orgs/' + ctx.ORG_NAME + '/repos',
+                uri: `${apiPath}/orgs/` + ctx.ORG_NAME + '/repos',
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
                     'User-Agent': ctx.GITHUB_USER_NAME,
@@ -355,7 +358,7 @@ export default class GitHubManager {
 
             var options = {
                 method: 'DELETE',
-                uri: 'https://github.ubc.ca/api/v3/repos/' + ctx.ORG_NAME + '/' + repoName,
+                uri: `${apiPath}/repos/` + ctx.ORG_NAME + '/' + repoName,
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
                     'User-Agent': ctx.GITHUB_USER_NAME,
@@ -400,7 +403,7 @@ export default class GitHubManager {
 
                 var options = {
                     method: 'DELETE',
-                    uri: 'https://github.ubc.ca/api/v3/teams/' + teamId,
+                    uri: `${apiPath}/teams/` + teamId,
                     headers: {
                         'Authorization': ctx.GITHUB_AUTH_TOKEN,
                         'User-Agent': ctx.GITHUB_USER_NAME,
@@ -443,7 +446,7 @@ export default class GitHubManager {
 
             var options = {
                 method: 'GET',
-                uri: 'https://github.ubc.ca/api/v3/orgs/' + ctx.ORG_NAME + '/teams?per_page=100',
+                uri: `${apiPath}/orgs/` + ctx.ORG_NAME + '/teams?per_page=100',
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
                     'User-Agent': ctx.GITHUB_USER_NAME,
@@ -557,7 +560,7 @@ export default class GitHubManager {
 
             var options = {
                 method: 'POST',
-                uri: 'https://github.ubc.ca/api/v3/orgs/' + ctx.ORG_NAME + '/teams',
+                uri: `${apiPath}/orgs/` + ctx.ORG_NAME + '/teams',
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
                     'User-Agent': ctx.GITHUB_USER_NAME,
@@ -595,7 +598,7 @@ export default class GitHubManager {
 
             var options = {
                 method: 'PUT',
-                uri: 'https://github.ubc.ca/api/v3/teams/' + teamId + '/repos/' + ctx.ORG_NAME + '/' + repoName,
+                uri: `${apiPath}/teams/` + teamId + '/repos/' + ctx.ORG_NAME + '/' + repoName,
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
                     'User-Agent': ctx.GITHUB_USER_NAME,
@@ -636,7 +639,7 @@ export default class GitHubManager {
 
                 let opts = {
                     method: 'PUT',
-                    uri: 'https://github.ubc.ca/api/v3/teams/' + teamId + '/memberships/' + member,
+                    uri: `${apiPath}/teams/` + teamId + '/memberships/' + member,
                     headers: {
                         'Authorization': ctx.GITHUB_AUTH_TOKEN,
                         'User-Agent': ctx.GITHUB_USER_NAME,
@@ -672,7 +675,7 @@ export default class GitHubManager {
 
             var options = {
                 method: 'PUT',
-                uri: 'https://github.ubc.ca/api/v3/repos/' + ctx.ORG_NAME + '/' + repoName + '/collaborators/' + userName,
+                uri: `${apiPath}/repos/` + ctx.ORG_NAME + '/' + repoName + '/collaborators/' + userName,
 
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
@@ -709,7 +712,7 @@ export default class GitHubManager {
 
         return new Promise(function (fulfill, reject) {
 
-            var destinationRepo = 'https://github.ubc.ca/api/v3/repos/' + ctx.ORG_NAME + '/' + targetRepo + '/import';
+            var destinationRepo = `${apiPath}/repos/` + ctx.ORG_NAME + '/' + targetRepo + '/import';
             logger.info("GitHubManager::importRepoToNewRepo(..) - destination repo: " + destinationRepo + '; import repo: ' + importRepoUrl);
 
             // https://developer.github.com/v3/migration/source_imports/
@@ -747,7 +750,7 @@ export default class GitHubManager {
             // GET /repos/:owner/:repo/import
             let opts = {
                 method: 'GET',
-                uri: 'https://github.ubc.ca/api/v3/repos/' + ctx.ORG_NAME + '/' + repoName + '/import',
+                uri: `${apiPath}/repos/` + ctx.ORG_NAME + '/' + repoName + '/import',
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
                     'User-Agent': ctx.GITHUB_USER_NAME,
@@ -781,7 +784,7 @@ export default class GitHubManager {
             // PATCH /repos/:owner/:repo/import
             let opts = {
                 method: 'PATCH',
-                uri: 'https://github.ubc.ca/api/v3/repos/' + ctx.ORG_NAME + '/' + repoName + '/import',
+                uri: `${apiPath}/repos/` + ctx.ORG_NAME + '/' + repoName + '/import',
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
                     'User-Agent': ctx.GITHUB_USER_NAME,
@@ -813,7 +816,7 @@ export default class GitHubManager {
             // POST /repos/:owner/:repo/hooks
             let opts = {
                 method: 'POST',
-                uri: 'https://github.ubc.ca/api/v3/repos/' + ctx.ORG_NAME + '/' + repoName + '/hooks',
+                uri: `${apiPath}/repos/` + ctx.ORG_NAME + '/' + repoName + '/hooks',
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
                     'User-Agent': ctx.GITHUB_USER_NAME
@@ -858,7 +861,7 @@ export default class GitHubManager {
 
             var options = {
                 method: 'GET',
-                uri: 'https://github.ubc.ca/api/v3/repos/' + ctx.ORG_NAME + '/' + repoName + "/hooks",
+                uri: `${apiPath}/repos/` + ctx.ORG_NAME + '/' + repoName + "/hooks",
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
                     'User-Agent': ctx.GITHUB_USER_NAME,
@@ -904,8 +907,8 @@ export default class GitHubManager {
             // POST /repos/:owner/:repo/hooks
             let opts = {
                 method: 'GET',
-                uri: 'https://github.ubc.ca/api/v3/repos/' + ctx.ORG_NAME + '/' + repoName + '/stats/commit_activity',
-                // uri:                     'https://github.ubc.ca/api/v3/repos/' + ctx.ORG_NAME + '/' + repoName + '/stats/contributors',
+                uri: `${apiPath}/repos/` + ctx.ORG_NAME + '/' + repoName + '/stats/commit_activity',
+                // uri:                     '${apiPath}/repos/' + ctx.ORG_NAME + '/' + repoName + '/stats/contributors',
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
                     'User-Agent': ctx.GITHUB_USER_NAME
@@ -952,8 +955,8 @@ export default class GitHubManager {
             // GET /repos/:owner/:repo/commits
             let opts = {
                 method: 'GET',
-                uri: 'https://github.ubc.ca/api/v3/repos/' + ctx.ORG_NAME + '/' + repoName + '/commits',
-                // uri:                     'https://github.ubc.ca/api/v3/repos/' + ctx.ORG_NAME + '/' + repoName + '/stats/contributors',
+                uri: `${apiPath}/repos/` + ctx.ORG_NAME + '/' + repoName + '/commits',
+                // uri:                     '${apiPath}/repos/' + ctx.ORG_NAME + '/' + repoName + '/stats/contributors',
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
                     'User-Agent': ctx.GITHUB_USER_NAME
@@ -1020,13 +1023,13 @@ export default class GitHubManager {
 
         return new Promise(function (fulfill, reject) {
 
-            let url = 'https://github.ubc.ca/api/v3/repos/' + ctx.ORG_NAME + '/' + repoName + '/commits/' + sha + '/comments';
+            let url = `${apiPath}/repos/` + ctx.ORG_NAME + '/' + repoName + '/commits/' + sha + '/comments';
             // Log.info("GitHubManager::makeCommitComment(..) - url: " + url);
             // POST /repos/:owner/:repo/commits/:sha/comments
             let opts = {
                 method: 'POST',
                 uri: url,
-                // uri:                     'https://github.ubc.ca/api/v3/repos/' + ctx.ORG_NAME + '/' + repoName + '/stats/contributors',
+                // uri:                     '${apiPath}/repos/' + ctx.ORG_NAME + '/' + repoName + '/stats/contributors',
                 headers: {
                     'Authorization': ctx.GITHUB_AUTH_TOKEN,
                     'User-Agent': ctx.GITHUB_USER_NAME
@@ -1185,6 +1188,7 @@ export default class GitHubManager {
         let that = this;
         logger.info("GitHubManager::completeTeamProvision(..) - start: " + JSON.stringify(inputGroup));
         return new Promise(function (fulfill, reject) {
+            let teamProvisionRecord: any;
 
             const DELAY = that.DELAY_SEC * 3; // 2 would be enough, but let's just be safe
             // slow down creation to avoid getting in trouble with GH
@@ -1214,7 +1218,7 @@ export default class GitHubManager {
                 return that.addTeamToRepo(teamId, inputGroup.projectName, TEAM_PERMISSIONS);
             }).then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - team added to repo; getting staff team number");
-                // let staffTeamName = '310staff';
+                let staffTeamName = 'staff';
                 return that.getTeamNumber(staffTeamName);
             }).then(function (staffTeamNumber: number) {
                 logger.info("GitHubManager::completeTeamProvision(..) - found staff team number ( " + staffTeamNumber + " ); adding staff to repo");

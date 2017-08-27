@@ -7,6 +7,8 @@ import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
 import GitHubManager from '../github/githubManager';
 import * as auth from '../middleware/auth.middleware';
 
+const TEAM_PREPENDAGE = 'team';
+
 function getRepos(orgName: string): Promise<[Object]> {
   let githubManager = new GitHubManager(orgName);
   return githubManager.getRepos(orgName);
@@ -26,8 +28,8 @@ function createGithubTeam(payload: any): Promise<number> {
 @return <bool> true if valid
 **/
 function validGithubOrg(course: ICourseDocument, testOrgName: string): Boolean {
-  console.log(course.githubOrgs.indexOf(testOrgName) >= 0);
-  if (course.githubOrgs.indexOf(testOrgName) >= 0) {
+  console.log(course.githubOrg.indexOf(testOrgName) >= 0);
+  if (course.githubOrg.indexOf(testOrgName) >= 0) {
     console.log('is valid');
     return true;
   } else { return false; }
@@ -225,9 +227,10 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
 
   return Course.findOne({ courseId: payload.courseId })
     .exec()
-    .then((course: ICourseDocument) => {
-      if (course) {
-        course_id = course._id;
+    .then((_course: ICourseDocument) => {
+      if (_course) {
+        course_id = _course._id;
+        course = _course;
         return splitUsersIntoArrays(course);
       }
       throw `Could not find course ${payload.courseId}`;
@@ -243,29 +246,37 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
     let bulkInsertArray: any;
       if (course.settings.markDelivsByBatch) {
         bulkInsertArray = createTeamObjectsForBatchMarking();
+        return createTeamObjectsForBatchMarking()
+          .then((_teams: any) => {
+            return insertTeamDocuments(_teams);
+          });
       } else {
-        bulkInsertArray = createTeamObjectsForSingleDelivMarking();
+        return createTeamObjectsForSingleDelivMarking()
+          .then((_teams: any) => {
+            return insertTeamDocuments(_teams);
+          });
       }
 
-      return Team.collection.insertMany(bulkInsertArray)
-        .then((documents: any) => {
-          console.log(documents);
-          return documents;
-        })
-        .catch(err => {
-          logger.error(`TeamController::bulkInsertOp ERROR ${err}`);
-        });
+      function insertTeamDocuments(_bulkInsertArray: any) {
+        return Team.collection.insertMany(_bulkInsertArray)
+          .then((documents: any) => {
+            return documents;
+          })
+          .catch(err => {
+            logger.error(`TeamController::bulkInsertOp ERROR ${err}`);
+          });
+      }
 
       function createTeamObjectsForSingleDelivMarking() {
-        return getDeliverable(payload.name, course._id)
+        return getDeliverable(payload.name, course)
           .then((deliv: IDeliverableDocument) => {
             let bulkInsertArray = new Array();
             if (deliv) {
-              
+
               for ( let i = 0; i < sortedTeamIdList.length; i++) {
                 let teamObject = {
                   courseId: course_id,
-                  deliverableIds: deliv._id,
+                  deliverableId: deliv._id,
                   members: sortedTeamIdList[i],
                 };
                 bulkInsertArray.push(teamObject);
@@ -281,10 +292,10 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       }
 
       function createTeamObjectsForBatchMarking() {
-        return getDeliverables(course._id)
+        return getDeliverables(course)
           .then((delivs: IDeliverableDocument[]) => {
             let bulkInsertArray = new Array();
-            if (delivs) {
+            if (delivs.length > 0) {
               let deliverableIds = new Array();
 
               for (let i = 0; i < delivs.length; i++) {
@@ -300,8 +311,16 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
                 bulkInsertArray.push(teamObject);
               }
             } else {
-              throw `Could not find Deliverable for ${payload.deliverableName} and ${course._id}`;
+              throw `Could not find Deliverables for ${payload.deliverableName} and ${course._id}`;
             }
+
+            // adds the team number Name property used by AutoTest
+            let counter = 1;
+            for (let i = 0; i < bulkInsertArray.length; i++) {
+              bulkInsertArray[i].name = TEAM_PREPENDAGE + counter;
+              counter++;
+            }
+
             return bulkInsertArray;
           })
           .catch(err => {
@@ -319,7 +338,14 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
     // Gets CourseSettings to see if markByBatch flag enabled, and then gets Deliverable(s) 
     // based markByBatch flag.
     function getDeliverable(deliverableName: string, course: ICourseDocument) {
-      return Deliverable.findOne({ name: deliverableName, courseId: course_id }).exec();
+      return Deliverable.findOne({ name: deliverableName, courseId: course._id }).exec()
+        .then((deliverable: IDeliverableDocument) => {
+          if (deliverable) {
+            return deliverable;
+          }
+          throw `Team.Controller::getDeliverable(${deliverableName}, ${course._id})
+           No Deliverable Found`;
+        });
     }
 
 
@@ -328,13 +354,11 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
 
       // divides number of teams needed and rounds up
       const numberOfTeams = Math.ceil(course.classList.length / course.maxTeamSize + 1);
-      console.log('number of teams: ' + numberOfTeams);
 
-      // creates arrays for e
+      // creates arrays for each Team
       for (let i = 0; i < numberOfTeams; i++) {
         sorted.teams.push(new Array());
       }
-      console.log('made it here');
 
       let maxTeamSize = course.maxTeamSize;
       let teamNumber = 0;
@@ -346,8 +370,6 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
             teamNumber = 0;
           }
       }
-      console.log(sorted.teams);
-
       return sorted.teams;
     }
 }

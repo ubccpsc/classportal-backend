@@ -210,18 +210,17 @@ const createGithubTeam = (req: restify.Request, res: restify.Response, next: res
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-const createGithubRepoForTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return githubCtrl.createGithubRepo(req.params)
+const createGithubReposForTeams = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return githubCtrl.createGithubReposForTeams(req.params)
   .then((githubResponse: Object) => res.json(200, { response: 'Successfully created repo with teams and members.' }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-const createGithubRepoForUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return githubCtrl.createGithubRepo(req.params)
+const createGithubReposForProjects = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return githubCtrl.createGithubReposForProjects(req.params)
   .then((githubResponse: Object) => res.json(200, { response: 'Successfully created repo with teams and members.' }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };
-
 
 const getRepos = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return githubCtrl.getRepos(req.params.orgName)
@@ -261,7 +260,7 @@ const getCourseTeamsPerUser = (req: restify.Request, res: restify.Response, next
 
 const randomlyGenerateTeamsPerCourse = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return teamCtrl.randomlyGenerateTeamsPerCourse(req.params)
-  .then((teams: ITeamDocument[]) => res.json(200, { response: teams }))
+  .then((teams: any) => res.json(200, { response: teams }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
@@ -270,7 +269,7 @@ const randomlyGenerateTeamsPerCourse = (req: restify.Request, res: restify.Respo
 export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
    getCurrentUserInfo, validateRegistration, addGithubUsername, updateDeliverable, getDeliverables,
    getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
-   addAdmins, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepoForTeam, getRepos,
+   addAdmins, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
    deleteRepos, getCurrentUser, addTokenToDB, isAuthenticated, getMyCourses,
    getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
-   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubRepoForUser };
+   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects };

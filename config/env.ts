@@ -20,6 +20,7 @@ const config = {
   auth_strategy: 'github',
   github_auth_token: process.env.GITHUB_AUTH_TOKEN,
   github_user_name: process.env.GITHUB_USER_NAME,
+  github_api_path: process.env.GITHUB_API_PATH,
 };
 
 // specific to test config

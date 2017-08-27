@@ -15,6 +15,9 @@ const app = restify.createServer({
   ca: fs.readFileSync(config.ssl_int_cert_path).toString(),
 });
 
+restify.CORS.ALLOW_HEADERS.push('Accept-Encoding');
+restify.CORS.ALLOW_HEADERS.push('Accept-Language');
+
 // allow cors
 app.use(restify.CORS({
   origins: ['https://localhost:3000', 'https://localhost:5000'],
