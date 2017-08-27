@@ -62,7 +62,7 @@ function createTeamName(course: ICourseDocument, delivName: string, teamNum: str
   }
 }
 
-function createGithubReposForTeams(payload: any): Promise<Object> {
+function createGithubReposForTeams(payload: any): Promise<any> {
 
   const ADMIN = 'admin';
   const PULL = 'pull';
@@ -72,7 +72,9 @@ function createGithubReposForTeams(payload: any): Promise<Object> {
   let course: ICourseDocument;
   let courseSettings: any;
   let teams: ITeamDocument[];
+  let team: ITeamDocument;
   let inputGroup: GroupRepoDescription;
+  let deliverable: IDeliverableDocument;
 
   return Course.findOne({ courseId: payload.courseId }).exec()
     .then((_course: ICourseDocument) => {
@@ -80,41 +82,89 @@ function createGithubReposForTeams(payload: any): Promise<Object> {
         course = _course;
         courseSettings = _course.settings;
       } else { throw `Could not find course ${payload.courseId}`; }
-      return getTeamsToBuild(course);
+      return _course;
     })
-    .then((_teams: ITeamDocument[]) => {
-      // for (let i = 0; i < _teams.length; i++) {
-      //   let teamName = createTeamName(course, payload.deliverableName, _teams[i].name);
-      //   githubManager.createRepo(teamName)
-      //     .then((newRepoName: string) => {
-      //       if (newRepoName != '') {
-      //         return githubManager.importRepoToNewRepo(teamName, payload.importUrl)
-      //           .then((results: any) => {
-      //             return results;
-      //           });
-      //       }
-      //       return newRepoName;
-      //     });
-      // }
+    .then((_course: ICourseDocument) => {
+      return Deliverable.findOne({ courseId: _course._id, name: payload.deliverableName })
+        .then((deliv: IDeliverableDocument) => {
+          if (deliv) {
+            return deliv;
+          }
+          else { throw `Could not find Deliverable ${payload.deliverableName} under 
+            Course ${_course.courseId}`; }
+        })
+        .catch(err => {
+          logger.error(`GithubController:createGithubReposForTeams() ERROR ${err}`);
+        });
+    })
+    .then((deliv: IDeliverableDocument) => {
 
+      // IMPORTANT NOTE: Two Types of Teams Can Be Built.
+      // Team type #1: Build teams where all deliverables are in one repo
+      // Team type #2: Build teams where each deliverable is in individual 
+      // respective repo.
+      //
+      // courseSettings contains markByBatch bool to change configuration.
+      // Configuration cannot change after Teams have been built.
+
+      if (courseSettings.markDelivsByBatch) {
+        return getTeamsToBuildByBatch(course)
+          .then((teams: ITeamDocument[]) => {
+            return buildTeamsByBatch(teams);
+          })
+          .catch(err => {
+            logger.error(`GithubController::getTeamsToBuildByBatch()/buildByBatch() ERROR ${err}`);
+          });
+      } else {
+        return getTeamsToBuildForSelectedDeliv(course, deliv)
+          .then((teams: ITeamDocument[]) => {
+            return buildTeamsForSelectedDeliv(teams);
+          })
+          .catch(err => {
+            logger.error(`GithubController::getTeamsToBuildForSelectedDeliv()/
+              buildTeamsForSelectedDeliv() ERROR ${err}`);
+          });
+      }
+    });
+
+    function buildTeamsForSelectedDeliv(_teams: ITeamDocument[]) {
       for (let i = 0; i < _teams.length; i++) {
         let inputGroup = {
           teamName: createTeamName(course, payload.deliverableName, _teams[i].name),
-          members: ['stecler' , 'thekitsch'],
+          members: ['stecler', 'thekitsch'],
           projectName: createTeamName(course, payload.deliverableName, _teams[i].name),
-          teamIndex: 1,
-          team: 1,
+          teamIndex: i,
+          team: _teams[i].name,
+          _team: _teams[i],
         };
         githubManager.completeTeamProvision(inputGroup, IMPORTURL, STAFF_TEAM, WEBHOOK_ENDPOINT);
       }
-      return _teams;
-    });
+    }
 
-    function getTeamsToBuild(course: ICourseDocument) {
+    function buildTeamsByBatch(_teams: ITeamDocument[]) {
+      for (let i = 0; i < _teams.length; i++) {
+        let inputGroup = {
+          teamName: createTeamName(course, payload.deliverableName, _teams[i].name),
+          members: _teams[i].members.map((member: IUserDocument) => {
+            console.log(member.username);
+            return member.username;
+          }),
+          projectName: createTeamName(course, payload.deliverableName, _teams[i].name),
+          teamIndex: i,
+          team: _teams[i].name,
+          _team: _teams[i],
+        };
+        githubManager.completeTeamProvision(inputGroup, IMPORTURL, STAFF_TEAM, WEBHOOK_ENDPOINT);
+      }
+    }
+
+    function getTeamsToBuildByBatch(course: ICourseDocument) {
       return Team.find({ courseId: course._id })
-        .then((_teams: ITeamDocument[]) => {
-          if (!_teams) {
-            throw `No Teams found`;
+        .populate({ path: 'members' })
+        .exec()
+        .then((_teams: any) => {
+          if (_teams.length == 0) {
+            throw `No Teams found. Must add teams before you can build Repos.`;
           }
           teams = _teams;
           return _teams;
@@ -125,6 +175,22 @@ function createGithubReposForTeams(payload: any): Promise<Object> {
         
     }
 
+    function getTeamsToBuildForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
+      return Team.find({ courseId: course._id, deliverableId: deliv._id })
+        .populate({ path: 'members deliverableId' })
+        .exec()
+        .then((_teams: ITeamDocument[]) => {
+          if (_teams) {
+            console.log('did i make it here');  
+            teams = _teams;
+            return teams;
+          }
+          throw `Deliverable ${deliv.name} not found under Course ${course.courseId}.`;
+        })
+        .catch(err => {
+          logger.error(`Github.Controller::getTeamsToBuildForSelectedDiv() ERROR ${err}`);
+        });
+    }
   // return githubManager.createRepo(payload.name)
   //   .then( (newRepoName) => {
   //     if (payload.importUrl != '') {

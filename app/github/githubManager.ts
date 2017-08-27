@@ -6,6 +6,7 @@ var rp = require('request-promise-native');
 
 import { Helper } from "../github/util";
 import { link } from "fs";
+import { ITeamDocument, Team } from '../models/team.model';
 
 let async = require('async');
 let _ = require('lodash');
@@ -16,12 +17,13 @@ let apiPath = config.github_api_path;
  * are already registered (so we have their Github ids).
  */
 export interface GroupRepoDescription {
-    team: number;           // team number (used internally by portal)
+    team: any;           // team number (used internally by portal)
     members: string[];      // github usernames
     url?: string;           // github url (leave undefined if not set)
     projectName?: string;   // github project name
     teamName?: string;      // github team name
     teamIndex?: number;
+    _team?: ITeamDocument;  // ITeamDocument model
 }
 
 export interface IndividualRepoDescription extends GroupRepoDescription {
@@ -228,21 +230,48 @@ export default class GitHubManager {
     /**
      * Update team entry with new URL.
      *
-     * @param teamId, url, callback
+     * @param url, url, callback
+     * @param team, ITeamDocument
      * @returns callback(null) on success, callback("error") on error
      */
-    public setGithubUrl(teamId: number, url: string): Promise<string> {
-        logger.trace("AdminController::setGithubUrl| Updating team " + teamId + " with url: " + url);
+    public setGithubUrl(url: string, team: ITeamDocument): Promise<ITeamDocument> {
+        logger.trace("AdminController::setGithubUrl| Updating team with url: " + url);
         return new Promise(function (fulfill, reject) {
-            // Helper.updateEntry("teams.json", {'id': teamId}, {'url': url}, function (error: any) {
-            //     if (!error) {
-                console.log('set github URL ()');
-                console.log(url);
-                    fulfill(url);
-                // } else {
-                    reject('URL not assigned for: ' + url);
-                // }
-            // });
+            if (typeof url != 'undefined') {
+                team.githubUrl = url;
+                team.save()
+                    .then((team: ITeamDocument) => {
+                        return team;
+                    })
+                fulfill(team);
+            } else {
+                reject('URL not assigned for: ' + url);
+            }
+        });
+    }
+
+    /**
+     * Update team entry with new URL.
+     *
+     * @param teamId, url, callback
+     * @param team, ITeamDocument
+     * @returns callback(null) on success, callback("error") on error
+     */
+    public setTeamId(teamId: number, team: ITeamDocument): Promise<number> {
+        logger.trace("AdminController::setGithubUrl| Updating teamId with " + teamId);
+        return new Promise(function (fulfill, reject) {
+            if (typeof teamId != 'undefined') {
+                team.githubTeamId = teamId;
+                team.save()
+                    .then((team: ITeamDocument) => {
+                        fulfill(team.teamId);
+                    })
+                    .catch(err => {
+                        logger.error("GitHubManager::getIndividualDescriptions(..) - error: " + err);
+                    });
+            } else {
+                reject('Team ID not assigned for: ' + teamId);
+            }
         });
     }
 
@@ -1210,8 +1239,10 @@ export default class GitHubManager {
             }).then(function (teamDeets: any) {
                 var teamId = teamDeets.teamId;
                 logger.info("GitHubManager::completeTeamProvision(..) - team created ( " + teamId + " ) ; adding members: " + JSON.stringify(inputGroup.members));
-                return that.addMembersToTeam(teamId, inputGroup.members);
-
+                return that.setTeamId(teamId, inputGroup._team)
+                    .then(() => {
+                        return that.addMembersToTeam(teamId, inputGroup.members);
+                    });
             }).then(function (teamId: number) {
                 logger.info("GitHubManager::completeTeamProvision(..) - members added to team ( " + teamId + " ); adding team to project");
                 const TEAM_PERMISSIONS = 'push';
@@ -1226,7 +1257,7 @@ export default class GitHubManager {
                 return that.addTeamToRepo(staffTeamNumber, inputGroup.projectName, STAFF_PERMISSIONS);
             }).then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - admin staff added to repo; saving url");
-                return that.setGithubUrl(inputGroup.team, inputGroup.url);
+                return that.setGithubUrl(inputGroup.url, inputGroup._team);
             }).then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
                 fulfill(inputGroup);

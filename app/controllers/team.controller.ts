@@ -132,15 +132,6 @@ function getCourseTeamsPerUser(req: any): Promise<ITeamDocument[]> {
   });
 }
 
-// function updateMembersOnTeam(payload: any) {
-//   let teamQuery = { courseId : }
-//   Team.findOne()
-// }
-
-// function updateMembersOnTeamByBatch(payload: any) {
-
-// }
-
 function createGithubRepo(payload: any): Promise<Object> {
 
   const SUPERADMIN = 'superadmin';
@@ -268,7 +259,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       }
 
       function createTeamObjectsForSingleDelivMarking() {
-        return getDeliverable(payload.name, course)
+        return getDeliverable(payload.deliverableName, course)
           .then((deliv: IDeliverableDocument) => {
             let bulkInsertArray = new Array();
             if (deliv) {
@@ -284,6 +275,14 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
             } else {
               throw `Could not find Deliverable for ${payload.deliverableName} and ${course._id}`;
             }
+            
+            // adds the team number Name property used by AutoTest
+            let counter = 1;
+            for (let i = 0; i < bulkInsertArray.length; i++) {
+              bulkInsertArray[i].name = TEAM_PREPENDAGE + counter;
+              counter++;
+            }
+
             return bulkInsertArray;
           })
           .catch(err => {

@@ -9,6 +9,7 @@ interface ITeamDocument extends mongoose.Document {
   name: string;
   githubUrl: string;
   githubOrg: string;
+  githubTeamId: number;
   TAs: Object[];
 }
 
@@ -29,17 +30,20 @@ const TeamSchema = new mongoose.Schema({
   githubUrl: {
     type: String,
   },
+  githubTeamId: {
+    type: Number,
+  },
   multiDeliverableRepo: {
     type: Boolean,
   },
-  course: {
+  courseId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
     required: true,
   },
   deliverableId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable',
   },
-  deliverablesIds: [
+  deliverableIds: [
     { type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }
   ],
   members: {
