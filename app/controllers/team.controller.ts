@@ -9,6 +9,72 @@ import * as auth from '../middleware/auth.middleware';
 
 const TEAM_PREPENDAGE = 'team';
 
+function getUsersNotOnTeam(payload: any) {
+  
+  let markByBatchFlag: boolean;
+  let course: ICourseDocument;
+
+  return Course.findOne({ courseId: payload.courseId })
+    .then((_course: ICourseDocument) => {
+      course = _course;
+      markByBatchFlag = course.settings.markDelivsByBatch;
+      return _course;
+    })
+    .then((course) => {
+
+      let teamQuery: any = { courseId: course._id };
+      if (markByBatchFlag) {
+        teamQuery.deliverableIds = { '$in': course.deliverables };
+      }
+      else {
+        // teamQuery.deliverableId = { '$in': course.deliverables };
+      }
+      
+      return Team.find(teamQuery).exec()
+        .then((teams: ITeamDocument[]) => {
+          return teams;
+        });
+    })
+    .then((teams: ITeamDocument[]) => {
+      if (teams.length < 1 ) {
+        throw `ERROR. No Teams found.`;
+      }
+      // create a list of the team members under that class or class deliverable
+      let usersOnTeam: any = new Array();
+
+      for (let i = 0; i < teams.length; i++) {
+        for (let j = 0; j < teams[i].members.length; j++) {
+          let teamMember = teams[i].members[j];
+          if (usersOnTeam.indexOf(teamMember) < 0) {
+            console.log(teamMember);
+            
+            // a trick to get these to appear as simple strings Part 1/2
+            usersOnTeam.push(teamMember.toString());
+          }
+        }
+      }
+      return usersOnTeam;
+    })
+    .then((usersOnTeam: string[]) => {
+      // compare Users on Team to the ClassList. Return those that are on the classList but
+      // not on the Team
+      console.log(usersOnTeam);
+      console.log('users on team ends');
+      let notOnTeam = course.classList.filter(function(obj) { 
+        console.log('object begins');
+
+        // a trick to get these to appear as simple strings Part 2/2
+        let newObj = obj.toString();
+        return usersOnTeam.indexOf(newObj) == -1;
+       }
+    );
+      return notOnTeam;
+    })
+    .then((notOnTeam: string[]) => {
+      return User.find({ _id: { '$in': notOnTeam } });
+    });
+}
+
 function getRepos(orgName: string): Promise<[Object]> {
   let githubManager = new GitHubManager(orgName);
   return githubManager.getRepos(orgName);
@@ -387,11 +453,8 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       let sorted: any = { teams: new Array() };
 
       // divides number of teams needed and rounds up
-      console.log('maxTeamSize', course.maxTeamSize);
       let teamSize = typeof payload.teamSize === 'undefined' ? course.maxTeamSize : payload.teamSize;
-      console.log('teamSize', teamSize);
       const numberOfTeams = Math.ceil(course.classList.length / teamSize);
-      console.log('number of teams', numberOfTeams);
       // creates arrays for each Team
       for (let i = 0; i < numberOfTeams; i++) {
         sorted.teams.push(new Array());
@@ -601,4 +664,4 @@ function update(req: any) {
 // }
 
 export { createTeam, update, getTeams, createGithubTeam, createGithubRepo, getRepos, getCourseTeamsPerUser,
-         randomlyGenerateTeamsPerCourse }
+         randomlyGenerateTeamsPerCourse, getUsersNotOnTeam }
