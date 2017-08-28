@@ -387,8 +387,11 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       let sorted: any = { teams: new Array() };
 
       // divides number of teams needed and rounds up
-      const numberOfTeams = Math.ceil(course.classList.length / course.maxTeamSize + 1);
-
+      console.log('maxTeamSize', course.maxTeamSize);
+      let teamSize = typeof payload.teamSize === 'undefined' ? course.maxTeamSize : payload.teamSize;
+      console.log('teamSize', teamSize);
+      const numberOfTeams = Math.ceil(course.classList.length / teamSize);
+      console.log('number of teams', numberOfTeams);
       // creates arrays for each Team
       for (let i = 0; i < numberOfTeams; i++) {
         sorted.teams.push(new Array());
