@@ -261,37 +261,72 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       function createTeamObjectsForSingleDelivMarking() {
         return getDeliverable(payload.deliverableName, course)
           .then((deliv: IDeliverableDocument) => {
-            let bulkInsertArray = new Array();
-            if (deliv) {
+            Team.find({ courseId: course._id, deliverableId: deliv._id })
+              .then((teams: ITeamDocument[]) => {
+                if (teams.length > 0) {
+                  throw `Teams already exist for Deliverable. Cannot generate teams.`;
+                }
+                return false;
+              })
+              .then((teamsExist: Boolean) => {
+                if (!teamsExist) {
+                  let bulkInsertArray = new Array();
+                  if (deliv) {
 
-              for ( let i = 0; i < sortedTeamIdList.length; i++) {
-                let teamObject = {
-                  courseId: course_id,
-                  deliverableId: deliv._id,
-                  members: sortedTeamIdList[i],
-                };
-                bulkInsertArray.push(teamObject);
-              }
-            } else {
-              throw `Could not find Deliverable for ${payload.deliverableName} and ${course._id}`;
-            }
-            
-            // adds the team number Name property used by AutoTest
-            let counter = 1;
-            for (let i = 0; i < bulkInsertArray.length; i++) {
-              bulkInsertArray[i].name = TEAM_PREPENDAGE + counter;
-              counter++;
-            }
+                    for ( let i = 0; i < sortedTeamIdList.length; i++) {
+                      let teamObject = {
+                        courseId: course_id,
+                        deliverableId: deliv._id,
+                        members: sortedTeamIdList[i],
+                      };
+                      bulkInsertArray.push(teamObject);
+                    }
+                  } else {
+                    throw `Could not find Deliverable for ${payload.deliverableName} and ${course._id}`;
+                  }
+                  
+                  // adds the team number Name property used by AutoTest
+                  let counter = 1;
+                  for (let i = 0; i < bulkInsertArray.length; i++) {
+                    bulkInsertArray[i].name = TEAM_PREPENDAGE + counter;
+                    counter++;
+                  }
 
-            return bulkInsertArray;
+                  return bulkInsertArray;
+                }
+                return bulkInsertArray;
+              });
           })
           .catch(err => {
             logger.error(`TeamController::createTeamForEachTeamList ERROR ${err}`);
           });
       }
 
+      function checkIfTeamsAlreadyExistForBatch(delivs: IDeliverableDocument[], course: ICourseDocument) {
+        return Team.find({ courseId: course._id, 'deliverableIds' : { '$in': delivs } })
+          .then((teams: ITeamDocument[]) => {
+            if (teams.length > 0) {
+              return true;
+            }
+            return false;
+          });
+      }
+
       function createTeamObjectsForBatchMarking() {
         return getDeliverables(course)
+          .then((delivs: IDeliverableDocument[]) => {
+            return checkIfTeamsAlreadyExistForBatch(delivs, course)
+              .then((teamsExist: Boolean) => {
+                if (teamsExist) {
+                  throw `Teams already exist. Please remove teams before generating new teams`;
+                }
+                return delivs;
+              })
+              .catch((err: any) => {
+                logger.error(`TeamController::createTeamForEachTeamList ERROR ${err}`);
+                return Promise.reject(err);
+              });
+          })
           .then((delivs: IDeliverableDocument[]) => {
             let bulkInsertArray = new Array();
             if (delivs.length > 0) {
@@ -322,7 +357,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
 
             return bulkInsertArray;
           })
-          .catch(err => {
+          .catch((err: any) => {
             logger.error(`TeamController::createTeamForEachTeamList ERROR ${err}`);
           });
       }

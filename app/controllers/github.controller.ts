@@ -181,7 +181,6 @@ function createGithubReposForTeams(payload: any): Promise<any> {
         .exec()
         .then((_teams: ITeamDocument[]) => {
           if (_teams) {
-            console.log('did i make it here');  
             teams = _teams;
             return teams;
           }
