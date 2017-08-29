@@ -9,6 +9,51 @@ import * as auth from '../middleware/auth.middleware';
 
 const TEAM_PREPENDAGE = 'team';
 
+function getMyTeams(req: any) {
+
+  let user: IUserDocument;
+  let course: ICourseDocument;
+  let deliv: IDeliverableDocument;
+  return User.findOne({ username: req.user.username })
+    .then((_user: IUserDocument) => {
+      if (_user) {
+        user = _user;
+        return _user;
+      }
+      throw `Could not find user ${req.user.username}`;
+    })
+    .then((_user: IUserDocument) => {
+      return Course.findOne({ courseId: req.params.courseId })
+        .then((course: ICourseDocument) => {
+          if (course) {
+            return course;
+          }
+          throw `Could not find course ${req.params.courseId}`;
+        })
+        .catch(err => {
+          logger.error(`TeamController::getMyTeams() ERROR ${err}`);
+        });
+    })
+    .then((course: ICourseDocument) => {
+      return Team.findOne({ courseId: course._id, members: user._id })
+        .populate({ 
+          path: 'members deliverableIds deliverableId', 
+          select: 'username fname lname _id name url gradesReleased open close',
+      })
+        .then((team: ITeamDocument) => {
+          if (team) {
+            return team;
+          }
+          else {
+            return `You are not on any teams under ${req.params.courseId}.`;
+          }
+        });
+    })
+    .catch(err => {
+      logger.error(`TeamController::getMyTeams() ERROR ${err}`);
+    });
+}
+
 function getUsersNotOnTeam(payload: any) {
   
   let markByBatchFlag: boolean;
@@ -660,4 +705,4 @@ function update(req: any) {
 // }
 
 export { createTeam, update, getTeams, createGithubTeam, createGithubRepo, getRepos, getCourseTeamsPerUser,
-         randomlyGenerateTeamsPerCourse, getUsersNotOnTeam }
+         randomlyGenerateTeamsPerCourse, getUsersNotOnTeam, getMyTeams }

@@ -12,6 +12,7 @@ const routes = (server: restify.Server) => {
   server.get('/course', isAuthenticated, routeHandler.getCourse);
   server.get('/courses', isAuthenticated, routeHandler.getAllCourses);
   server.get('/myCourses', isAuthenticated, routeHandler.getMyCourses);
+  server.get('/:courseId/myTeams', routeHandler.getMyTeams);
   server.get('/:courseId/labSections', isAuthenticated, routeHandler.getLabSectionsFromCourse);
   server.get('/:courseId/:labId/labList', isAuthenticated, routeHandler.getCourseLabSectionList);
   server.get('/test', isAuthenticated, routeHandler.testRoute);
