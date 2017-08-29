@@ -351,6 +351,11 @@ function create(course: ICourseDocument) {
   });
 }
 
+function getCourse(payload: any) {
+  logger.info(`CourseController::getCourse(${payload.courseId}`);
+  return Course.findOne({ 'courseId': payload.courseId }).exec();
+}
+
 /**
  * Create a team
  */
@@ -390,4 +395,4 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
 
 export { getAllCourses, create, update, updateClassList, remove, addLabList, getClassList, getStudentNamesFromCourse, 
          addAdmins, getAllAdmins, getMyCourses, getCourseSettings, getLabSectionsFromCourse, 
-         getCourseLabSectionList }
+         getCourseLabSectionList, getCourse }

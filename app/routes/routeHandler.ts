@@ -270,6 +270,11 @@ const getUsersNotOnTeam = (req: restify.Request, res: restify.Response, next: re
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
+const getCourse = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.getCourse(req.params)
+  .then((course: ICourseDocument) => res.json(200, { response: course }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
 
 export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
    getCurrentUserInfo, validateRegistration, addGithubUsername, updateDeliverable, getDeliverables,
@@ -278,4 +283,4 @@ export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList
    deleteRepos, getCurrentUser, addTokenToDB, isAuthenticated, getMyCourses,
    getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
    addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects,
-   getUsersNotOnTeam };
+   getUsersNotOnTeam, getCourse };

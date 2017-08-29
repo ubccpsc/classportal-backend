@@ -27,7 +27,7 @@ function getUsersNotOnTeam(payload: any) {
         teamQuery.deliverableIds = { '$in': course.deliverables };
       }
       else {
-        // teamQuery.deliverableId = { '$in': course.deliverables };
+        teamQuery.deliverableId = { '$in': course.deliverables };
       }
       
       return Team.find(teamQuery).exec()
@@ -36,7 +36,7 @@ function getUsersNotOnTeam(payload: any) {
         });
     })
     .then((teams: ITeamDocument[]) => {
-      if (teams.length < 1 ) {
+      if (teams.length == 0 ) {
         throw `ERROR. No Teams found.`;
       }
       // create a list of the team members under that class or class deliverable
@@ -58,10 +58,7 @@ function getUsersNotOnTeam(payload: any) {
     .then((usersOnTeam: string[]) => {
       // compare Users on Team to the ClassList. Return those that are on the classList but
       // not on the Team
-      console.log(usersOnTeam);
-      console.log('users on team ends');
       let notOnTeam = course.classList.filter(function(obj) { 
-        console.log('object begins');
 
         // a trick to get these to appear as simple strings Part 2/2
         let newObj = obj.toString();
@@ -71,7 +68,7 @@ function getUsersNotOnTeam(payload: any) {
       return notOnTeam;
     })
     .then((notOnTeam: string[]) => {
-      return User.find({ _id: { '$in': notOnTeam } });
+      return User.find({ _id: { '$in': notOnTeam } }).select('username fname lname _id');
     });
 }
 
@@ -96,7 +93,6 @@ function createGithubTeam(payload: any): Promise<number> {
 function validGithubOrg(course: ICourseDocument, testOrgName: string): Boolean {
   console.log(course.githubOrg.indexOf(testOrgName) >= 0);
   if (course.githubOrg.indexOf(testOrgName) >= 0) {
-    console.log('is valid');
     return true;
   } else { return false; }
 }
