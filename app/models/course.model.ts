@@ -13,6 +13,8 @@ interface ICourseDocument extends mongoose.Document {
   grades: [Object];
   labSections: [Object];
   admins: [Object];
+  batchImportUrl: string;
+  urlWebhook: string;
   githubOrg: string;
   teamMustBeInSameLab: Boolean;
   settings: CourseSettings;
@@ -43,6 +45,9 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     type: String,
     default: '',
     unique: false,
+  },
+  urlWebhook: {
+    type: String,
   },
   icon: {
     type: String,
@@ -94,6 +99,9 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     default: true,
   },
   githubOrg: {
+    type: String,
+  },
+  batchImportUrl: {
     type: String,
   },
   settings: {

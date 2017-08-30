@@ -1,6 +1,9 @@
 
 import { logger } from '../../utils/logger';
 import { config } from '../../config/env';
+let fs = require('fs');
+
+var tmp = require('tmp-promise');
 var request = require('request');
 var rp = require('request-promise-native');
 
@@ -1165,6 +1168,107 @@ export default class GitHubManager {
         });
     }
 
+    public async cloneRepoFS(importRepo: string, studentRepo: string) {
+
+        console.log('import repo', importRepo);
+        console.log('student repo', studentRepo);
+        var exec = require('child-process-promise').exec;
+        let tempDir = await tmp.dir({ dir: '/recycling', unsafeCleanup: true });
+        let tempPath = tempDir.path;
+
+         return cloneRepo().then(() => {
+             return enterRepoPath()
+                .then(() => {
+                    return removeGitDir();
+                })
+                    .then(() => {
+                        return initGitDir();
+                    })
+                        .then(() => {
+                            return changeGitRemote();
+                        })
+                            .then(() => {
+                                return addFilesToRepo();
+                            })
+                                .then(() => {
+                                    return pushToNewRepo();
+                                })
+                                .catch((err: any) => {
+                                    logger.error(`githubManager::cloneRepo() ` + err);
+                                });
+         })
+
+    function cloneRepo() {
+        logger.info('GithubManager::cloneRepo() begins');
+        return exec(`git clone ${importRepo} ${tempPath}`)
+                .then(function (result: any) {
+                    logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
+                    console.log('stdoutSOMETHING: ', result.stdout);
+                    console.log('stderr: ', result.stderr);
+        });
+    }
+
+    function enterRepoPath() {
+        logger.info('GithubManager::cloneRepo() enterRepoPath');
+        return exec(`cd ${tempPath}`)
+                .then(function (result: any) {
+                    logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
+                    console.log('stdoutSOMETHING: ', result.stdout);
+                    console.log('stderr: ', result.stderr);
+        });
+    }
+
+    function removeGitDir() {
+        logger.info('GithubManager::cloneRepo() begins');
+        return exec(`cd ${tempPath} && rm -rf .git`)
+                .then(function (result: any) {
+                    logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
+                    console.log('stdoutSOMETHING: ', result.stdout);
+                    console.log('stderr: ', result.stderr);
+        });
+    }
+
+    function initGitDir() {
+        logger.info('GithubManager::cloneRepo() initGitDir()');
+        return exec(`cd ${tempPath} && git init`)
+                .then(function (result: any) {
+                    logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
+                    console.log('stdoutSOMETHING: ', result.stdout);
+                    console.log('stderr: ', result.stderr);
+        });
+    }
+
+    function changeGitRemote() {
+        logger.info('GithubManager::cloneRepo() changeGitRemote()');
+        return exec(`cd ${tempPath} && git remote add origin ${studentRepo}.git && git fetch --all`)
+                .then(function (result: any) {
+                    logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
+                    console.log('stdoutSOMETHING: ', result.stdout);
+                    console.log('stderr: ', result.stderr);
+        });
+    }
+
+    function addFilesToRepo() {
+        logger.info('GithubManager::cloneRepo() addFilesToRepo()');
+        return exec(`cd ${tempPath} && git add . && git commit -m "Student Project Files Committed"`)
+                .then(function (result: any) {
+                    logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
+                    console.log('stdoutSOMETHING: ', result.stdout);
+                    console.log('stderr: ', result.stderr);
+        });
+    }
+
+    function pushToNewRepo() {
+        logger.info('GithubManager::cloneRepo() pushToNewRepo()');
+        return exec(`pushd ${tempPath} && git push origin master`)
+                .then(function (result: any) {
+                    logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
+                    console.log('stdoutSOMETHING: ', result.stdout);
+                    console.log('stderr: ', result.stderr);
+        });
+    }
+    }
+
     public addTeamToRepos(groupData: GroupRepoDescription[], adminTeamName: string, permissions: string) {
         logger.info("GitHubManager::addTeamToRepos(..) - start");
         let ctx = this;
@@ -1212,13 +1316,13 @@ export default class GitHubManager {
         });
     }
 
-
     completeTeamProvision(inputGroup: GroupRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<GroupRepoDescription> {
         let that = this;
         logger.info("GitHubManager::completeTeamProvision(..) - start: " + JSON.stringify(inputGroup));
         return new Promise(function (fulfill, reject) {
             let teamProvisionRecord: any;
 
+            console.log(inputGroup);
             const DELAY = that.DELAY_SEC * 3; // 2 would be enough, but let's just be safe
             // slow down creation to avoid getting in trouble with GH
             that.delay(inputGroup.teamIndex * DELAY).then(function () {
@@ -1228,9 +1332,11 @@ export default class GitHubManager {
                 inputGroup.url = url;
                 // let importUrl = 'https://github.com/CS310-2016Fall/cpsc310project';
                 logger.info("GitHubManager::completeTeamProvision(..) - project created; importing url: " + importUrl);
-                return that.importRepoToNewRepo(inputGroup.projectName, importUrl);
-            }).then(function () {
+                return that.cloneRepoFS(importUrl, inputGroup.url);
+            })
+            .then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - import started; adding webhook");
+                console.log(webhookEndpoint);
                 return that.addWebhook(inputGroup.projectName, webhookEndpoint);
             }).then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - webhook added; creating team: " + inputGroup.teamName);
@@ -1258,7 +1364,8 @@ export default class GitHubManager {
             }).then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - admin staff added to repo; saving url");
                 return that.setGithubUrl(inputGroup.url, inputGroup._team);
-            }).then(function () {
+            })
+            .then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
                 fulfill(inputGroup);
             }).catch(function (err) {

@@ -16,13 +16,7 @@ import * as auth from '../middleware/auth.middleware';
   const TEAM_PREFIX = 'cpsc310_team';
 
   // the team containing all of the TAs
-  const STAFF_TEAM = '310staff';
-
-  // the endpoint for AutoTest (null if you do not want these)
-  const WEBHOOK_ENDPOINT = 'http://portal.cs.ubc.ca:11311/submit';
-
-  // this is the
-  const IMPORTURL = 'https://github.com/CS310-2017Jan/bootstrap';
+  const STAFF_TEAM = 'staff';
 
   // if we want to delete projects instead of creating them. be careful with this!
   const CLEAN = false;
@@ -75,6 +69,7 @@ function createGithubReposForTeams(payload: any): Promise<any> {
   let team: ITeamDocument;
   let inputGroup: GroupRepoDescription;
   let deliverable: IDeliverableDocument;
+  let courseWebhook: string;
 
   return Course.findOne({ courseId: payload.courseId }).exec()
     .then((_course: ICourseDocument) => {
@@ -131,13 +126,14 @@ function createGithubReposForTeams(payload: any): Promise<any> {
       for (let i = 0; i < _teams.length; i++) {
         let inputGroup = {
           teamName: createTeamName(course, payload.deliverableName, _teams[i].name),
-          members: ['stecler', 'thekitsch'],
+          members: ['steca', 'autotest-01'],
           projectName: createTeamName(course, payload.deliverableName, _teams[i].name),
           teamIndex: i,
           team: _teams[i].name,
           _team: _teams[i],
+          orgName: course.githubOrg
         };
-        githubManager.completeTeamProvision(inputGroup, IMPORTURL, STAFF_TEAM, WEBHOOK_ENDPOINT);
+        githubManager.completeTeamProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
       }
     }
 
@@ -145,16 +141,17 @@ function createGithubReposForTeams(payload: any): Promise<any> {
       for (let i = 0; i < _teams.length; i++) {
         let inputGroup = {
           teamName: createTeamName(course, payload.deliverableName, _teams[i].name),
-          members: _teams[i].members.map((member: IUserDocument) => {
-            console.log(member.username);
-            return member.username;
-          }),
+          members: ['steca', 'autotest-01'],
           projectName: createTeamName(course, payload.deliverableName, _teams[i].name),
           teamIndex: i,
           team: _teams[i].name,
           _team: _teams[i],
+          orgName: course.githubOrg
         };
-        githubManager.completeTeamProvision(inputGroup, IMPORTURL, STAFF_TEAM, WEBHOOK_ENDPOINT);
+        console.log('THE COURSE', inputGroup);
+        console.log('THE COURSE', course.urlWebhook);
+        console.log('batch import', course.batchImportUrl);
+        githubManager.completeTeamProvision(inputGroup, course.batchImportUrl, STAFF_TEAM, course.urlWebhook);
       }
     }
 

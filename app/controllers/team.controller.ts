@@ -447,7 +447,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
                 let teamObject = {
                   courseId: course_id,
                   deliverableIds,
-                  members: sortedTeamIdList[i],
+                  members: ['598f98b6d1fa8ec4ee03d031', '918f98b6d1fa8ec4ee03d031'],
                 };
                 bulkInsertArray.push(teamObject);
               }
