@@ -6,11 +6,13 @@ import * as delivCtrl from '../controllers/deliverable.controller';
 import * as gradeCtrl from '../controllers/grade.controller';
 import * as teamCtrl from '../controllers/team.controller';
 import * as testCtrl from '../controllers/test.controller';
+import * as projectCtrl from '../controllers/project.controller';
 import * as githubCtrl from '../controllers/github.controller';
 import { logger } from '../../utils/logger';
 import { Course, ICourseDocument } from '../models/course.model';
 import { Grade, IGradeDocument } from '../models/grade.model';
 import { User, IUserDocument } from '../models/user.model';
+import { Project, IProjectDocument } from '../models/project.model';
 import { Deliverable, IDeliverableDocument } from '../models/deliverable.model';
 import { Team, ITeamDocument } from '../models/team.model';
 
@@ -282,6 +284,19 @@ const getMyTeams = (req: restify.Request, res: restify.Response, next: restify.N
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
+// const generateProjects = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+//   return projectCtrl.generateProjects(req.params)
+//   .then((newProjects: any) => res.json(200, { response: newProjects }))
+//   .catch((err: any) => res.json(500, { err: err.message }));
+// };
+
+const generateProjects = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return projectCtrl.generateProjects(req.params)
+  .then((projects: any) => res.json(200, { response: projects }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+
 export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
    getCurrentUserInfo, validateRegistration, addGithubUsername, updateDeliverable, getDeliverables,
    getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
@@ -289,4 +304,4 @@ export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList
    deleteRepos, getCurrentUser, addTokenToDB, isAuthenticated, getMyCourses,
    getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
    addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects,
-   getUsersNotOnTeam, getCourse, getMyTeams };
+   getUsersNotOnTeam, getCourse, getMyTeams, generateProjects };

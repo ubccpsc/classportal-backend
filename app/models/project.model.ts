@@ -2,13 +2,9 @@ import * as mongoose from 'mongoose';
 import { logger } from '../../utils/logger';
 
 interface IProjectDocument extends mongoose.Document {
-  course: Object;
-  ProjectId: number;
-  members: Object[];
-  deliverable: Object;
-  name: string;
-  member: string;
-  repo: string;
+  student: Object;
+  deliverableId: string;
+  repoId: string;
   labId: string;
   githubUrl: string;
   githubOrg: string;
@@ -20,10 +16,6 @@ interface IProjectModel extends mongoose.Model<IProjectDocument> {
 }
 
 const ProjectSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
   githubOrg: {
     type: String,
     default: null,
@@ -37,17 +29,16 @@ const ProjectSchema = new mongoose.Schema({
   githubProjectId: {
     type: Number,
   },
-  repo: {
-    type: String,
+  repoId: {
+    type: Number,
   },
   courseId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
-    required: true,
   },
   deliverableId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable',
   },
-  member: {
+  student: {
     type: mongoose.Schema.Types.ObjectId, ref: 'User',
   },
   TAs: {
@@ -55,15 +46,35 @@ const ProjectSchema = new mongoose.Schema({
   },
 });
 
+
 // Methods
 ProjectSchema.method({
 });
 
 // Statics
 ProjectSchema.static({
-
+  /**
+  * Find a team by object ID. If does not exist, then team is created in DB.
+  * @param {object} recommended courseId
+  * @returns {Promise<ITeamDocument>} Returns a Promise of the user.
+  */
+  test: (query: Object): Promise<IProjectDocument> => {
+    return Project
+      .findOne(query)
+      .exec()
+      .then((team) => {
+        if (team !== null) {
+          return Promise.resolve(team);
+        } else {
+          return Project.create(query)
+            .then((q: any) => { return q.save(); })
+            .catch((err: any) => { logger.info(err); });
+        }
+      });
+  },
 });
 
 const Project: IProjectModel = <IProjectModel>mongoose.model('Project', ProjectSchema);
 
 export { IProjectDocument, IProjectModel, Project };
+

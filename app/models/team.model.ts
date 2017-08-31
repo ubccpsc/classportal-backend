@@ -36,6 +36,9 @@ const TeamSchema = new mongoose.Schema({
   multiDeliverableRepo: {
     type: Boolean,
   },
+  repoId: {
+    type: Number,
+  },
   courseId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
     required: true,
