@@ -72,13 +72,24 @@ function generateProjects(payload: any) {
 
       return Project.find({ deliverableId: deliverable._id, courseId: course._id })
         .then((projects: IProjectDocument[]) => {
-          return bulkInsertList.filter((projectInDB: IProjectDocument) => {
-          let existsInDB: Boolean = true;
-            for (let i = 0; i < projects.length; i++) {
-              existsInDB = projects[i].student === projectInDB.student;
-            }
-            return existsInDB;
-          });
+          // If there are projects in the DB, compare them against the bulk insert list
+          // and remove the insertions that match in the DB already.
+          if (projects.length > 0) {
+            return bulkInsertList.filter((bulkInsertListItem: IProjectDocument) => {
+            let existInDB: Boolean = false;
+              for (let i = 0; i < projects.length; i++) {
+                let studentInProject = projects[i].student.toString();
+                let bulkInsertListItemStudent = bulkInsertListItem.student.toString();
+                if (studentInProject.indexOf(bulkInsertListItemStudent) > -1) {
+                  existInDB = true;
+                }
+              }
+              return !existInDB;
+            });
+          }
+          else {
+            return bulkInsertList;
+          }
         });
     }
 }
