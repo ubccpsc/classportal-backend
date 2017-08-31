@@ -148,9 +148,6 @@ function createGithubReposForTeams(payload: any): Promise<any> {
           _team: _teams[i],
           orgName: course.githubOrg
         };
-        console.log('THE COURSE', inputGroup);
-        console.log('THE COURSE', course.urlWebhook);
-        console.log('batch import', course.batchImportUrl);
         githubManager.completeTeamProvision(inputGroup, course.batchImportUrl, STAFF_TEAM, course.urlWebhook);
       }
     }
@@ -239,8 +236,14 @@ function createGithubReposForProjects(payload: any): Promise<Object> {
   const ADMIN = 'admin';
   const PULL = 'pull';
   const PUSH = 'push';
-
-  let githubManager = new GitHubManager(payload.orgName);
+  let githubManager = new GitHubManager(payload.githubOrg);
+  let course: ICourseDocument;
+  let courseSettings: any;
+  let teams: ITeamDocument[];
+  let team: ITeamDocument;
+  let inputGroup: GroupRepoDescription;
+  let deliverable: IDeliverableDocument;
+  let courseWebhook: string;
 
   return githubManager.createRepo(payload.name)
     .then( (newRepoName) => {

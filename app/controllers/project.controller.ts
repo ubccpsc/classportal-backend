@@ -28,10 +28,12 @@ function generateProjects(payload: any) {
       if (!_course) {
         throw `Course ${payload.courseId} not found`;
       }
-      // if (course.settings.markDelivsByBatch) {
-      //   throw `Cannot generate projects for MarkByBatch Team groups`;
-      // }
+      // Turn off once Single Projects are allowed on markByBatch Team Courses as well
+      if (_course.settings.markDelivsByBatch) {
+        throw `Cannot generate projects for MarkByBatch Team groups`;
+      }
       course = _course;
+      console.log('the course', course);
       return _course;
     })
     .then((_course: ICourseDocument) => {
@@ -56,6 +58,8 @@ function generateProjects(payload: any) {
           student: student._id,
           deliverableId: deliv._id,
           courseId: course._id,
+          githubUrl: '',
+          githubRepoId: '',
         };
         bulkInsertProjectArray.push(newProject);
       }
@@ -93,7 +97,6 @@ function generateProjects(payload: any) {
         });
     }
 }
-
 
 
 export { generateProjects };

@@ -23,13 +23,16 @@ const ProjectSchema = new mongoose.Schema({
   labId: {
     type: String,
   },
+  name: {
+    type: String,
+  },
   githubUrl: {
     type: String,
   },
   githubProjectId: {
     type: Number,
   },
-  repoId: {
+  githubRepoId: {
     type: Number,
   },
   courseId: {
