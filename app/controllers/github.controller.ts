@@ -2,6 +2,7 @@ import * as restify from 'restify';
 import { logger } from '../../utils/logger';
 import { ITeamDocument, Team } from '../models/team.model';
 import { ICourseDocument, Course } from '../models/course.model';
+import { IProjectDocument, Project } from '../models/project.model';
 import { IUserDocument, User } from '../models/user.model';
 import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
 import GitHubManager, { GroupRepoDescription } from '../github/githubManager';
@@ -184,112 +185,98 @@ function createGithubReposForTeams(payload: any): Promise<any> {
           logger.error(`Github.Controller::getTeamsToBuildForSelectedDiv() ERROR ${err}`);
         });
     }
-  // return githubManager.createRepo(payload.name)
-  //   .then( (newRepoName) => {
-  //     if (payload.importUrl != '') {
-  //       return githubManager.importRepoToNewRepo(payload.name, payload.importUrl)
-  //         .then( (results) => {
-  //           return results;
-  //         });
-  //     }
-  //     return newRepoName;
-  //   })
-  //   .then((newRepoName: string) => {
-
-  //     // As repo is now created, add teams and members in Promise.All()
-
-  //     let adminTeamNumbers = Promise.all(payload.adminTeams.map((teamName: string) => {
-  //       return githubManager.getTeamNumber(teamName);
-  //     }));
-  //     let memberTeamNumbers = Promise.all(payload.memberTeams.map((teamName: string) => {
-  //       return githubManager.getTeamNumber(teamName);
-  //     }));
-  //     let addAdmins = Promise.all(payload.admins.map((admin: string) => {
-  //       return githubManager.addCollaboratorToRepo(admin, payload.name, ADMIN);
-  //     }));
-  //     let addMembers = Promise.all(payload.members.map((member: string) => {
-  //       return githubManager.addCollaboratorToRepo(member, payload.name, PUSH);
-  //     }));
-
-  //     let addTeamsAndMembers = [adminTeamNumbers, memberTeamNumbers, addMembers, addAdmins];
-
-  //     adminTeamNumbers.then( teamNums => {
-  //       return Promise.all(teamNums.map( (teamNum: number) => {
-  //         console.log('Adding admin teamNum to repo: ' + teamNum);
-  //         return githubManager.addTeamToRepo(teamNum, payload.name, ADMIN);
-  //       }));
-  //     });
-
-  //     memberTeamNumbers.then( teamNums => {
-  //       return Promise.all(teamNums.map( (teamNum: number) => {
-  //         console.log('Adding member teamNum to repo: ' + teamNum);
-  //         return githubManager.addTeamToRepo(teamNum, payload.name, PUSH);
-  //       }));
-  //     });
-
-  //     return Promise.all(addTeamsAndMembers);
-  //   });
 }
 
-function createGithubReposForProjects(payload: any): Promise<Object> {
+function createGithubReposForProjects(payload: any): Promise<any> {
 
   const ADMIN = 'admin';
   const PULL = 'pull';
   const PUSH = 'push';
+
   let githubManager = new GitHubManager(payload.githubOrg);
   let course: ICourseDocument;
   let courseSettings: any;
-  let teams: ITeamDocument[];
-  let team: ITeamDocument;
+  let projects: IProjectDocument[];
+  let project: IProjectDocument;
   let inputGroup: GroupRepoDescription;
   let deliverable: IDeliverableDocument;
-  let courseWebhook: string;
 
-  return githubManager.createRepo(payload.name)
-    .then( (newRepoName) => {
-      if (payload.importUrl != '') {
-        return githubManager.importRepoToNewRepo(payload.name, payload.importUrl)
-          .then( (results) => {
-            return results;
-          });
-      }
-      return newRepoName;
+  return Course.findOne({ courseId: payload.courseId }).exec()
+    .then((_course: ICourseDocument) => {
+      if (_course) {
+        course = _course;
+        courseSettings = _course.settings;
+      } else { throw `Could not find course ${payload.courseId}`; }
+      return _course;
     })
-    .then((newRepoName: string) => {
+    .then((_course: ICourseDocument) => {
+      return Deliverable.findOne({ courseId: _course._id, name: payload.deliverableName })
+        .then((deliv: IDeliverableDocument) => {
+          if (deliv) {
+            deliverable = deliv;
+            return deliv;
+          }
+          else { throw `Could not find Deliverable ${payload.deliverableName} under 
+            Course ${_course.courseId}`; }
+        })
+        .catch(err => {
+          logger.error(`GithubController:createGithubReposForProjects() ERROR ${err}`);
+        });
+    })
+    .then((deliv: IDeliverableDocument) => {
 
-      // As repo is now created, add teams and members in Promise.All()
+      // IMPORTANT NOTE: Two Types of Teams Can Be Built.
+      // Team type #1: Build teams where all deliverables are in one repo
+      // Team type #2: Build teams where each deliverable is in individual 
+      // respective repo.
+      //
+      // courseSettings contains markByBatch bool to change configuration.
+      // Configuration cannot change after Teams have been built.
 
-      let adminTeamNumbers = Promise.all(payload.adminTeams.map((teamName: string) => {
-        return githubManager.getTeamNumber(teamName);
-      }));
-      let memberTeamNumbers = Promise.all(payload.memberTeams.map((teamName: string) => {
-        return githubManager.getTeamNumber(teamName);
-      }));
-      let addAdmins = Promise.all(payload.admins.map((admin: string) => {
-        return githubManager.addCollaboratorToRepo(admin, payload.name, ADMIN);
-      }));
-      let addMembers = Promise.all(payload.members.map((member: string) => {
-        return githubManager.addCollaboratorToRepo(member, payload.name, PUSH);
-      }));
-
-      let addTeamsAndMembers = [adminTeamNumbers, memberTeamNumbers, addMembers, addAdmins];
-
-      adminTeamNumbers.then( teamNums => {
-        return Promise.all(teamNums.map( (teamNum: number) => {
-          console.log('Adding admin teamNum to repo: ' + teamNum);
-          return githubManager.addTeamToRepo(teamNum, payload.name, ADMIN);
-        }));
-      });
-
-      memberTeamNumbers.then( teamNums => {
-        return Promise.all(teamNums.map( (teamNum: number) => {
-          console.log('Adding member teamNum to repo: ' + teamNum);
-          return githubManager.addTeamToRepo(teamNum, payload.name, PUSH);
-        }));
-      });
-
-      return Promise.all(addTeamsAndMembers);
+      if (courseSettings.markDelivsByBatch) {
+        throw `Cannot build projects for Batch Team course`;
+      } 
+      return getProjectsToBuildForSelectedDeliv(course, deliv)
+        .then((projects: IProjectDocument[]) => {
+          return buildProjectsForSelectedDeliv(projects);
+        })
+        .catch(err => {
+          logger.error(`GithubController::getProjectsToBuildForSelectedDeliv()/
+             ERROR ${err}`);
+        });
     });
+
+    function buildProjectsForSelectedDeliv(_projects: IProjectDocument[]) {
+      console.log('did we make it here then?');
+      for (let i = 0; i < _projects.length; i++) {
+        let inputGroup = {
+          repoName: createTeamName(course, payload.deliverableName, _projects[i].name),
+          projectName: createTeamName(course, payload.deliverableName, _projects[i].name),
+          projectIndex: i,
+          student: 'steca',
+          project: _projects[i],
+          projects: _projects,
+          orgName: course.githubOrg
+        };
+        githubManager.completeIndividualProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
+      }
+    }
+
+    function getProjectsToBuildForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
+      return Project.find({ courseId: course._id, deliverableId: deliv._id })
+        .populate({ path: 'members deliverableId' })
+        .exec()
+        .then((_projects: IProjectDocument[]) => {
+          if (_projects) {
+            projects = _projects;
+            return projects;
+          }
+          throw `Deliverable ${deliv.name} not found under Course ${course.courseId}.`;
+        })
+        .catch(err => {
+          logger.error(`Github.Controller::getProjectsToBuildForSelectedDiv() ERROR ${err}`);
+        });
+    }
 }
 
 function getTeams(payload: any) {

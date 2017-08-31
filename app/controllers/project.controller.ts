@@ -9,6 +9,7 @@ import { logger } from '../../utils/logger';
 import { config } from '../../config/env';
 import * as request from '../helpers/request';
 
+const PROJECT_PREPEND = 'project';
 
 /**
 * Determines if Github Projectname is already registered in Project object
@@ -51,16 +52,19 @@ function generateProjects(payload: any) {
     .then((deliv: IDeliverableDocument) => {
       let classList: any = course.classList;
       let bulkInsertProjectArray = new Array();
+        
       for (let i = 0; i < course.classList.length; i++) {
         let student: any = course.classList[i];
-        
+
         let newProject: object = {
           student: student._id,
           deliverableId: deliv._id,
           courseId: course._id,
+          name: '',
           githubUrl: '',
           githubRepoId: '',
         };
+
         bulkInsertProjectArray.push(newProject);
       }
 
@@ -78,8 +82,12 @@ function generateProjects(payload: any) {
         .then((projects: IProjectDocument[]) => {
           // If there are projects in the DB, compare them against the bulk insert list
           // and remove the insertions that match in the DB already.
+
+          // Also, label them with latest projectCount num that is under the Deliverable
           if (projects.length > 0) {
-            return bulkInsertList.filter((bulkInsertListItem: IProjectDocument) => {
+
+            // filter function
+            let filteredList = bulkInsertList.filter((bulkInsertListItem: IProjectDocument) => {
             let existInDB: Boolean = false;
               for (let i = 0; i < projects.length; i++) {
                 let studentInProject = projects[i].student.toString();
@@ -90,8 +98,32 @@ function generateProjects(payload: any) {
               }
               return !existInDB;
             });
+
+            // label function
+            let counter = 1;
+            for (let i = 0; i < filteredList.length; i++) {
+              filteredList[i].name = PROJECT_PREPEND + ( deliverable.projectCount + counter++);
+            }
+            
+            // then submit filtered list to database after saving new project count
+            deliverable.projectCount = deliverable.projectCount + counter;
+            return deliverable.save()
+              .then(() => {
+                return filteredList;
+              });
           }
           else {
+
+            // label 
+            // else means that no other projects exist in repo and we should start 
+            // counting and labeling from 1
+
+            let counter = 1;
+            for (let i = 0; i < bulkInsertList.length; i++) {
+              bulkInsertList[i].name = PROJECT_PREPEND + (counter++);
+            }
+            deliverable.projectCount = counter;
+            deliverable.save();
             return bulkInsertList;
           }
         });

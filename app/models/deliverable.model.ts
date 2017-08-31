@@ -8,6 +8,8 @@ interface IDeliverableDocument extends mongoose.Document {
   url: string;
   open: Date;
   close: Date;
+  projectCount: number;
+  teamCount: number;
   gradesReleased: Boolean;
 }
 
@@ -19,6 +21,9 @@ const DeliverableSchema = new mongoose.Schema({
   courseId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
   },
+  teamCount: {
+    type: Number,
+  },
   name: {
     type: String,
     required: true,
@@ -28,6 +33,9 @@ const DeliverableSchema = new mongoose.Schema({
   },
   url: {
     type: String,
+  },
+  projectCount: {
+    type: Number,
   },
   team: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Team',

@@ -6,6 +6,7 @@ interface IProjectDocument extends mongoose.Document {
   deliverableId: string;
   repoId: string;
   labId: string;
+  name: string;
   githubUrl: string;
   githubOrg: string;
   githubProjectId: number;

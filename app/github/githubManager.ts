@@ -10,6 +10,7 @@ var rp = require('request-promise-native');
 import { Helper } from "../github/util";
 import { link } from "fs";
 import { ITeamDocument, Team } from '../models/team.model';
+import { IProjectDocument, Project } from '../models/project.model';
 
 let async = require('async');
 let _ = require('lodash');
@@ -32,6 +33,18 @@ export interface GroupRepoDescription {
 export interface IndividualRepoDescription extends GroupRepoDescription {
     // this is terrible, but is just to make us feel better about ourselves.
     // don't do anything with this
+}
+
+export interface ProjectRepoDescription {
+    projectName: string;
+    student: string;
+    repoName: string;
+    url?: string;
+    projectIndex: number;
+    projects?: IProjectDocument[];
+    project?: IProjectDocument;
+    orgName?: string;
+    labName?: string;
 }
 
 export interface GroupCommit {
@@ -1168,7 +1181,7 @@ export default class GitHubManager {
         });
     }
 
-    public async cloneRepoFS(importRepo: string, studentRepo: string) {
+    public async importRepoFS(importRepo: string, studentRepo: string) {
 
         console.log('import repo', importRepo);
         console.log('student repo', studentRepo);
@@ -1332,7 +1345,7 @@ export default class GitHubManager {
                 inputGroup.url = url;
                 // let importUrl = 'https://github.com/CS310-2016Fall/cpsc310project';
                 logger.info("GitHubManager::completeTeamProvision(..) - project created; importing url: " + importUrl);
-                return that.cloneRepoFS(importUrl, inputGroup.url);
+                return that.importRepoFS(importUrl, inputGroup.url);
             })
             .then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - import started; adding webhook");
@@ -1383,28 +1396,28 @@ export default class GitHubManager {
         });
     }
 
-    completeIndividualProvision(inputGroup: GroupRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<GroupRepoDescription> {
+    completeIndividualProvision(inputGroup: ProjectRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<ProjectRepoDescription> {
         let that = this;
         logger.info("GitHubManager::completeIndividualProvision(..) - start: " + JSON.stringify(inputGroup));
         return new Promise(function (fulfill, reject) {
 
             const DELAY = 10000;
             // slow down creation to avoid getting in trouble with GH
-            that.delay(inputGroup.teamIndex * DELAY).then(function () {
+            that.delay(inputGroup.projectIndex * DELAY).then(function () {
                 logger.info("GitHubManager::completeIndividualProvision(..) - creating project: " + inputGroup.projectName);
                 return that.createRepo(inputGroup.projectName);
             }).then(function (url: string) {
                 inputGroup.url = url;
                 // let importUrl = 'https://github.com/CS310-2016Fall/cpsc310project';
                 logger.info("GitHubManager::completeIndividualProvision(..) - project created; importing url: " + importUrl);
-                return that.importRepoToNewRepo(inputGroup.projectName, importUrl);
+                return that.importRepoFS(importUrl, inputGroup.url);
             }).then(function () {
                 logger.info("GitHubManager::completeIndividualProvision(..) - import started; adding webhook");
                 return that.addWebhook(inputGroup.projectName, webhookEndpoint);
             }).then(function () {
                 // add individual to repo
-                logger.info("GitHubManager::completeIndividualProvision(..) - webhook added; adding user: " + inputGroup.members[0]);
-                return that.addCollaboratorToRepo(inputGroup.members[0], inputGroup.projectName, 'push');
+                logger.info("GitHubManager::completeIndividualProvision(..) - webhook added; adding user: " + inputGroup.student);
+                return that.addCollaboratorToRepo(inputGroup.student, inputGroup.projectName, 'push');
                 /*
                  // don't need teams for individual repos
                  .then(function () {
@@ -1430,7 +1443,7 @@ export default class GitHubManager {
             }).then(function () {
                 logger.info("GitHubManager::completeIndividualProvision(..) - admin staff added to repo; setting individual URL");
                 // TODO: write githubURL as importUrl
-                return that.setIndividualUrl(inputGroup.members[0], inputGroup.url);
+                return that.setIndividualUrl(inputGroup.student, inputGroup.url);
             }).then(function () {
                 logger.info("GitHubManager::completeIndividualProvision(..) - process complete for: " + JSON.stringify(inputGroup));
                 fulfill(inputGroup);
