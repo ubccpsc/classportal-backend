@@ -74,6 +74,9 @@ function generateProjects(payload: any) {
         .then((cleanBulkEntryList: any) => {
           return Project.collection.insertMany(cleanBulkEntryList);
         });
+    })
+    .catch(err => {
+      logger.error(`ProjectController::generateProjects() ERROR ${err}`);
     });
     
     function filterAlreadyCreatedProjects(bulkInsertList: any) {
