@@ -225,14 +225,6 @@ function createGithubReposForProjects(payload: any): Promise<any> {
     })
     .then((deliv: IDeliverableDocument) => {
 
-      // IMPORTANT NOTE: Two Types of Teams Can Be Built.
-      // Team type #1: Build teams where all deliverables are in one repo
-      // Team type #2: Build teams where each deliverable is in individual 
-      // respective repo.
-      //
-      // courseSettings contains markByBatch bool to change configuration.
-      // Configuration cannot change after Teams have been built.
-
       if (courseSettings.markDelivsByBatch) {
         throw `Cannot build projects for Batch Team course`;
       } 
@@ -247,7 +239,6 @@ function createGithubReposForProjects(payload: any): Promise<any> {
     });
 
     function buildProjectsForSelectedDeliv(_projects: IProjectDocument[]) {
-      console.log('did we make it here then?');
       for (let i = 0; i < _projects.length; i++) {
         let inputGroup = {
           repoName: createTeamName(course, payload.deliverableName, _projects[i].name),
@@ -263,7 +254,11 @@ function createGithubReposForProjects(payload: any): Promise<any> {
     }
 
     function getProjectsToBuildForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
-      return Project.find({ courseId: course._id, deliverableId: deliv._id })
+      return Project.find({ 
+        courseId: course._id,
+        deliverableId: deliv._id,
+        githubUrl: { '$ne': '' },
+      })
         .populate({ path: 'student deliverableId courseId' })
         .exec()
         .then((_projects: IProjectDocument[]) => {
