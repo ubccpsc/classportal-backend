@@ -1187,9 +1187,19 @@ export default class GitHubManager {
 
         console.log('import repo', importRepo);
         console.log('student repo', studentRepo);
+
+        function addGithubAuthToken(url: string) {
+            let start_append = url.indexOf('//') + 2;
+            let authKey = config.github_auth_token + '@';
+            let authedUrl = url.slice(0, start_append) + authKey + url.slice(start_append);
+            return authedUrl;
+        }
+        
         var exec = require('child-process-promise').exec;
         let tempDir = await tmp.dir({ dir: '/recycling', unsafeCleanup: true });
         let tempPath = tempDir.path;
+        let authedStudentRepo = addGithubAuthToken(studentRepo);
+        let authedImportRepo = addGithubAuthToken(importRepo);
 
          return cloneRepo().then(() => {
              return enterRepoPath()
@@ -1215,7 +1225,7 @@ export default class GitHubManager {
 
     function cloneRepo() {
         logger.info('GithubManager::cloneRepo() begins');
-        return exec(`git clone ${importRepo} ${tempPath}`)
+        return exec(`git clone ${authedImportRepo} ${tempPath}`)
                 .then(function (result: any) {
                     logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
                     console.log('stdoutSOMETHING: ', result.stdout);
@@ -1255,7 +1265,7 @@ export default class GitHubManager {
 
     function changeGitRemote() {
         logger.info('GithubManager::cloneRepo() changeGitRemote()');
-        return exec(`cd ${tempPath} && git remote add origin ${studentRepo}.git && git fetch --all`)
+        return exec(`cd ${tempPath} && git remote add origin ${authedStudentRepo}.git && git fetch --all`)
                 .then(function (result: any) {
                     logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
                     console.log('stdoutSOMETHING: ', result.stdout);
