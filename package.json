@@ -26,6 +26,7 @@
     "csv-parse": "^1.2.0",
     "dotenv": "^4.0.0",
     "faker": "^4.1.0",
+    "forever": "^0.15.3",
     "mongoose": "^4.8.2",
     "mongoose-findorcreate": "^1.0.1",
     "node-fetch": "^1.6.3",
@@ -63,7 +64,7 @@
     "test:debug": "DEBUG=true npm run test",
     "cover": "npm run build && NODE_ENV='test' node_modules/.bin/istanbul cover node_modules/.bin/_mocha \"test/**/*.spec.js\"",
     "dev": "npm run build && DEBUG=true node ./build/server.js",
-    "start:prod": "npm run build && NODE_ENV='production' node ./build/server.js",
+    "start:prod": "npm run build && NODE_ENV='production' forever start --spinSleepTime 10000 ./build/server.js",
     "seed:test": "npm run build && NODE_ENV='test' node ./build/utils/seed.js"
   }
 }
