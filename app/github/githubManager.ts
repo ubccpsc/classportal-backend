@@ -1190,7 +1190,7 @@ export default class GitHubManager {
 
         function addGithubAuthToken(url: string) {
             let start_append = url.indexOf('//') + 2;
-            let authKey = config.github_auth_token + '@';
+            let authKey = config.github_clone_token + '@';
             let authedUrl = url.slice(0, start_append) + authKey + url.slice(start_append);
             return authedUrl;
         }
