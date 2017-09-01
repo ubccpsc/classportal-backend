@@ -253,7 +253,7 @@ function createGithubReposForProjects(payload: any): Promise<any> {
           repoName: createTeamName(course, payload.deliverableName, _projects[i].name),
           projectName: createTeamName(course, payload.deliverableName, _projects[i].name),
           projectIndex: i,
-          student: 'steca',
+          student: _projects[i].student.username,
           project: _projects[i],
           projects: _projects,
           orgName: course.githubOrg
@@ -264,7 +264,7 @@ function createGithubReposForProjects(payload: any): Promise<any> {
 
     function getProjectsToBuildForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
       return Project.find({ courseId: course._id, deliverableId: deliv._id })
-        .populate({ path: 'members deliverableId' })
+        .populate({ path: 'student deliverableId courseId' })
         .exec()
         .then((_projects: IProjectDocument[]) => {
           if (_projects) {

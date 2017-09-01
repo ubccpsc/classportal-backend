@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import { logger } from '../../utils/logger';
 
 interface IProjectDocument extends mongoose.Document {
-  student: Object;
+  student: Student;
   deliverableId: string;
   repoId: string;
   labId: string;
@@ -11,6 +11,10 @@ interface IProjectDocument extends mongoose.Document {
   githubOrg: string;
   githubProjectId: number;
   TAs: Object[];
+}
+
+interface Student {
+  username: string;
 }
 
 interface IProjectModel extends mongoose.Model<IProjectDocument> {
