@@ -9,6 +9,7 @@ const config = {
   host: process.env.DEV_HOST,
   port: process.env.DEV_PORT,
   db: process.env.DEV_DB,
+  app_path: process.env.DEV_APP_PATH,
   ssl_key_path: process.env.SSL_KEY_PATH,
   ssl_cert_path: process.env.SSL_CERT_PATH,
   ssl_int_cert_path: process.env.SSL_INT_CERT_PATH,
@@ -38,6 +39,8 @@ if (config.env === 'test') {
 if (config.env === 'production') {
   config.host = process.env.PROD_HOST;
   config.port = process.env.PROD_PORT;
+  config.app_path = process.env.PROD_APP_PATH;
+  config.debug = process.env.DEBUG || false;
   config.db = process.env.PROD_DB;
   config.super_admin = process.env.PROD_SUPER_ADMIN;
   config.admins = process.env.PROD_ADMINS.split(' ');

@@ -297,17 +297,19 @@ export default class GitHubManager {
      * @param teamId, url, callback
      * @returns callback(null) on success, callback("error") on error
      */
-    public setIndividualUrl(username: string, url: string): Promise<string> {
-        logger.trace("AdminController::setIndividualUrl| Updating student " + username + " with url: " + url);
-        return new Promise(function (fulfill, reject) {
-            Helper.updateEntry("students.json", {'username': username}, {'url': url}, function (error: any) {
-                if (!error) {
-                    fulfill(url);
-                } else {
-                    reject('URL not assigned for: ' + url);
-                }
-            });
-        });
+    public setProjectUrl(project: IProjectDocument, url: string): Promise<IProjectDocument> {
+        logger.trace("GithubManager::setProjectUrl| Updating student " + project.name + " with url: " + url);
+        project.githubUrl = url;
+        return project.save();
+        // return new Promise(function (fulfill, reject) {
+        //     Helper.updateEntry("students.json", {'username': username}, {'url': url}, function (error: any) {
+        //         if (!error) {
+        //             fulfill(url);
+        //         } else {
+        //             reject('URL not assigned for: ' + url);
+        //         }
+        //     });
+        // });
     }
 
     /**
@@ -1410,6 +1412,10 @@ export default class GitHubManager {
                 inputGroup.url = url;
                 // let importUrl = 'https://github.com/CS310-2016Fall/cpsc310project';
                 logger.info("GitHubManager::completeIndividualProvision(..) - project created; importing url: " + importUrl);
+
+                console.log('BREAKPOINT: importUrl', importUrl);
+                console.log('BREAKPOINT: inputGroup.url', inputGroup.url);
+
                 return that.importRepoFS(importUrl, inputGroup.url);
             }).then(function () {
                 logger.info("GitHubManager::completeIndividualProvision(..) - import started; adding webhook");
@@ -1443,7 +1449,7 @@ export default class GitHubManager {
             }).then(function () {
                 logger.info("GitHubManager::completeIndividualProvision(..) - admin staff added to repo; setting individual URL");
                 // TODO: write githubURL as importUrl
-                return that.setIndividualUrl(inputGroup.student, inputGroup.url);
+                return that.setProjectUrl(inputGroup.project, inputGroup.url);
             }).then(function () {
                 logger.info("GitHubManager::completeIndividualProvision(..) - process complete for: " + JSON.stringify(inputGroup));
                 fulfill(inputGroup);
