@@ -16,6 +16,13 @@ let async = require('async');
 let _ = require('lodash');
 let apiPath = config.github_api_path;
 
+
+export interface NewGithubRepoInfo {
+    url: string;
+    name: string;
+    id: number;
+}
+
 /**
  * Represents a complete team that has been formed and where all members
  * are already registered (so we have their Github ids).
@@ -299,7 +306,7 @@ export default class GitHubManager {
      */
     public setProjectUrl(project: IProjectDocument, url: string): Promise<IProjectDocument> {
         logger.trace("GithubManager::setProjectUrl| Updating student " + project.name + " with url: " + url);
-        project.githubUrl = url;
+        project.githubState.repo.url = url;
         return project.save();
         // return new Promise(function (fulfill, reject) {
         //     Helper.updateEntry("students.json", {'username': username}, {'url': url}, function (error: any) {
@@ -350,9 +357,14 @@ export default class GitHubManager {
      * @param repoName
      * @returns {Promise<{}>}
      */
-    public createRepo(repoName: string): Promise<string> {
+    public createRepo(repoName: string): Promise<NewGithubRepoInfo> {
         let ctx = this;
-        let url = '';
+        let newRepoInfo: NewGithubRepoInfo = {
+            url: '',
+            name: '',
+            id: 0,
+        }
+
         logger.info("GitHubManager::createRepo( " + repoName + " ) - start");
         return new Promise(function (fulfill, reject) {
             var options = {
@@ -366,7 +378,7 @@ export default class GitHubManager {
                 body: {
                     name: repoName,
                     // In Dev and Test, Github free Org Repos cannot be private. 
-                    private: config.env === 'production' ? true : false,
+                    private: true, // config.env === 'production' ? true : false,
                     has_issues: true,
                     has_wiki: false,
                     has_downloads: false,
@@ -376,13 +388,16 @@ export default class GitHubManager {
             };
 
             rp(options).then(function (body: any) {
-                url = body.html_url;
-                logger.info("GitHubManager::createRepo(..) - success; url: " + url + "; delaying 5 seconds (so target is ready for import)");
+                newRepoInfo.url = body.html_url;
+                newRepoInfo.name = body.name;
+                newRepoInfo.id = body.id;
+
+                logger.info("GitHubManager::createRepo(..) - success; url: " + newRepoInfo.url + "; delaying 5 seconds (so target is ready for import)");
 
                 return ctx.delay(ctx.DELAY_SEC);
             }).then(function () {
                 logger.info("GitHubManager::provisionProject(..) - repo created: " + repoName);
-                fulfill(url);
+                fulfill(newRepoInfo);
             }).catch(function (err: any) {
                 logger.error("GitHubManager::createRepo(..) - ERROR: " + JSON.stringify(err));
                 reject(err);
@@ -1275,7 +1290,7 @@ export default class GitHubManager {
 
     function addFilesToRepo() {
         logger.info('GithubManager::cloneRepo() addFilesToRepo()');
-        return exec(`cd ${tempPath} && git add . && git commit -m "Student Project Files Committed"`)
+        return exec(`cd ${tempPath} && git add . && git commit -m "Starter files"`)
                 .then(function (result: any) {
                     logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
                     console.log('stdoutSOMETHING: ', result.stdout);
@@ -1353,8 +1368,9 @@ export default class GitHubManager {
             that.delay(inputGroup.teamIndex * DELAY).then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - creating project: " + inputGroup.projectName);
                 return that.createRepo(inputGroup.projectName);
-            }).then(function (url: string) {
-                inputGroup.url = url;
+            }).then(function (newRepoInfo: NewGithubRepoInfo) {
+                
+                inputGroup.url = newRepoInfo.url;
                 // let importUrl = 'https://github.com/CS310-2016Fall/cpsc310project';
                 logger.info("GitHubManager::completeTeamProvision(..) - project created; importing url: " + importUrl);
                 return that.importRepoFS(importUrl, inputGroup.url);
@@ -1418,14 +1434,19 @@ export default class GitHubManager {
             that.delay(inputGroup.projectIndex * DELAY).then(function () {
                 logger.info("GitHubManager::completeIndividualProvision(..) - creating project: " + inputGroup.projectName);
                 return that.createRepo(inputGroup.projectName);
-            }).then(function (url: string) {
-                inputGroup.url = url;
+            }).then(function (newRepoInfo: NewGithubRepoInfo) {
+                inputGroup.url = newRepoInfo.url;
                 // let importUrl = 'https://github.com/CS310-2016Fall/cpsc310project';
                 logger.info("GitHubManager::completeIndividualProvision(..) - project created; importing url: " + importUrl);
-
-                console.log('BREAKPOINT: importUrl', importUrl);
-                console.log('BREAKPOINT: inputGroup.url', inputGroup.url);
-
+                inputGroup.project.githubState.repo.name = newRepoInfo.name;
+                inputGroup.project.githubState.repo.id = newRepoInfo.id;
+                inputGroup.project.save()
+                    .then((project: IProjectDocument) => {
+                        console.log('SAVING DOCUMENT', project);
+                    })
+                    .catch((err: any) => {
+                        logger.error(`GithubManager::completeIndividualProvision() inputGroup.project.save() ERROR ${err}`);
+                    });
                 return that.importRepoFS(importUrl, inputGroup.url);
             }).then(function () {
                 logger.info("GitHubManager::completeIndividualProvision(..) - import started; adding webhook");
@@ -1460,7 +1481,8 @@ export default class GitHubManager {
                 logger.info("GitHubManager::completeIndividualProvision(..) - admin staff added to repo; setting individual URL");
                 // TODO: write githubURL as importUrl
                 return that.setProjectUrl(inputGroup.project, inputGroup.url);
-            }).then(function () {
+            }).then(function (project: IProjectDocument) {
+                console.log('SAVED URL', project);
                 logger.info("GitHubManager::completeIndividualProvision(..) - process complete for: " + JSON.stringify(inputGroup));
                 fulfill(inputGroup);
             }).catch(function (err) {
@@ -1486,7 +1508,7 @@ export default class GitHubManager {
             that.delay((inputGroup.teamIndex * 5000) + initDelay).then(function () {
                 logger.info("GitHubManager::provisionProject(..) - creating repo: " + repoName);
                 return that.createRepo(repoName);
-            }).then(function (url: string) {
+            }).then(function (newRepoInfo: NewGithubRepoInfo) {
                 logger.info("GitHubManager::provisionProject(..) - repo created; importing url: " + importURL);
                 return that.importRepoToNewRepo(repoName, importURL);
             }).then(function () {

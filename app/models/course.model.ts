@@ -9,6 +9,7 @@ interface ICourseDocument extends mongoose.Document {
   modules: string[];
   customData: any;
   classList: Object[];
+  batchDeliverables: Object[];
   deliverables: Object[];
   grades: [Object];
   labSections: [Object];
@@ -64,6 +65,9 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   },
   classList: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  },
+  batchDeliverables: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }],
   },
   deliverables: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }],

@@ -21,7 +21,69 @@ import * as auth from '../middleware/auth.middleware';
 
   // if we want to delete projects instead of creating them. be careful with this!
   const CLEAN = false;
-  
+
+
+function fixGithubReposForProjects(payload: any) {
+  // requires payload.courseId, payload.deliverableName, payload.githubOrg
+  let reposInOrg: any;
+  let projects: any;
+  let course: ICourseDocument;
+  let deliv: IDeliverableDocument;
+
+  return getRepos(payload.githubOrg)
+    .then((_reposInOrg: [Object]) => {
+      reposInOrg = _reposInOrg;
+      return _reposInOrg;
+    })
+    .then(() => {
+      return Course.findOne({ courseId: payload.courseId })
+        .then((_course: ICourseDocument) => {
+          if (_course) {
+            course = _course;
+            return _course;
+          }
+          throw `Course not found`;
+        })
+        .catch(err => {
+          logger.error(`GithubController:fixGithubReposForProjects ERROR ${err}`);
+        });
+    })
+    .then(() => {
+      return Deliverable.findOne({ courseId: course._id, name: payload.deliverableName })
+        .then((_deliv: IDeliverableDocument) => {
+          if (_deliv) {
+            deliv = _deliv;
+            return deliv;
+          }
+          throw `Could not find Deliverable ${payload.deliverableName} under ${course.courseId}`;
+        })
+        .catch(err => {
+          logger.error(`CourseController::Deliverable.findOne ERROR ${err}`);
+        });
+    })
+    .then(() => {
+      return Project.find({ courseId: course._id, deliverableId: deliv._id })
+        .then((_projects: IProjectDocument[]) => {
+          if (_projects) {
+            console.log('reposInOrg', reposInOrg);
+            console.log('projects', projects);
+            console.log('course', course);
+            console.log('deliverable', deliv);
+            // return _projects;
+            return reposInOrg;
+          }
+          throw `Could not find Projects under ${course.courseId} and ${deliv.name}`;
+        })
+        .catch(err => {
+          logger.error(`CourseController::Project.find ERROR ${err}`);
+        });
+    })
+    .catch(err => {
+      logger.error(`GithubController::fixGithubReposForProjects ERROR ${err}`);
+    });
+
+}
+
 function getRepos(orgName: string): Promise<[Object]> {
   let githubManager = new GitHubManager(orgName);
   return githubManager.getRepos(orgName);
@@ -43,7 +105,7 @@ function deleteRepos(payload: any): Promise<[string]> {
   })]);
 }
 
-function createTeamName(course: ICourseDocument, delivName: string, teamNum: string) {
+function createRepoName(course: ICourseDocument, delivName: string, teamNum: string) {
   const CPSC_PREPENDAGE = 'cpsc';
   let courseSettings = course.settings;
 
@@ -126,9 +188,9 @@ function createGithubReposForTeams(payload: any): Promise<any> {
     function buildTeamsForSelectedDeliv(_teams: ITeamDocument[]) {
       for (let i = 0; i < _teams.length; i++) {
         let inputGroup = {
-          teamName: createTeamName(course, payload.deliverableName, _teams[i].name),
+          teamName: createRepoName(course, payload.deliverableName, _teams[i].name),
           members: ['steca', 'autotest-01'],
-          projectName: createTeamName(course, payload.deliverableName, _teams[i].name),
+          projectName: createRepoName(course, payload.deliverableName, _teams[i].name),
           teamIndex: i,
           team: _teams[i].name,
           _team: _teams[i],
@@ -141,9 +203,9 @@ function createGithubReposForTeams(payload: any): Promise<any> {
     function buildTeamsByBatch(_teams: ITeamDocument[]) {
       for (let i = 0; i < _teams.length; i++) {
         let inputGroup = {
-          teamName: createTeamName(course, payload.deliverableName, _teams[i].name),
+          teamName: createRepoName(course, payload.deliverableName, _teams[i].name),
           members: ['steca', 'autotest-01'],
-          projectName: createTeamName(course, payload.deliverableName, _teams[i].name),
+          projectName: createRepoName(course, payload.deliverableName, _teams[i].name),
           teamIndex: i,
           team: _teams[i].name,
           _team: _teams[i],
@@ -241,8 +303,8 @@ function createGithubReposForProjects(payload: any): Promise<any> {
     function buildProjectsForSelectedDeliv(_projects: IProjectDocument[]) {
       for (let i = 0; i < _projects.length; i++) {
         let inputGroup = {
-          repoName: createTeamName(course, payload.deliverableName, _projects[i].name),
-          projectName: createTeamName(course, payload.deliverableName, _projects[i].name),
+          repoName: createRepoName(course, payload.deliverableName, _projects[i].name),
+          projectName: createRepoName(course, payload.deliverableName, _projects[i].name),
           projectIndex: i,
           student: _projects[i].student.username,
           project: _projects[i],
@@ -257,7 +319,7 @@ function createGithubReposForProjects(payload: any): Promise<any> {
       return Project.find({ 
         courseId: course._id,
         deliverableId: deliv._id,
-        githubUrl: { '$ne': '' },
+        'githubState.repo.url': '',
       })
         .populate({ path: 'student deliverableId courseId' })
         .exec()
@@ -297,4 +359,4 @@ function getTeams(payload: any) {
 }
 
 export { getTeams, createGithubTeam, createGithubReposForTeams, createGithubReposForProjects,
-        getRepos, deleteRepos };
+        getRepos, deleteRepos, fixGithubReposForProjects };

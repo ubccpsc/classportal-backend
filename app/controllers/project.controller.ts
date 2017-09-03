@@ -4,6 +4,7 @@ import * as parse from 'csv-parse';
 import { IProjectDocument, Project } from '../models/project.model';
 import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
 import { ICourseDocument, Course } from '../models/course.model';
+import { GithubState, GithubRepo, defaultGithubState } from '../models/github.interfaces';
 import { IUserDocument, User } from '../models/user.model';
 import { logger } from '../../utils/logger';
 import { config } from '../../config/env';
@@ -34,7 +35,6 @@ function generateProjects(payload: any) {
         throw `Cannot generate projects for MarkByBatch Team groups`;
       }
       course = _course;
-      console.log('the course', course);
       return _course;
     })
     .then((_course: ICourseDocument) => {
@@ -55,14 +55,12 @@ function generateProjects(payload: any) {
         
       for (let i = 0; i < course.classList.length; i++) {
         let student: any = course.classList[i];
-
         let newProject: object = {
           student: student._id,
           deliverableId: deliv._id,
           courseId: course._id,
           name: '',
-          githubUrl: '',
-          githubRepoId: '',
+          githubState: defaultGithubState,
         };
 
         bulkInsertProjectArray.push(newProject);

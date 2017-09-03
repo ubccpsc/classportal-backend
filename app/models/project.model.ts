@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { logger } from '../../utils/logger';
+import { GithubState, GithubRepo, defaultGithubState, defaultGithubRepo } from './github.interfaces';
 
 interface IProjectDocument extends mongoose.Document {
   student: Student;
@@ -9,8 +10,10 @@ interface IProjectDocument extends mongoose.Document {
   name: string;
   githubUrl: string;
   githubOrg: string;
-  githubProjectId: number;
+  githubRepoName: string;
+  githubRepoId: number;
   TAs: Object[];
+  githubState: GithubState;
 }
 
 interface Student {
@@ -34,8 +37,8 @@ const ProjectSchema = new mongoose.Schema({
   githubUrl: {
     type: String,
   },
-  githubProjectId: {
-    type: Number,
+  githubRepoName: {
+    type: String,
   },
   githubRepoId: {
     type: Number,
@@ -51,6 +54,13 @@ const ProjectSchema = new mongoose.Schema({
   },
   TAs: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  },
+  githubState: {
+      repo: {
+        url: { type: String },
+        id: { type: Number },
+        name: { type: String },
+      },
   },
 });
 
