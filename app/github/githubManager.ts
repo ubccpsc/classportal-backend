@@ -1507,6 +1507,9 @@ export default class GitHubManager {
                 logger.info("GitHubManager::provisionProject(..) - creating repo: " + repoName);
                 return that.createRepo(repoName);
             }).then(function (newRepoInfo: NewGithubRepoInfo) {
+                inputGroup._team.githubState.repo.id = newRepoInfo.id;
+                inputGroup._team.githubState.repo.name = newRepoInfo.name;
+                inputGroup._team.save().catch((err) => { logger.error(`completeTeamProvision::_team.save() ERROR ${err}`); })
                 logger.info("GitHubManager::provisionProject(..) - repo created; importing url: " + importURL);
                 return that.importRepoToNewRepo(repoName, importURL);
             }).then(function () {
