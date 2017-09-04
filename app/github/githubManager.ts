@@ -1381,7 +1381,6 @@ export default class GitHubManager {
             }).then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - webhook added; creating team: " + inputGroup.teamName);
                 return that.createTeam(inputGroup.teamName, 'push');
-
             }).then(function (teamDeets: any) {
                 var teamId = teamDeets.teamId;
                 logger.info("GitHubManager::completeTeamProvision(..) - team created ( " + teamId + " ) ; adding members: " + JSON.stringify(inputGroup.members));
