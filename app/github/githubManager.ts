@@ -261,7 +261,7 @@ export default class GitHubManager {
         logger.trace("AdminController::setGithubUrl| Updating team with url: " + url);
         return new Promise(function (fulfill, reject) {
             if (typeof url != 'undefined') {
-                team.githubUrl = url;
+                team.githubState.repo.url = url;
                 team.save()
                     .then((team: ITeamDocument) => {
                         return team;
@@ -284,7 +284,8 @@ export default class GitHubManager {
         logger.trace("AdminController::setGithubUrl| Updating teamId with " + teamId);
         return new Promise(function (fulfill, reject) {
             if (typeof teamId != 'undefined') {
-                team.githubTeamId = teamId;
+                console.log(team);
+                team.githubState.team.id = teamId;
                 team.save()
                     .then((team: ITeamDocument) => {
                         fulfill(team.teamId);
@@ -1361,8 +1362,6 @@ export default class GitHubManager {
         logger.info("GitHubManager::completeTeamProvision(..) - start: " + JSON.stringify(inputGroup));
         return new Promise(function (fulfill, reject) {
             let teamProvisionRecord: any;
-
-            console.log(inputGroup);
             const DELAY = that.DELAY_SEC * 3; // 2 would be enough, but let's just be safe
             // slow down creation to avoid getting in trouble with GH
             that.delay(inputGroup.teamIndex * DELAY).then(function () {

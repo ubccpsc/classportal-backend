@@ -8,10 +8,7 @@ interface IProjectDocument extends mongoose.Document {
   repoId: string;
   labId: string;
   name: string;
-  githubUrl: string;
   githubOrg: string;
-  githubRepoName: string;
-  githubRepoId: number;
   TAs: Object[];
   githubState: GithubState;
 }
@@ -57,9 +54,9 @@ const ProjectSchema = new mongoose.Schema({
   },
   githubState: {
       repo: {
-        url: { type: String },
-        id: { type: Number },
-        name: { type: String },
+        url: { type: String, default: '' },
+        id: { type: Number, default: 0 },
+        name: { type: String, default: '' },
       },
   },
 });

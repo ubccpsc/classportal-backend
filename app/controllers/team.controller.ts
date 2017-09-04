@@ -4,6 +4,7 @@ import { ITeamDocument, Team } from '../models/team.model';
 import { ICourseDocument, Course } from '../models/course.model';
 import { IUserDocument, User } from '../models/user.model';
 import { IDeliverableDocument, Deliverable } from '../models/deliverable.model';
+import { GithubState, GithubRepo, defaultGithubState } from '../models/github.interfaces';
 import GitHubManager from '../github/githubManager';
 import * as auth from '../middleware/auth.middleware';
 
@@ -323,6 +324,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
   let course_id: string;
   let course: ICourseDocument;
   let deliverable: IDeliverableDocument;
+  let teams: ITeamDocument[];
 
   return Course.findOne({ courseId: payload.courseId })
     .exec()
@@ -352,13 +354,12 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
         // if entails that we want to cross-check all all team members for multiple Deliverables
         // in markByBatch logic.
           return getDeliverables(course).then((delivs: IDeliverableDocument[]) => {
-            console.log('THE DELIVS', delivs);
             return Team.find({ courseId: course.id, deliverableIds: { '$in': delivs } })
-              .then((teams: ITeamDocument[]) => {
-                console.log('THE TEAMS', teams);
+              .then((_teams: ITeamDocument[]) => {
+                teams = _teams;
                 let filteredUsers: any;
-                if (teams.length > 0) {
-                  filteredUsers = filterUsersAlreadyInTeam(teams);
+                if (_teams.length > 0) {
+                  filteredUsers = filterUsersAlreadyInTeam(_teams);
                   return splitUsersIntoArrays(filteredUsers);
                 }
                 return splitUsersIntoArrays(course.classList);
@@ -436,6 +437,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
                         courseId: course_id,
                         deliverableId: deliv._id,
                         members: sortedTeamIdList[i],
+                        githubState: defaultGithubState,
                       };
                       bulkInsertArray.push(teamObject);
                     }
@@ -444,7 +446,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
                   }
                   
                   // adds the team number Name property used by AutoTest
-                  let counter = 1;
+                  let counter = teams.length + 1;
                   for (let i = 0; i < bulkInsertArray.length; i++) {
                     bulkInsertArray[i].name = TEAM_PREPENDAGE + counter;
                     counter++;
@@ -499,6 +501,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
                   courseId: course_id,
                   deliverableIds,
                   members: sortedTeamIdList[i],
+                  githubState: defaultGithubState,
                 };
                 bulkInsertArray.push(teamObject);
               }
@@ -507,7 +510,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
             }
 
             // adds the team number Name property used by AutoTest
-            let counter = 1;
+            let counter = teams.length + 1;
             for (let i = 0; i < bulkInsertArray.length; i++) {
               bulkInsertArray[i].name = TEAM_PREPENDAGE + counter;
               counter++;
@@ -556,12 +559,9 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
         for (let i = 0; i < allTeamMembers.length; i++) {
           let userAlreadyOnTeam = allTeamMembers[i].toString();
 
-          // console.log(`userAlreadyonTeamString ${userAlreadyOnTeam.toString()} 
-          // userInClassString: ${userInClassString}`);
           if (userInClassString.indexOf(userAlreadyOnTeam) > -1) {
             existsOnTeam = true;
           }
-          console.log(!existsOnTeam);
         }
         // we only get the users that do not exist on a team.
         return !existsOnTeam;
@@ -658,7 +658,7 @@ let updateTeam = function(team_Id: string, updatedModel: ITeamDocument) {
       }
       t.set('members', []);
       t.set('TAs', []);
-      t.githubUrl = updatedModel.githubUrl;
+      t.githubState.repo.url = updatedModel.githubState.repo.url;
 
       // Only add non-duplicates
       for (let i = 0; i < updatedModel.members.length; i++) {

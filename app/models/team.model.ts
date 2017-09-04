@@ -1,5 +1,7 @@
 import * as mongoose from 'mongoose';
 import { logger } from '../../utils/logger';
+import { GithubState, GithubRepo, GithubTeam, defaultGithubState, 
+  defaultGithubRepo } from './github.interfaces';
 
 interface ITeamDocument extends mongoose.Document {
   course: Object;
@@ -9,9 +11,9 @@ interface ITeamDocument extends mongoose.Document {
   deliverableId: Object;
   deliverableIds: Object[];
   name: string;
-  githubUrl: string;
   githubOrg: string;
-  githubTeamId: number;
+  githubState: GithubState;
+
   TAs: Object[];
 }
 
@@ -57,6 +59,16 @@ const TeamSchema = new mongoose.Schema({
   },
   TAs: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  },
+  githubState: {
+    repo: {
+      url: { type: String, default: '' },
+      id: { type: Number, default: 0 },
+      name: { type: String, default: '' },
+    },
+    team: {
+      id: { type: Number, default: 0 }
+    }
   },
 });
 

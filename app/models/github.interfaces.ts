@@ -6,15 +6,25 @@ export interface GithubRepo {
 
 export interface GithubState { 
   repo: GithubRepo;
+  team: GithubTeam;
+}
+
+export interface GithubTeam {
+  id: number;
 }
 
 export const defaultGithubRepo = {
-    url: '',
-    id: 0,
-    name: '',
-  };
+  url: '',
+  id: 0,
+  name: '',
+};
+
+export const defaultTeam = {
+  id: 0,
+};
 
 export const defaultGithubState = {
     repo: defaultGithubRepo,
+    team: defaultTeam,
   };
 
