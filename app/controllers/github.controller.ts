@@ -23,7 +23,7 @@ import * as auth from '../middleware/auth.middleware';
   const CLEAN = false;
 
 
-function fixGithubReposForProjects(payload: any) {
+function repairProjectRepos(payload: any) {
   // requires payload.courseId, payload.deliverableName, payload.githubOrg
   let reposInOrg: any;
   let projects: any;
@@ -187,9 +187,12 @@ function createGithubReposForTeams(payload: any): Promise<any> {
 
     function buildTeamsForSelectedDeliv(_teams: ITeamDocument[]) {
       for (let i = 0; i < _teams.length; i++) {
+        console.log('teams output', _teams[i].members);
         let inputGroup = {
           teamName: createRepoName(course, payload.deliverableName, _teams[i].name),
-          members: ['steca', 'autotest-01'],
+          members: _teams[i].members.map((user: IUserDocument) => {
+            return user.username;
+          }),
           projectName: createRepoName(course, payload.deliverableName, _teams[i].name),
           teamIndex: i,
           team: _teams[i].name,
@@ -204,7 +207,9 @@ function createGithubReposForTeams(payload: any): Promise<any> {
       for (let i = 0; i < _teams.length; i++) {
         let inputGroup = {
           teamName: createRepoName(course, payload.deliverableName, _teams[i].name),
-          members: ['steca', 'autotest-01'],
+          members: _teams[i].members.map((user: IUserDocument) => {
+            return user.username;
+          }),
           projectName: createRepoName(course, payload.deliverableName, _teams[i].name),
           teamIndex: i,
           team: _teams[i].name,
@@ -359,4 +364,4 @@ function getTeams(payload: any) {
 }
 
 export { getTeams, createGithubTeam, createGithubReposForTeams, createGithubReposForProjects,
-        getRepos, deleteRepos, fixGithubReposForProjects };
+        getRepos, deleteRepos, repairProjectRepos };

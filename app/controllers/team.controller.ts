@@ -322,6 +322,7 @@ function getTeams(payload: any) {
 function randomlyGenerateTeamsPerCourse(payload: any) {
   let course_id: string;
   let course: ICourseDocument;
+  let deliverable: IDeliverableDocument;
 
   return Course.findOne({ courseId: payload.courseId })
     .exec()
@@ -329,9 +330,59 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       if (_course) {
         course_id = _course._id;
         course = _course;
-        return splitUsersIntoArrays(course);
+        return _course;
       }
       throw `Could not find course ${payload.courseId}`;
+    })
+    .then((course: ICourseDocument) => {
+      return Deliverable.findOne({ courseId: course._id, deliverableId: payload.deliverableName })
+        .then((_deliv: IDeliverableDocument) => {
+          if (_deliv) {
+            deliverable = _deliv;
+            return _deliv;
+          }
+          throw `No deliverable found under ${course.courseId} and ${payload.deliverableName}`;
+        })
+        .catch(err => {
+          logger.error(`TeamController::Deliverable.findOne() ERROR ${err}`);
+        });
+    })
+    .then((_deliv: IDeliverableDocument) => {
+        if (course.settings.markDelivsByBatch) {
+        // if entails that we want to cross-check all all team members for multiple Deliverables
+        // in markByBatch logic.
+          return getDeliverables(course).then((delivs: IDeliverableDocument[]) => {
+            console.log('THE DELIVS', delivs);
+            return Team.find({ courseId: course.id, deliverableIds: { '$in': delivs } })
+              .then((teams: ITeamDocument[]) => {
+                console.log('THE TEAMS', teams);
+                let filteredUsers: any;
+                if (teams.length > 0) {
+                  filteredUsers = filterUsersAlreadyInTeam(teams);
+                  return splitUsersIntoArrays(filteredUsers);
+                }
+                return splitUsersIntoArrays(course.classList);
+              })
+              .catch(err => {
+                logger.error(`TeamController::getDeliverables() filterByTeams() markByBatch ERROR ${err}`);
+              });
+          })
+          .catch(err => {
+            logger.error(`getDeliverables(${course.courseId}) ${err}`);
+          });
+        }
+        else {
+          // else entails that we only want to cross-check team members for a single Deliverable
+          // in single deliverable logic.
+          return Team.find({ courseId: course.id, deliverableId: payload.deliverableName })
+            .then((teams: ITeamDocument[]) => {
+              let filteredUsers: any = filterUsersAlreadyInTeam(teams);
+              return splitUsersIntoArrays(filteredUsers);
+            })
+            .catch(err => {
+              logger.error(`TeamController::getDeliverables() filterByTeams() singleDeliv ERROR ${err}`);
+            });
+        }
     })
     .then((sortedTeamIdList: string[][]) => {
       return createTeamForEachTeamList(sortedTeamIdList);
@@ -370,9 +421,9 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
           .then((deliv: IDeliverableDocument) => {
             Team.find({ courseId: course._id, deliverableId: deliv._id })
               .then((teams: ITeamDocument[]) => {
-                if (teams.length > 0) {
-                  throw `Teams already exist for Deliverable. Cannot generate teams.`;
-                }
+                // if (teams.length > 0) {
+                //   throw `Teams already exist for Deliverable. Cannot generate teams.`;
+                // }
                 return false;
               })
               .then((teamsExist: Boolean) => {
@@ -424,9 +475,9 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
           .then((delivs: IDeliverableDocument[]) => {
             return checkIfTeamsAlreadyExistForBatch(delivs, course)
               .then((teamsExist: Boolean) => {
-                if (teamsExist) {
-                  throw `Teams already exist. Please remove teams before generating new teams`;
-                }
+                // if (teamsExist) {
+                //   throw `Teams already exist. Please remove teams before generating new teams`;
+                // }
                 return delivs;
               })
               .catch((err: any) => {
@@ -447,7 +498,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
                 let teamObject = {
                   courseId: course_id,
                   deliverableIds,
-                  members: ['598f98b6d1fa8ec4ee03d031', '918f98b6d1fa8ec4ee03d031'],
+                  members: sortedTeamIdList[i],
                 };
                 bulkInsertArray.push(teamObject);
               }
@@ -489,13 +540,41 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
         });
     }
 
+    function filterUsersAlreadyInTeam(teams: ITeamDocument[]) {
+      let allTeamMembers: any = new Array();
+      // compile all Team members on Teams to filter out in next method
+      for (let i = 0; i < teams.length; i++) {
+        teams[i].members.map((delivId: string) => {
+          allTeamMembers.push(delivId);
+        });
+      }
 
-    function splitUsersIntoArrays(course: ICourseDocument): Promise<Object[]> {
+      let filteredList = course.classList.filter((userInClassId: string) => {
+        let existsOnTeam: boolean = false;
+        let userInClassString = userInClassId.toString();
+
+        for (let i = 0; i < allTeamMembers.length; i++) {
+          let userAlreadyOnTeam = allTeamMembers[i].toString();
+
+          // console.log(`userAlreadyonTeamString ${userAlreadyOnTeam.toString()} 
+          // userInClassString: ${userInClassString}`);
+          if (userInClassString.indexOf(userAlreadyOnTeam) > -1) {
+            existsOnTeam = true;
+          }
+          console.log(!existsOnTeam);
+        }
+        // we only get the users that do not exist on a team.
+        return !existsOnTeam;
+      });
+      return filteredList;
+    }
+
+    function splitUsersIntoArrays(usersList: any): Promise<Object[]> {
       let sorted: any = { teams: new Array() };
 
       // divides number of teams needed and rounds up
       let teamSize = typeof payload.teamSize === 'undefined' ? course.maxTeamSize : payload.teamSize;
-      const numberOfTeams = Math.ceil(course.classList.length / teamSize);
+      const numberOfTeams = Math.ceil(usersList.length / teamSize);
       // creates arrays for each Team
       for (let i = 0; i < numberOfTeams; i++) {
         sorted.teams.push(new Array());
@@ -504,8 +583,8 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       let maxTeamSize = course.maxTeamSize;
       let teamNumber = 0;
 
-      for (let i = 0; i < course.classList.length; i++) {
-        sorted.teams[teamNumber].push(course.classList[i]);
+      for (let i = 0; i < usersList.length; i++) {
+        sorted.teams[teamNumber].push(usersList[i]);
         teamNumber++;
         if (teamNumber % numberOfTeams == 0) { 
             teamNumber = 0;

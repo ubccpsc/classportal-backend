@@ -6,6 +6,8 @@ interface ITeamDocument extends mongoose.Document {
   teamId: number;
   members: Object[];
   deliverable: Object;
+  deliverableId: Object;
+  deliverableIds: Object[];
   name: string;
   githubUrl: string;
   githubOrg: string;

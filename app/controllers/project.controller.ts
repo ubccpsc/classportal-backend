@@ -13,7 +13,8 @@ import * as request from '../helpers/request';
 const PROJECT_PREPEND = 'project';
 
 /**
-* Determines if Github Projectname is already registered in Project object
+* Generates projects for a Deliverable and Course only for classList Users who are 
+// not already on in a Project for same Deliverable and Course combination.
 * @param courseId
 * @param labId
 * @param deliverableName
@@ -116,7 +117,7 @@ function generateProjects(payload: any) {
           else {
 
             // label 
-            // else means that no other projects exist in repo and we should start 
+            // else entails that no other projects exist in repo and we should start 
             // counting and labeling from 1
 
             let counter = 1;
