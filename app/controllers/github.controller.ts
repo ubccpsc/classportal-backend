@@ -29,6 +29,10 @@ function repairProjectRepos(payload: any) {
   let projects: any;
   let course: ICourseDocument;
   let deliv: IDeliverableDocument;
+  let report: any = new Object();
+  let reposUnderDeliv: any = [];
+
+  const DELIVERABLE_NAME = payload.deliverableName.toString();
 
   return getRepos(payload.githubOrg)
     .then((_reposInOrg: [Object]) => {
@@ -64,13 +68,47 @@ function repairProjectRepos(payload: any) {
     .then(() => {
       return Project.find({ courseId: course._id, deliverableId: deliv._id })
         .then((_projects: IProjectDocument[]) => {
+          console.log('courseID: ', course._id);
+          console.log('deliverableId', deliv._id);
           if (_projects) {
-            console.log('reposInOrg', reposInOrg);
             console.log('projects', projects);
-            console.log('course', course);
-            console.log('deliverable', deliv);
-            // return _projects;
-            return reposInOrg;
+            projects = _projects;
+            
+            // get Github repos that have name containing deliverableName flag
+            Object.keys(reposInOrg).forEach((key: any) => {
+              let searchString = '_' + DELIVERABLE_NAME + '_';
+              let repoName = reposInOrg[key].name.toString();
+              if (repoName.indexOf(searchString) > -1 ) {
+                reposUnderDeliv.push(reposInOrg[key]);
+              }
+            });
+
+            report.info = { 
+              name: `PROJECT HEALTH CHECK for ${payload.deliverableName} and ${payload.courseId}`,
+              deliverable: payload.deliverableName,
+              courseNum: payload.courseId,
+           };
+
+            // get Project numbers that exist under DelivName and Course
+            report.numberOfProjects = getNumberOfProjects();
+            report.repoNames = reposUnderDeliv.map((repo: any) => {
+              return repo.name;
+            });
+            report.projectNames = projects.map((project: IProjectDocument) => {
+              return project.name;
+            });
+
+            // get report Number of Repos with Deliv from Github
+            report.numberOfCreatedRepos = getNumberOfGithubRepos();
+            let collaborators: any = [];
+            for (let i = 0; i < reposUnderDeliv.length; i++) {
+              getCollaborators(reposUnderDeliv[i].name, payload.orgName)
+                .then((result: any) => {
+                  collaborators.push(result);
+                });
+            }
+            return collaborators;
+            // return report;
           }
           throw `Could not find Projects under ${course.courseId} and ${deliv.name}`;
         })
@@ -81,6 +119,27 @@ function repairProjectRepos(payload: any) {
     .catch(err => {
       logger.error(`GithubController::fixGithubReposForProjects ERROR ${err}`);
     });
+
+
+    function checkIfRepoCreated() {
+
+    }
+
+    function getNumberOfGithubRepos(): Number {
+      return reposUnderDeliv.length;
+    }
+
+    function getNumberOfProjects(): Number {
+      return projects.length;
+    }
+
+    function getCollaborators(repoName: string, orgName: string): Promise<any> {
+      let githubManager = new GitHubManager(orgName);
+      return githubManager.getCollaboratorsFromRepo(repoName)
+        .then((result: any) => {
+          return result;
+        });
+    }
 
 }
 
@@ -314,9 +373,14 @@ function createGithubReposForProjects(payload: any): Promise<any> {
           student: _projects[i].student.username,
           project: _projects[i],
           projects: _projects,
+          previousRepoId: _projects[i].githubState.repo.id,
           orgName: course.githubOrg
         };
-        githubManager.completeIndividualProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
+        if (payload.reAddUsers) {
+          githubManager.reAddIndividualUser(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
+        } else {
+          githubManager.completeIndividualProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
+        }
       }
     }
 

@@ -50,6 +50,7 @@ export interface ProjectRepoDescription {
     projectIndex: number;
     projects?: IProjectDocument[];
     project?: IProjectDocument;
+    previousRepoId?: number;
     orgName?: string;
     labName?: string;
 }
@@ -346,6 +347,39 @@ export default class GitHubManager {
                 fulfill(body);
             }).catch(function (err: any) {
                 logger.error("GitHubManager::getRepos(..) - ERROR: " + JSON.stringify(err));
+                reject(err);
+            });
+
+        });
+    }
+
+    /**
+     * Gets a list of repos that are in an organization.
+     *
+     * @param repoId
+     * @param orgName
+     * @returns {Promise<[object]>}
+     */
+    public getRepoById(repoId: number, orgName: string): Promise<object> {
+        let ctx = this;
+        logger.info("GitHubManager::getRepoById( " + orgName + " ) - start");
+        return new Promise(function (fulfill, reject) {
+            var options = {
+                method: 'GET',
+                uri: `${apiPath}/orgs/` + orgName + '/repos/' + repoId,
+                headers: {
+                    'Authorization': ctx.GITHUB_AUTH_TOKEN,
+                    'User-Agent': ctx.GITHUB_USER_NAME,
+                    'Accept': 'application/json'
+                },
+                json: true
+            };
+
+            rp(options).then(function (body: any) {
+                logger.info("GitHubManager::getRepoById(..) - success; gotRepos():");
+                fulfill(body);
+            }).catch(function (err: any) {
+                logger.error("GitHubManager::getRepoById(..) - ERROR: " + JSON.stringify(err));
                 reject(err);
             });
 
@@ -723,6 +757,44 @@ export default class GitHubManager {
         });
     }
 
+    /**
+     * NOTE: needs the team Id (number), not the team name (string)!
+     *
+     * @param teamId
+     * @param repoName
+     * @param permission ('pull', 'push', 'admin')
+     * @returns {Promise<{}>}
+     */
+    public getCollaboratorsFromRepo(repoName: string): Promise<{}> {
+        let ctx = this;
+        logger.info("GitHubManager::getCollaboratorsFromRepo( " + ", " + repoName + " ) - start");
+        return new Promise(function (fulfill, reject) {
+
+            var options = {
+                method: 'PUT',
+                uri: `${apiPath}/repos/` + ctx.ORG_NAME + '/' + repoName + '/collaborators/',
+
+                headers: {
+                    'Authorization': ctx.GITHUB_AUTH_TOKEN,
+                    'User-Agent': ctx.GITHUB_USER_NAME,
+                    'Accept': 'application/json'
+                },
+
+                json: true
+            };
+
+            rp(options).then(function (body: any) {
+                logger.info("GitHubManager::getCollaboratorsFromRepo(..) - success; user: ; repo: " + repoName);
+                // onSuccess(body);
+                fulfill();
+            }).catch(function (err: any) {
+                logger.error("GitHubManager::getCollaboratorsFromRepo(..) - ERROR: " + err);
+                reject(err);
+            });
+        });
+    }
+
+    
     /**
      * NOTE: needs the team Id (number), not the team name (string)!
      *
@@ -1422,6 +1494,29 @@ export default class GitHubManager {
         });
     }
 
+    reAddIndividualUser(inputGroup: ProjectRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<ProjectRepoDescription> {
+        let that = this;
+        logger.info("GitHubManager::reAddIndividualUser(..) - start: " + JSON.stringify(inputGroup));
+        return new Promise(function (fulfill, reject) {
+
+            const DELAY = 10000;
+            // slow down creation to avoid getting in trouble with GH
+            that.delay(inputGroup.projectIndex * DELAY).then(function () {
+                logger.info("GitHubManager::reAddIndividualUser(..) - creating project: " + inputGroup.projectName);
+                return that.addCollaboratorToRepo(inputGroup.student, inputGroup.projectName, 'push');
+            }).catch(function (err) {
+                logger.error("******");
+                logger.error("******");
+                logger.error("Input Description: " + JSON.stringify(inputGroup));
+                logger.error("GitHubManager::reAddIndividualUser(..) - ERROR: " + err);
+                logger.error("******");
+                logger.error("******");
+                inputGroup.url = "";
+                reject(err);
+            });
+        });
+    }
+
     completeIndividualProvision(inputGroup: ProjectRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<ProjectRepoDescription> {
         let that = this;
         logger.info("GitHubManager::completeIndividualProvision(..) - start: " + JSON.stringify(inputGroup));
@@ -1438,9 +1533,9 @@ export default class GitHubManager {
                 logger.info("GitHubManager::completeIndividualProvision(..) - project created; importing url: " + importUrl);
                 inputGroup.project.githubState.repo.name = newRepoInfo.name;
                 inputGroup.project.githubState.repo.id = newRepoInfo.id;
+                inputGroup.project.githubState.repo.url = newRepoInfo.url;
                 inputGroup.project.save()
                     .then((project: IProjectDocument) => {
-                        console.log('SAVING DOCUMENT', project);
                     })
                     .catch((err: any) => {
                         logger.error(`GithubManager::completeIndividualProvision() inputGroup.project.save() ERROR ${err}`);
@@ -1480,7 +1575,6 @@ export default class GitHubManager {
                 // TODO: write githubURL as importUrl
                 return that.setProjectUrl(inputGroup.project, inputGroup.url);
             }).then(function (project: IProjectDocument) {
-                console.log('SAVED URL', project);
                 logger.info("GitHubManager::completeIndividualProvision(..) - process complete for: " + JSON.stringify(inputGroup));
                 fulfill(inputGroup);
             }).catch(function (err) {
