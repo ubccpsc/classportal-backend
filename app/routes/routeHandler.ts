@@ -224,8 +224,8 @@ const createGithubReposForProjects = (req: restify.Request, res: restify.Respons
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-const repairProjectRepos = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return githubCtrl.repairProjectRepos(req.params)
+const repairIndividualProvisions = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return githubCtrl.repairIndividualProvisions(req.params)
   .then((githubResponse: any) => res.json(200, { response: githubResponse }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };
@@ -310,4 +310,4 @@ export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList
    deleteRepos, getCurrentUser, addTokenToDB, isAuthenticated, getMyCourses,
    getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
    addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects,
-   getUsersNotOnTeam, getCourse, getMyTeams, generateProjects, repairProjectRepos };
+   getUsersNotOnTeam, getCourse, getMyTeams, generateProjects, repairIndividualProvisions };

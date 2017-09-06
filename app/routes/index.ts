@@ -38,31 +38,32 @@ const routes = (server: restify.Server) => {
 
   // -- Prof or Admin Routes
   server.post('/:courseId/admin/admins', /* adminOrProfAuthenticated, */ routeHandler.addAdmins);
-  server.get('/:courseId/admin/admins', routeHandler.getAllAdmins);
-  server.get('/:courseId/admin/teams', routeHandler.getTeams);
-  server.get('/:courseId/admin/courseSettings', routeHandler.getCourseSettings);
-  server.post('/admin/classList', routeHandler.getClassList);
+  server.get('/:courseId/admin/admins', adminAuthenticated, routeHandler.getAllAdmins);
+  server.get('/:courseId/admin/teams', adminAuthenticated, routeHandler.getTeams);
+  server.get('/:courseId/admin/courseSettings', adminAuthenticated, routeHandler.getCourseSettings);
+  server.post('/admin/classList', adminAuthenticated, routeHandler.getClassList);
 
   // -- Admin or Super Admin Only Routes
-  server.put('/:courseId/admin/github/team', routeHandler.createGithubTeam);
-  server.put('/:courseId/admin/github/repo/team', routeHandler.createGithubReposForTeams);
-  server.put('/:courseId/admin/github/repo/project', routeHandler.createGithubReposForProjects);
-  server.put('/:courseId/admin/github/repo/project/repair', routeHandler.repairProjectRepos);
-  server.put('/:courseId/admin/projectGeneration', routeHandler.generateProjects);
-  server.put('/:courseId/admin/teamGeneration', routeHandler.randomlyGenerateTeamsPerCourse);
-  server.get('/:courseId/admin/github/repos/:orgName', routeHandler.getRepos);
-  server.del('/:courseId/admin/github/repos/:orgName', routeHandler.deleteRepos);
-  server.put('/admin/:courseId', routeHandler.createCourse);
-  server.post('/:courseId/admin/team', routeHandler.updateTeam);
+  server.put('/:courseId/admin/github/team', adminAuthenticated, routeHandler.createGithubTeam);
+  server.put('/:courseId/admin/github/repo/team', adminAuthenticated, routeHandler.createGithubReposForTeams);
+  server.put('/:courseId/admin/github/repo/project', adminAuthenticated, routeHandler.createGithubReposForProjects);
+  server.put('/:courseId/admin/github/repo/project/repair', adminAuthenticated, 
+    routeHandler.repairIndividualProvisions);
+  server.put('/:courseId/admin/projectGeneration', adminAuthenticated, routeHandler.generateProjects);
+  server.put('/:courseId/admin/teamGeneration', adminAuthenticated, routeHandler.randomlyGenerateTeamsPerCourse);
+  server.get('/:courseId/admin/github/repos/:orgName', adminAuthenticated, routeHandler.getRepos);
+  server.del('/:courseId/admin/github/repos/:orgName', adminAuthenticated, routeHandler.deleteRepos);
+  server.put('/admin/:courseId', adminAuthenticated, routeHandler.createCourse);
+  server.post('/:courseId/admin/team', adminAuthenticated, routeHandler.updateTeam);
   server.get('/:courseId/admin/students', adminAuthenticated, routeHandler.getClassList);
-  server.post('/:courseId/admin/students', routeHandler.addStudentList);
-  server.post('/:courseId/admin/labList', routeHandler.addLabList);
-  server.post('/:courseId/admin/grades', routeHandler.addGrades);
-  server.get('/:courseId/admin/grades', routeHandler.getGradesAdmin);
-  server.post('/:courseId/admin/grades/:delivId', routeHandler.addGradesCSV);
-  server.post('/:courseId/admin/deliverable', routeHandler.updateDeliverable);
-  server.put('/:courseId/admin/deliverable', routeHandler.addDeliverable);
-  server.get('/settings', isAuthenticated, routeHandler.getCurrentUserInfo);
+  server.post('/:courseId/admin/students', adminAuthenticated, routeHandler.addStudentList);
+  server.post('/:courseId/admin/labList', adminAuthenticated, routeHandler.addLabList);
+  server.post('/:courseId/admin/grades', adminAuthenticated, routeHandler.addGrades);
+  server.get('/:courseId/admin/grades', adminAuthenticated, routeHandler.getGradesAdmin);
+  server.post('/:courseId/admin/grades/:delivId', adminAuthenticated, routeHandler.addGradesCSV);
+  server.post('/:courseId/admin/deliverable', adminAuthenticated, routeHandler.updateDeliverable);
+  server.put('/:courseId/admin/deliverable', adminAuthenticated, routeHandler.addDeliverable);
+  server.get('/settings', isAuthenticated, isAuthenticated, routeHandler.getCurrentUserInfo);
   server.get('/logout', isAuthenticated, routeHandler.logout);
 };
 

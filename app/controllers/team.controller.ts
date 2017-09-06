@@ -63,7 +63,7 @@ function getUsersNotOnTeam(payload: any) {
   return Course.findOne({ courseId: payload.courseId })
     .then((_course: ICourseDocument) => {
       course = _course;
-      markByBatchFlag = course.settings.markDelivsByBatch;
+      markByBatchFlag = payload.markInBatch;
       return _course;
     })
     .then((course) => {
@@ -317,9 +317,20 @@ function getTeams(payload: any) {
 }
 
 
-// if markByBatch is true in CourseSettings property, then
-// teams will be created with multiple Deliverables.
-// if inverse, Teams will be created with a single Deliverable property.
+// if markInBatch is true in payload.markInBatch, then
+// teams will be created with multiple Deliverables under CourseSettings.
+// if inverse, Teams will be created with the specified single Deliverable property
+// in payload.deliverableName;
+/**
+ * 
+ * // under payload param
+ * @param markInBatch type of boolean
+ * @param teamSize: The max team size we will create
+ * @param deliverableName: ie. "d1", etc.
+ * @param importUrl -- undefined for now
+ * @param githubOrg -- undefined for now
+ * @param courseId - ie. 310
+ */
 function randomlyGenerateTeamsPerCourse(payload: any) {
   let course_id: string;
   let course: ICourseDocument;
@@ -337,7 +348,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       throw `Could not find course ${payload.courseId}`;
     })
     .then((course: ICourseDocument) => {
-      return Deliverable.findOne({ courseId: course._id, deliverableId: payload.deliverableName })
+      return Deliverable.findOne({ courseId: course._id, name: payload.deliverableName })
         .then((_deliv: IDeliverableDocument) => {
           if (_deliv) {
             deliverable = _deliv;
@@ -350,9 +361,9 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
         });
     })
     .then((_deliv: IDeliverableDocument) => {
-        if (course.settings.markDelivsByBatch) {
-        // if entails that we want to cross-check all all team members for multiple Deliverables
-        // in markByBatch logic.
+        if (payload.markInBatch) {
+        // 'if' entails that we want to cross-check Deliverables and Teams to ensure 
+        // students are now already on team for those Deliverables
           return getDeliverables(course).then((delivs: IDeliverableDocument[]) => {
             return Team.find({ courseId: course.id, deliverableIds: { '$in': delivs } })
               .then((_teams: ITeamDocument[]) => {
@@ -375,9 +386,11 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
         else {
           // else entails that we only want to cross-check team members for a single Deliverable
           // in single deliverable logic.
-          return Team.find({ courseId: course.id, deliverableId: payload.deliverableName })
+          console.log('CONFIRM running');
+          return Team.find({ courseId: course.id, deliverableId: deliverable._id })
             .then((teams: ITeamDocument[]) => {
               let filteredUsers: any = filterUsersAlreadyInTeam(teams);
+              console.log('splitUsersIntoArrays', splitUsersIntoArrays(filteredUsers));
               return splitUsersIntoArrays(filteredUsers);
             })
             .catch(err => {
@@ -394,8 +407,8 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
 
     function createTeamForEachTeamList(sortedTeamIdList: string[][]) {
     let bulkInsertArray: any;
-      if (course.settings.markDelivsByBatch) {
-        bulkInsertArray = createTeamObjectsForBatchMarking();
+      if (payload.markInBatch) {
+        // bulkInsertArray = createTeamObjectsForBatchMarking();
         return createTeamObjectsForBatchMarking()
           .then((_teams: any) => {
             return insertTeamDocuments(_teams);
@@ -420,7 +433,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       function createTeamObjectsForSingleDelivMarking() {
         return getDeliverable(payload.deliverableName, course)
           .then((deliv: IDeliverableDocument) => {
-            Team.find({ courseId: course._id, deliverableId: deliv._id })
+            return Team.find({ courseId: course._id, deliverableId: deliv._id })
               .then((teams: ITeamDocument[]) => {
                 // if (teams.length > 0) {
                 //   throw `Teams already exist for Deliverable. Cannot generate teams.`;
@@ -569,26 +582,32 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       return filteredList;
     }
 
-    function splitUsersIntoArrays(usersList: any): Promise<Object[]> {
+    function splitUsersIntoArrays(usersList: any): Object[] {
       let sorted: any = { teams: new Array() };
+      try {
 
-      // divides number of teams needed and rounds up
-      let teamSize = typeof payload.teamSize === 'undefined' ? course.maxTeamSize : payload.teamSize;
-      const numberOfTeams = Math.ceil(usersList.length / teamSize);
-      // creates arrays for each Team
-      for (let i = 0; i < numberOfTeams; i++) {
-        sorted.teams.push(new Array());
+        // divides number of teams needed and rounds up
+        let teamSize = typeof payload.teamSize === 'undefined' ? course.maxTeamSize : payload.teamSize;
+        const numberOfTeams = Math.ceil(usersList.length / teamSize);
+        // creates arrays for each Team
+        for (let i = 0; i < numberOfTeams; i++) {
+          sorted.teams.push(new Array());
+        }
+
+        let maxTeamSize = course.maxTeamSize;
+        let teamNumber = 0;
+
+        for (let i = 0; i < usersList.length; i++) {
+          sorted.teams[teamNumber].push(usersList[i]);
+          teamNumber++;
+          if (teamNumber % numberOfTeams == 0) { 
+              teamNumber = 0;
+            }
+        }
+        return sorted.teams;
       }
-
-      let maxTeamSize = course.maxTeamSize;
-      let teamNumber = 0;
-
-      for (let i = 0; i < usersList.length; i++) {
-        sorted.teams[teamNumber].push(usersList[i]);
-        teamNumber++;
-        if (teamNumber % numberOfTeams == 0) { 
-            teamNumber = 0;
-          }
+      catch (err) {
+        logger.error(`TeamController::splitUsersIntoArrays() ERROR ${err}`);
       }
       return sorted.teams;
     }

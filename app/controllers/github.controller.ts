@@ -23,7 +23,7 @@ import * as auth from '../middleware/auth.middleware';
   const CLEAN = false;
 
 
-function repairProjectRepos(payload: any) {
+function getProjectHealthReport(payload: any) {
   // requires payload.courseId, payload.deliverableName, payload.githubOrg
   let reposInOrg: any;
   let projects: any;
@@ -102,12 +102,12 @@ function repairProjectRepos(payload: any) {
             report.numberOfCreatedRepos = getNumberOfGithubRepos();
             let collaborators: any = [];
             for (let i = 0; i < reposUnderDeliv.length; i++) {
-              getCollaborators(reposUnderDeliv[i].name, payload.orgName)
+              getCollaborators(reposUnderDeliv[i].name, payload.orgNa)
                 .then((result: any) => {
                   collaborators.push(result);
                 });
             }
-            return collaborators;
+            return report;
             // return report;
           }
           throw `Could not find Projects under ${course.courseId} and ${deliv.name}`;
@@ -140,7 +140,6 @@ function repairProjectRepos(payload: any) {
           return result;
         });
     }
-
 }
 
 function getRepos(orgName: string): Promise<[Object]> {
@@ -313,6 +312,93 @@ function createGithubReposForTeams(payload: any): Promise<any> {
     }
 }
 
+function repairIndividualProvisions(payload: any): Promise<any> {
+
+  const ADMIN = 'admin';
+  const PULL = 'pull';
+  const PUSH = 'push';
+
+  let githubManager = new GitHubManager(payload.githubOrg);
+  let course: ICourseDocument;
+  let courseSettings: any;
+  let projects: IProjectDocument[];
+  let project: IProjectDocument;
+  let inputGroup: GroupRepoDescription;
+  let deliverable: IDeliverableDocument;
+
+  return Course.findOne({ courseId: payload.courseId }).exec()
+    .then((_course: ICourseDocument) => {
+      if (_course) {
+        course = _course;
+        courseSettings = _course.settings;
+      } else { throw `Could not find course ${payload.courseId}`; }
+      return _course;
+    })
+    .then((_course: ICourseDocument) => {
+      return Deliverable.findOne({ courseId: _course._id, name: payload.deliverableName })
+        .then((deliv: IDeliverableDocument) => {
+          if (deliv) {
+            deliverable = deliv;
+            return deliv;
+          }
+          else { throw `Could not find Deliverable ${payload.deliverableName} under 
+            Course ${_course.courseId}`; }
+        })
+        .catch(err => {
+          logger.error(`GithubController:createGithubReposForProjects() ERROR ${err}`);
+        });
+    })
+    .then((deliv: IDeliverableDocument) => {
+
+      if (courseSettings.markDelivsByBatch) {
+        throw `Cannot build projects for Batch Team course`;
+      } 
+      return getProjectsToBuildForSelectedDeliv(course, deliv)
+        .then((projects: IProjectDocument[]) => {
+          return repairProjectsForSelectedDeliv(projects);
+        })
+        .catch(err => {
+          logger.error(`GithubController::getProjectsToBuildForSelectedDeliv()/
+             ERROR ${err}`);
+        });
+    });
+
+    function repairProjectsForSelectedDeliv(_projects: IProjectDocument[]) {
+      for (let i = 0; i < _projects.length; i++) {
+        let inputGroup = {
+          repoName: createRepoName(course, payload.deliverableName, _projects[i].name),
+          projectName: createRepoName(course, payload.deliverableName, _projects[i].name),
+          projectIndex: i,
+          student: _projects[i].student.username,
+          project: _projects[i],
+          projects: _projects,
+          orgName: course.githubOrg
+        };
+        githubManager.repairIndividualProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
+      }
+    }
+
+    function getProjectsToBuildForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
+      return Project.find({ 
+        courseId: course._id,
+        deliverableId: deliv._id,
+        'githubState.repo.url': '',
+      })
+        .populate({ path: 'student deliverableId courseId' })
+        .exec()
+        .then((_projects: IProjectDocument[]) => {
+          if (_projects) {
+            projects = _projects;
+            return projects;
+          }
+          throw `Deliverable ${deliv.name} not found under Course ${course.courseId}.`;
+        })
+        .catch(err => {
+          logger.error(`Github.Controller::getProjectsToBuildForSelectedDiv() ERROR ${err}`);
+        });
+    }
+}
+
 function createGithubReposForProjects(payload: any): Promise<any> {
 
   const ADMIN = 'admin';
@@ -373,14 +459,9 @@ function createGithubReposForProjects(payload: any): Promise<any> {
           student: _projects[i].student.username,
           project: _projects[i],
           projects: _projects,
-          previousRepoId: _projects[i].githubState.repo.id,
           orgName: course.githubOrg
         };
-        if (payload.reAddUsers) {
-          githubManager.reAddIndividualUser(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
-        } else {
-          githubManager.completeIndividualProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
-        }
+        githubManager.completeIndividualProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
       }
     }
 
@@ -428,4 +509,4 @@ function getTeams(payload: any) {
 }
 
 export { getTeams, createGithubTeam, createGithubReposForTeams, createGithubReposForProjects,
-        getRepos, deleteRepos, repairProjectRepos };
+        getRepos, deleteRepos, getProjectHealthReport, repairIndividualProvisions };
