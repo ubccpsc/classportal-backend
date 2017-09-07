@@ -378,7 +378,10 @@ function repairIndividualProvisions(payload: any): Promise<any> {
           githubManager.repairIndividualProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
         } 
         else if (payload.reAddUserPermissions) {
-          githubManager.reAddUserAndStaff(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
+          githubManager.reAddUser(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
+        }
+        else if (payload.reAddStaffPermissions) {
+          githubManager.reAddStaff(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
         }
       }
       if (!payload.reAddUserPermissions && !payload.completeRepair) {
