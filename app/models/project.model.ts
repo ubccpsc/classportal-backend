@@ -57,6 +57,8 @@ const ProjectSchema = new mongoose.Schema({
         url: { type: String, default: '' },
         id: { type: Number, default: 0 },
         name: { type: String, default: '' },
+        webhookId: { type: Number, default: 0 },
+        webhookUrl: { type: String, default: 0 },
       },
   },
 });

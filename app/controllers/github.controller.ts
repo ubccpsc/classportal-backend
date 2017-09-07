@@ -353,7 +353,7 @@ function repairIndividualProvisions(payload: any): Promise<any> {
       if (courseSettings.markDelivsByBatch) {
         throw `Cannot build projects for Batch Team course`;
       } 
-      return getProjectsToBuildForSelectedDeliv(course, deliv)
+      return getProjectsToRepairForSelectedDeliv(course, deliv)
         .then((projects: IProjectDocument[]) => {
           return repairProjectsForSelectedDeliv(projects);
         })
@@ -374,15 +374,26 @@ function repairIndividualProvisions(payload: any): Promise<any> {
           projects: _projects,
           orgName: course.githubOrg
         };
-        githubManager.repairIndividualProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
+        if (payload.completeRepair) {
+          githubManager.repairIndividualProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
+        } 
+        else if (payload.reAddUserPermissions) {
+          githubManager.reAddUserAndStaff(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
+        }
+      }
+      if (!payload.reAddUserPermissions && !payload.completeRepair) {
+        return `GithubController:: No Payload Instructions Submitted. Repair Cancelled`;
+      }
+      else {
+        return `GithubController:: Repair starting...`;
       }
     }
 
-    function getProjectsToBuildForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
+    function getProjectsToRepairForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
       return Project.find({ 
         courseId: course._id,
         deliverableId: deliv._id,
-        'githubState.repo.url': '',
+        // 'githubState.repo.url': '',
       })
         .populate({ path: 'student deliverableId courseId' })
         .exec()

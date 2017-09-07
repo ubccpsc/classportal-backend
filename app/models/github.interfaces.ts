@@ -17,6 +17,8 @@ export const defaultGithubRepo = {
   url: '',
   id: 0,
   name: '',
+  webhookId: 0,
+  webhookUrl: '',
 };
 
 export const defaultTeam = {
