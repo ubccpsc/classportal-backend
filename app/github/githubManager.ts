@@ -1561,7 +1561,7 @@ export default class GitHubManager {
         logger.info("GitHubManager::reAddIndividualUser(..) - start: ");
         return new Promise(function (fulfill, reject) {
 
-            const DELAY = 10000;
+            const DELAY = that.DELAY_SEC * 3;
             // slow down creation to avoid getting in trouble with GH
             that.delay(inputGroup.projectIndex * DELAY).then(function () {
                 logger.info("GitHubManager::reAddIndividualUser(..) - creating project: " + inputGroup.projectName);
@@ -1584,7 +1584,7 @@ export default class GitHubManager {
         logger.info("GitHubManager::completeIndividualProvision(..) - start: " + inputGroup.projectName);
         return new Promise(function (fulfill, reject) {
 
-            const DELAY = 10000;
+            const DELAY = that.DELAY_SEC * 3;
             // slow down creation to avoid getting in trouble with GH
             that.delay(inputGroup.projectIndex * DELAY).then(function () {
                 logger.info("GitHubManager::completeIndividualProvision(..) - creating project: " + inputGroup.projectName);
@@ -1660,7 +1660,7 @@ export default class GitHubManager {
         logger.info("GitHubManager::reapirIndividualProvision(..) - start: " + inputGroup.projectName);
         return new Promise(function (fulfill, reject) {
 
-            const DELAY = 10000;
+            const DELAY = that.DELAY_SEC * 3;
             // slow down creation to avoid getting in trouble with GH
             that.delay(inputGroup.projectIndex * DELAY).then(function () {
                 logger.info("GitHubManager:: DELAY TIME GAP (..) - delaying: " + inputGroup.projectName);
@@ -1767,7 +1767,7 @@ export default class GitHubManager {
                 })
                 logger.info("GitHubManager:: DELAY TIME GAP (..) - delaying: " + inputGroup.projectName);    
             })
-            that.delay(inputGroup.projectIndex * DELAY + 5000).then(function () {
+            that.delay(inputGroup.projectIndex * DELAY).then(function () {
                 logger.info("GitHubManager::completeIndividualProvision(..) adding webhook;");
                 return that.addWebhook(inputGroup.projectName, webhookEndpoint)
             })
