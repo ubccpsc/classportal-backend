@@ -383,8 +383,11 @@ function repairIndividualProvisions(payload: any): Promise<any> {
         else if (payload.reAddStaffPermissions) {
           githubManager.reAddStaff(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
         }
+        else if (payload.reAddWebhook) {
+          githubManager.reAddWebhook(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
+        }
       }
-      if (!payload.reAddUserPermissions && !payload.completeRepair) {
+      if (!payload.reAddUserPermissions && !payload.completeRepair && !payload.reAddWebhook) {
         return `GithubController:: No Payload Instructions Submitted. Repair Cancelled`;
       }
       else {

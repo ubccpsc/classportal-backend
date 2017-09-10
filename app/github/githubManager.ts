@@ -1556,6 +1556,71 @@ export default class GitHubManager {
         });
     }
 
+    
+    reAddWebhook(inputGroup: ProjectRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<ProjectRepoDescription> {
+        let that = this;
+        logger.info("GitHubManager::reapirIndividualProvision(..) - start: ");
+        return new Promise(function (fulfill, reject) {
+
+            const DELAY = 10000;
+            // slow down creation to avoid getting in trouble with GH
+            that.delay(inputGroup.projectIndex * DELAY).then(function () {
+                logger.info("GitHubManager:: DELAY TIME GAP (..) - delaying: " + inputGroup.projectName);
+                return;
+            }).then(function () {
+                logger.info("GitHubManager:: GETTING WEBHOOKS (..) - listing");
+                return that.getWebhooks(inputGroup.projectName)
+            })
+            .then(function(webhooks: any) {
+                logger.info("GitHubManager:: REMOVING WEBHOOKS (..) - listing");
+                let index = 1;
+                Object.keys(webhooks).forEach((key: string) => {
+                    let webhookId: Number = webhooks[key].id;
+                    that.removeWebhook(inputGroup.projectName, webhookId).then((res: any) => {
+                        if (res === 'success') {
+                            logger.info(`GitHubManager:: REMOVED WEBHOOK (..) - ${webhooks[key].url}`);
+                        }
+                    })
+                    .catch(err => {
+                        logger.error(`GitHubManager:: CANNOT REMOVE WEBHOOK (..) - ${err}`);
+                    })
+                    if (index === Object.keys(webhooks).length) {
+                        return;
+                    }
+                })
+                logger.info("GitHubManager:: DELAY TIME GAP (..) - delaying: " + inputGroup.projectName);    
+            })
+            that.delay(inputGroup.projectIndex * DELAY).then(function () {
+                logger.info("GitHubManager::completeIndividualProvision(..) adding webhook;");
+                return that.addWebhook(inputGroup.projectName, webhookEndpoint)
+            })
+            .then(function () {
+                // add individual to repo
+                logger.info("GitHubManager::completeIndividualProvision(..) - webhook added; adding user: " + inputGroup.student);
+                return that.addCollaboratorToRepo(inputGroup.student, inputGroup.projectName, 'push')
+                    .catch(err => {
+                        logger.info(`GithubManager::completeIndividualProvision(..) Collaborator was not added: ${err}`)
+                    });
+            }).then(function () {
+                logger.info("GitHubManager::completeIndividualProvision(..) - person added to repo; getting staff team number for: " + staffTeamName);
+                // let staffTeamName = '310staff';
+                return that.getTeamNumber(staffTeamName)
+            }).then(function () {
+                logger.info("GitHubManager::completeIndividualProvision(..) - process complete for: " + inputGroup.projectName);
+                fulfill(inputGroup);
+            }).catch(function (err) {
+                logger.error("******");
+                logger.error("******");
+                logger.error("Input Description: " + inputGroup.projectName);
+                logger.error("GitHubManager::completeIndividualProvision(..) - ERROR: " + err);
+                logger.error("******");
+                logger.error("******");
+                inputGroup.url = "";
+                reject(err);
+            });
+        });
+    }
+
     reAddIndividualUser(inputGroup: ProjectRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<ProjectRepoDescription> {
         let that = this;
         logger.info("GitHubManager::reAddIndividualUser(..) - start: ");
@@ -1709,7 +1774,7 @@ export default class GitHubManager {
             })
             .then(function () {
                 // add individual to repo
-                logger.info("GitHubManager::completeIndividualProvision(..) - webhook added; adding user: " + inputGroup.student);
+                logger.info("GitHubManager::completeIndividualProvision(..) - adding user: " + inputGroup.student);
                 return that.addCollaboratorToRepo(inputGroup.student, inputGroup.projectName, 'push')
                     .catch(err => {
                         logger.info(`GithubManager::completeIndividualProvision(..) Collaborator was not added: ${err}`)
