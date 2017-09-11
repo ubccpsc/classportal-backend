@@ -1602,10 +1602,6 @@ export default class GitHubManager {
                         logger.info(`GithubManager::completeIndividualProvision(..) Collaborator was not added: ${err}`)
                     });
             }).then(function () {
-                logger.info("GitHubManager::completeIndividualProvision(..) - person added to repo; getting staff team number for: " + staffTeamName);
-                // let staffTeamName = '310staff';
-                return that.getTeamNumber(staffTeamName)
-            }).then(function () {
                 logger.info("GitHubManager::completeIndividualProvision(..) - process complete for: " + inputGroup.projectName);
                 fulfill(inputGroup);
             }).catch(function (err) {
