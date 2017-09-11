@@ -1504,6 +1504,17 @@ export default class GitHubManager {
             }).then(function (newRepoInfo: NewGithubRepoInfo) {
                 
                 inputGroup.url = newRepoInfo.url;
+
+                logger.info("GitHubManager::completeIndividualProvision(..) - project created; importing url: " + importUrl);
+                inputGroup._team.githubState.repo.name = newRepoInfo.name;
+                inputGroup._team.githubState.repo.id = newRepoInfo.id;
+                inputGroup._team.githubState.repo.url = newRepoInfo.url;
+                inputGroup._team.save()
+                    .then((team: ITeamDocument) => {
+                    })
+                    .catch((err: any) => {
+                        logger.error(`GithubManager::completeIndividualProvision() inputGroup.project.save() ERROR ${err}`);
+                    });
                 // let importUrl = 'https://github.com/CS310-2016Fall/cpsc310project';
                 logger.info("GitHubManager::completeTeamProvision(..) - project created; importing url: " + importUrl);
                 return that.importRepoFS(importUrl, inputGroup.url);

@@ -204,6 +204,7 @@ function createGithubReposForTeams(payload: any): Promise<any> {
       return Deliverable.findOne({ courseId: _course._id, name: payload.deliverableName })
         .then((deliv: IDeliverableDocument) => {
           if (deliv) {
+            deliverable = deliv;
             return deliv;
           }
           else { throw `Could not find Deliverable ${payload.deliverableName} under 
@@ -223,7 +224,7 @@ function createGithubReposForTeams(payload: any): Promise<any> {
       // courseSettings contains markByBatch bool to change configuration.
       // Configuration cannot change after Teams have been built.
 
-      if (courseSettings.markDelivsByBatch) {
+      if (!courseSettings.markDelivsByBatch) {
         return getTeamsToBuildByBatch(course)
           .then((teams: ITeamDocument[]) => {
             return buildTeamsByBatch(teams);
@@ -251,7 +252,7 @@ function createGithubReposForTeams(payload: any): Promise<any> {
           members: _teams[i].members.map((user: IUserDocument) => {
             return user.username;
           }),
-          projectName: createRepoName(course, payload.deliverableName, _teams[i].name),
+          projectName: 'cpsc' + course.courseId + '_' + payload.deliverableName + '_' + _teams[i].name,
           teamIndex: i,
           team: _teams[i].name,
           _team: _teams[i],

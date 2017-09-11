@@ -101,7 +101,7 @@ function generateProjects(payload: any) {
               return !existInDB;
             });
 
-            // label function
+            // labels team object name field with teamNum
             let counter = 1;
             for (let i = 0; i < filteredList.length; i++) {
               filteredList[i].name = PROJECT_PREPEND + ( deliverable.projectCount + counter++);

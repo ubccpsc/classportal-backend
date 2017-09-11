@@ -384,9 +384,8 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
           });
         }
         else {
-          // else entails that we only want to cross-check team members for a single Deliverable
-          // in single deliverable logic.
-          console.log('CONFIRM running');
+          // else entails that we only want to cross-check team members to see if they are already
+          // on a team with this respective DeliverableId
           return Team.find({ courseId: course.id, deliverableId: deliverable._id })
             .then((teams: ITeamDocument[]) => {
               let filteredUsers: any = filterUsersAlreadyInTeam(teams);
@@ -406,7 +405,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
     });
 
     function createTeamForEachTeamList(sortedTeamIdList: string[][]) {
-    let bulkInsertArray: any;
+      let bulkInsertArray: any;
       if (payload.markInBatch) {
         // bulkInsertArray = createTeamObjectsForBatchMarking();
         return createTeamObjectsForBatchMarking()
@@ -431,10 +430,12 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       }
 
       function createTeamObjectsForSingleDelivMarking() {
+        let teams: ITeamDocument[];
         return getDeliverable(payload.deliverableName, course)
           .then((deliv: IDeliverableDocument) => {
             return Team.find({ courseId: course._id, deliverableId: deliv._id })
-              .then((teams: ITeamDocument[]) => {
+              .then((_teams: ITeamDocument[]) => {
+                teams = _teams;
                 // if (teams.length > 0) {
                 //   throw `Teams already exist for Deliverable. Cannot generate teams.`;
                 // }
@@ -459,11 +460,18 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
                   }
                   
                   // adds the team number Name property used by AutoTest
-                  let counter = teams.length + 1;
+                  let counter = teams.length + 1;                  
+                  if (deliverable.projectCount !== 0) {
+                    counter = deliverable.projectCount;
+                  }
+                  console.log('counter,', counter);                  
                   for (let i = 0; i < bulkInsertArray.length; i++) {
                     bulkInsertArray[i].name = TEAM_PREPENDAGE + counter;
                     counter++;
                   }
+
+                  deliverable.projectCount = counter;
+                  deliverable.save();
 
                   return bulkInsertArray;
                 }
@@ -471,7 +479,8 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
               });
           })
           .catch(err => {
-            logger.error(`TeamController::createTeamForEachTeamList ERROR ${err}`);
+            logger.error(`TeamController::createTeamForEachTeamList() --> 
+              createTeamObjectsForSingleDelivMarking() ERROR ${err}`);
           });
       }
 
@@ -496,7 +505,8 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
                 return delivs;
               })
               .catch((err: any) => {
-                logger.error(`TeamController::createTeamForEachTeamList ERROR ${err}`);
+                logger.error(`TeamController::createTeamForEachTeamList() --> 
+                  createTeamObjectsForBatchMarking() ERROR ${err}`);
                 return Promise.reject(err);
               });
           })
