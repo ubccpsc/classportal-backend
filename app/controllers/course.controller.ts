@@ -216,7 +216,7 @@ function updateClassList(reqFiles: any, courseId: string) {
         username : student.USERNAME,
       })
         .then(user => {
-          newClassList.push(user);
+          newClassList.push(user._id);
           courseQuery
             .then( c => {
               // add new Course information to User object
