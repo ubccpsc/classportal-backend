@@ -297,7 +297,7 @@ function createGithubReposForTeams(payload: any): Promise<any> {
     }
 
     function getTeamsToBuildForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
-      return Team.find({ courseId: course._id, deliverableId: deliv._id })
+      return Team.find({ courseId: course._id, deliverableId: deliv._id, 'githubState.repo.url': '' })
         .populate({ path: 'members deliverableId' })
         .exec()
         .then((_teams: ITeamDocument[]) => {
