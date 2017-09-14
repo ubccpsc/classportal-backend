@@ -188,10 +188,10 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
       course = _course;
       if (course) {
         return _course;
-      } else { throw `Could not find course ${payload.courseId}` };
+      } else { throw `Could not find course ${payload.courseId}`; }
     })
     .then(() => {
-      return   Team.find({}).populate({ path: 'members' }).then((_teams: ITeamDocument[]) => {
+      return Team.find({}).populate({ path: 'members' }).then((_teams: ITeamDocument[]) => {
         for (let i = 0; i < _teams.length; i++) {
           let inputGroup = {
             teamName: 'name',
@@ -208,11 +208,9 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
         }
       });
     })
-
-
-  
-
-
+    .catch(err => {
+      logger.error(`GithubController::repairGithubReposForTeams ERROR ${err}`);
+    });
 }
 
 function createGithubReposForTeams(payload: any): Promise<any> {
