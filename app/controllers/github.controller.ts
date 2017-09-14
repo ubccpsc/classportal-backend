@@ -182,7 +182,7 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
   // for MarkbyBatch and SingleDeliv
   let course: ICourseDocument;
   let teams: ITeamDocument[];
-  let githubManager = new GitHubManager(payload.githubOrg);
+  let githubManager = new GitHubManager('CPSC310-2017W-T1');
   return Team.find({}).populate({ path: 'members' }).then((_teams: ITeamDocument[]) => {
     for (let i = 0; i < _teams.length; i++) {
       let inputGroup = {
