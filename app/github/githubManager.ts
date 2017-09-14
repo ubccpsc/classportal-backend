@@ -1580,10 +1580,16 @@ export default class GitHubManager {
                 logger.info("GitHubManager::completeTeamProvision(..) - creating project: " + inputGroup.projectName);
                 return that.addMembersToTeam(inputGroup._team.githubState.team.id, inputGroup.members);           
             })
+            .then(function (teamId: number) {
+                logger.info("GitHubManager::completeTeamProvision(..) - members added to team ( " + teamId + " ); adding team to project");
+                const TEAM_PERMISSIONS = 'push';
+                return that.addTeamToRepo(teamId, inputGroup.projectName, TEAM_PERMISSIONS);
+            })
             .then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
                 fulfill(inputGroup);
-            }).catch(function (err) {
+            })
+            .catch(function (err: any) {
                 // logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
                 logger.error("******");
                 logger.error("******");
