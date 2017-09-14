@@ -190,7 +190,7 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
         members: _teams[i].members.map((user: IUserDocument) => {
           return user.username;
         }),
-        projectName: 'cpsc' + course.courseId + '_' + payload.deliverableName + '_' + _teams[i].name,
+        projectName: 'cpsc' + payload.courseId + '_' + payload.deliverableName + '_' + _teams[i].name,
         teamIndex: i,
         team: _teams[i].name,
         _team: _teams[i],
