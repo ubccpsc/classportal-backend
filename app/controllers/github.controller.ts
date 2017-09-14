@@ -194,9 +194,9 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
         teamIndex: i,
         team: _teams[i].name,
         _team: _teams[i],
-        orgName: course.githubOrg
+        orgName: 'CPSC310-2017W-T1'
       };
-      githubManager.reAddUsersToTeam(inputGroup, null, STAFF_TEAM, course.urlWebhook);
+      githubManager.reAddUsersToTeam(inputGroup, null, STAFF_TEAM, '');
     }
   });
   
