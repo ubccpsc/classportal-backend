@@ -46,6 +46,7 @@ const routes = (server: restify.Server) => {
   // -- Admin or Super Admin Only Routes
   server.put('/:courseId/admin/github/team', adminAuthenticated, routeHandler.createGithubTeam);
   server.put('/:courseId/admin/github/repo/team', adminAuthenticated, routeHandler.createGithubReposForTeams);
+  server.put('/:courseId/admin/github/repo/team/repair', adminAuthenticated, routeHandler.repairGithubReposForTeams);  
   server.put('/:courseId/admin/github/repo/project', adminAuthenticated, routeHandler.createGithubReposForProjects);
   server.put('/:courseId/admin/github/repo/project/repair', adminAuthenticated, 
     routeHandler.repairIndividualProvisions);

@@ -177,11 +177,34 @@ function createRepoName(course: ICourseDocument, delivName: string, teamNum: str
   }
 }
 
-function createGithubReposForTeams(payload: any): Promise<any> {
+function repairGithubReposForTeams(payload: any): Promise<any> {
+  // Requires implementation of Deliverable or Deliverables specifics
+  // for MarkbyBatch and SingleDeliv
+  let course: ICourseDocument;
+  let teams: ITeamDocument[];
+  let githubManager = new GitHubManager(payload.githubOrg);
+  return Team.find({}).populate({ path: 'members' }).then((_teams: ITeamDocument[]) => {
+    for (let i = 0; i < _teams.length; i++) {
+      let inputGroup = {
+        teamName: createRepoName(course, payload.deliverableName, _teams[i].name),
+        members: _teams[i].members.map((user: IUserDocument) => {
+          return user.username;
+        }),
+        projectName: 'cpsc' + course.courseId + '_' + payload.deliverableName + '_' + _teams[i].name,
+        teamIndex: i,
+        team: _teams[i].name,
+        _team: _teams[i],
+        orgName: course.githubOrg
+      };
+      githubManager.reAddUsersToTeam(inputGroup, null, STAFF_TEAM, course.urlWebhook);
+    }
+  });
+  
 
-  const ADMIN = 'admin';
-  const PULL = 'pull';
-  const PUSH = 'push';
+
+}
+
+function createGithubReposForTeams(payload: any): Promise<any> {
 
   let githubManager = new GitHubManager(payload.githubOrg);
   let course: ICourseDocument;
@@ -527,4 +550,4 @@ function getTeams(payload: any) {
 }
 
 export { getTeams, createGithubTeam, createGithubReposForTeams, createGithubReposForProjects,
-        getRepos, deleteRepos, getProjectHealthReport, repairIndividualProvisions };
+        getRepos, deleteRepos, getProjectHealthReport, repairIndividualProvisions, repairGithubReposForTeams };

@@ -1490,6 +1490,7 @@ export default class GitHubManager {
             logger.info("GitHubManager::addTeamToRepos(..) - end");
         });
     }
+    
 
     completeTeamProvision(inputGroup: GroupRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<GroupRepoDescription> {
         let that = this;
@@ -1567,6 +1568,107 @@ export default class GitHubManager {
         });
     }
 
+
+    reAddUsersToTeam(inputGroup: GroupRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<GroupRepoDescription> {
+        let that = this;
+        logger.info("GitHubManager::completeTeamProvision(..) - start: " + JSON.stringify(inputGroup));
+        return new Promise(function (fulfill, reject) {
+            let teamProvisionRecord: any;
+            const DELAY = that.DELAY_SEC * 3; // 2 would be enough, but let's just be safe
+            // slow down creation to avoid getting in trouble with GH
+            that.delay(inputGroup.teamIndex * DELAY).then(function () {
+                logger.info("GitHubManager::completeTeamProvision(..) - creating project: " + inputGroup.projectName);
+                return that.createRepo(inputGroup.projectName);
+            })
+            .then(function() {
+                return that.addMembersToTeam(inputGroup._team.githubState.team.id, inputGroup.members);                
+            })
+            .then(function () {
+                logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
+                fulfill(inputGroup);
+            }).catch(function (err) {
+                // logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
+                logger.error("******");
+                logger.error("******");
+                logger.error("Input Description: " + JSON.stringify(inputGroup));
+                logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
+                logger.error("******");
+                logger.error("******");
+
+                inputGroup.url = "";
+                reject(err);
+            });
+        });
+    }
+
+    repairTeamProvision(inputGroup: GroupRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<GroupRepoDescription> {
+        let that = this;
+        logger.info("GitHubManager::completeTeamProvision(..) - start: " + JSON.stringify(inputGroup));
+        return new Promise(function (fulfill, reject) {
+            let teamProvisionRecord: any;
+            const DELAY = that.DELAY_SEC * 3; // 2 would be enough, but let's just be safe
+            // slow down creation to avoid getting in trouble with GH
+            that.delay(inputGroup.teamIndex * DELAY).then(function () {
+                logger.info("GitHubManager::completeTeamProvision(..) - creating project: " + inputGroup.projectName);
+                return that.createRepo(inputGroup.projectName);
+            }).then(function (newRepoInfo: NewGithubRepoInfo) {
+                
+                inputGroup.url = newRepoInfo.url;
+
+                logger.info("GitHubManager::completeIndividualProvision(..) - project created; importing url: " + importUrl);
+                inputGroup._team.githubState.repo.name = newRepoInfo.name;
+                inputGroup._team.githubState.repo.id = newRepoInfo.id;
+                inputGroup._team.githubState.repo.url = newRepoInfo.url;
+                inputGroup._team.save()
+                    .then((team: ITeamDocument) => {
+                    })
+                    .catch((err: any) => {
+                        logger.error(`GithubManager::completeIndividualProvision() inputGroup.project.save() ERROR ${err}`);
+                    });
+                // let importUrl = 'https://github.com/CS310-2016Fall/cpsc310project';
+                logger.info("GitHubManager::completeTeamProvision(..) - project created; importing url: " + importUrl);
+                return that.importRepoFS(importUrl, inputGroup.url);
+            })
+            .then(function () {
+                logger.info("GitHubManager::completeTeamProvision(..) - import started; adding webhook");
+                console.log(webhookEndpoint);
+                return that.addWebhook(inputGroup.projectName, webhookEndpoint);
+            }).then(function () {
+                logger.info("GitHubManager::completeTeamProvision(..) - webhook added; creating team: " + inputGroup.teamName);
+                return that.createTeam(inputGroup.teamName, 'push');
+            }).then(function (teamDeets: any) {
+                var teamId = teamDeets.teamId;
+                logger.info("GitHubManager::completeTeamProvision(..) - team created ( " + teamId + " ) ; adding members: " + JSON.stringify(inputGroup.members));
+                return that.setTeamId(teamId, inputGroup._team)
+                    .then(() => {
+                        return that.addMembersToTeam(teamId, inputGroup.members);
+                    });
+            }).then(function (teamId: number) {
+                logger.info("GitHubManager::completeTeamProvision(..) - members added to team ( " + teamId + " ); adding team to project");
+                const TEAM_PERMISSIONS = 'push';
+                return that.addTeamToRepo(teamId, inputGroup.projectName, TEAM_PERMISSIONS);
+            }).then(function () {
+                logger.info("GitHubManager::completeTeamProvision(..) - team added to repo; getting staff team number");
+                let staffTeamName = 'staff';
+                return that.getTeamNumber(staffTeamName);
+            })
+            .then(function () {
+                logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
+                fulfill(inputGroup);
+            }).catch(function (err) {
+                // logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
+                logger.error("******");
+                logger.error("******");
+                logger.error("Input Description: " + JSON.stringify(inputGroup));
+                logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
+                logger.error("******");
+                logger.error("******");
+
+                inputGroup.url = "";
+                reject(err);
+            });
+        });
+    }
     
     reAddWebhook(inputGroup: ProjectRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<ProjectRepoDescription> {
         let that = this;
