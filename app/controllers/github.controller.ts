@@ -183,22 +183,33 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
   let course: ICourseDocument;
   let teams: ITeamDocument[];
   let githubManager = new GitHubManager('CPSC310-2017W-T1');
-  return Team.find({}).populate({ path: 'members' }).then((_teams: ITeamDocument[]) => {
-    for (let i = 0; i < _teams.length; i++) {
-      let inputGroup = {
-        teamName: 'name',
-        members: _teams[i].members.map((user: IUserDocument) => {
-          return user.username;
-        }),
-        projectName: '',
-        teamIndex: i,
-        team: _teams[i].name,
-        _team: _teams[i],
-        orgName: 'CPSC310-2017W-T1'
-      };
-      githubManager.reAddUsersToTeam(inputGroup, null, STAFF_TEAM, '');
-    }
-  });
+  return Course.findOne({ courseId: payload.courseId })
+    .then((_course: ICourseDocument) => {
+      course = _course;
+      if (course) {
+        return _course;
+      } else { throw `Could not find course ${payload.courseId}` };
+    })
+    .then(() => {
+      return   Team.find({}).populate({ path: 'members' }).then((_teams: ITeamDocument[]) => {
+        for (let i = 0; i < _teams.length; i++) {
+          let inputGroup = {
+            teamName: 'name',
+            members: _teams[i].members.map((user: IUserDocument) => {
+              return user.username;
+            }),
+            projectName: createRepoName(course, payload.deliverableName, _teams[i].name),
+            teamIndex: i,
+            team: _teams[i].name,
+            _team: _teams[i],
+            orgName: 'CPSC310-2017W-T1'
+          };
+          githubManager.reAddUsersToTeam(inputGroup, inputGroup.projectName, STAFF_TEAM, '');
+        }
+      });
+    })
+
+
   
 
 
