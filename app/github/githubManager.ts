@@ -1585,7 +1585,7 @@ export default class GitHubManager {
                 const TEAM_PERMISSIONS = 'push';
                 console.log('original team id');
                 console.log('inputGroup._team.githubState.team.id', inputGroup._team.githubState.team.id);
-                return that.addTeamToRepo(teamId, inputGroup.projectName, TEAM_PERMISSIONS);
+                return that.addTeamToRepo(inputGroup._team.githubState.team.id, inputGroup.projectName, TEAM_PERMISSIONS);
             })
             .then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
