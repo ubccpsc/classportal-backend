@@ -1583,6 +1583,8 @@ export default class GitHubManager {
             .then(function (teamId: number) {
                 logger.info("GitHubManager::completeTeamProvision(..) - members added to team ( " + teamId + " ); adding team to project");
                 const TEAM_PERMISSIONS = 'push';
+                console.log('original team id');
+                console.log('inputGroup._team.githubState.team.id', inputGroup._team.githubState.team.id);
                 return that.addTeamToRepo(teamId, inputGroup.projectName, TEAM_PERMISSIONS);
             })
             .then(function () {
