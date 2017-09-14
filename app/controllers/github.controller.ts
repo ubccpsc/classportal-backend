@@ -186,7 +186,7 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
   return Team.find({}).populate({ path: 'members' }).then((_teams: ITeamDocument[]) => {
     for (let i = 0; i < _teams.length; i++) {
       let inputGroup = {
-        teamName: createRepoName(course, payload.deliverableName, _teams[i].name),
+        teamName: 'name',
         members: _teams[i].members.map((user: IUserDocument) => {
           return user.username;
         }),

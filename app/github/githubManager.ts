@@ -1578,10 +1578,7 @@ export default class GitHubManager {
             // slow down creation to avoid getting in trouble with GH
             that.delay(inputGroup.teamIndex * DELAY).then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - creating project: " + inputGroup.projectName);
-                return that.createRepo(inputGroup.projectName);
-            })
-            .then(function() {
-                return that.addMembersToTeam(inputGroup._team.githubState.team.id, inputGroup.members);                
+                return that.addMembersToTeam(inputGroup._team.githubState.team.id, inputGroup.members);           
             })
             .then(function () {
                 logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
