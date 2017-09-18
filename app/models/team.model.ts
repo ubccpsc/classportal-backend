@@ -1,15 +1,17 @@
 import * as mongoose from 'mongoose';
 import { logger } from '../../utils/logger';
+import { User, IUserDocument } from '../models/user.model';
+import { Deliverable, IDeliverableDocument } from '../models/deliverable.model';
 import { GithubState, GithubRepo, GithubTeam, defaultGithubState, 
   defaultGithubRepo } from './github.interfaces';
 
 interface ITeamDocument extends mongoose.Document {
   course: Object;
   teamId: number;
-  members: Object[];
+  members: IUserDocument[];
   deliverable: Object;
-  deliverableId: Object;
-  deliverableIds: Object[];
+  deliverableId: IDeliverableDocument;
+  deliverableIds: IDeliverableDocument[];
   name: string;
   githubOrg: string;
   githubState: GithubState;

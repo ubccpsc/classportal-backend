@@ -316,10 +316,284 @@ function getTeams(payload: any) {
     });
 }
 
+// if markInBatch is true in payload.markInBatch, then
+// teams will be created with multiple Deliverables under CourseSettings.
+// if not true, Teams will be created with the specified single Deliverable property
+// in payload.deliverableName;
+/**
+ * 
+ * // under payload param
+ * @param markInBatch type of boolean
+ * @param deliverableName: ie. "d1", etc.
+ * @param members array of github usernames
+ * @param courseId - ie. 310
+ */
+function createCustomTeam(payload: any) {
+  let course: ICourseDocument;
+  let deliv: IDeliverableDocument;
+  let delivs: IDeliverableDocument[];
+  let team: ITeamDocument;
+
+  return Course.findOne({ courseId: payload.courseId })
+    .populate('classList')
+    .exec()
+    .then((_course: ICourseDocument) => {
+      if (_course) {
+        course = _course;
+        return _course;        
+      } else {
+        throw `Could not find course ${payload.courseId}`;
+      }
+    })
+    .then(() => {
+      return Deliverable.findOne({ name: payload.deliverableName, courseId: course._id })
+        .exec()
+        .then((_deliv: IDeliverableDocument) => {
+          if (_deliv) {
+            deliv = _deliv;
+          } 
+          return _deliv;          
+        })
+        .catch(err => {
+          logger.error(`TeamController::createCustomTeam() Deliverable.findOne() ERROR ${err}`);
+        });
+    })
+    .then(() => {
+      return Deliverable.find({ courseId: course._id, markInBatch: true })
+        .then((_delivs: IDeliverableDocument[]) => {
+          if (_delivs) {
+            delivs = _delivs;
+            return _delivs;
+          } else {
+            throw `Could not find Deliverables for markByBatch under course ${course.courseId}`;            
+          }
+        })
+        .catch(err => {
+          logger.error(`TeamController::createCustomTeam() Deliverable.find() ERROR ${err}`);
+        });
+    })
+    .then(() => {
+      return validateGithubNames(payload.members, course);
+    })
+    .then((validTeamMembers: boolean) => {
+      console.log('IS IT VALID 2', validTeamMembers);
+      if (validTeamMembers && payload.markInBatch) {
+        return checkIfMembersOnTeamByBatch(payload.members, delivs);
+      } else if (validTeamMembers && typeof payload.markInBatch == 'undefined') {
+        return checkIfMembersOnTeamBySingDeliv(payload.members, deliv);        
+      } else {
+        throw `Invalid team member list submitted. At least one user does not exist in database.`;
+      }
+    })
+    .then((membersAlreadyOnTeam: boolean) => {
+      if (membersAlreadyOnTeam) {
+        throw `Members are already on team. Cannot add team member to multiple teams per 
+          deliverable or sets of deliverables`;
+      } else if (payload.markInBatch) {
+        return createTeamObjectsForBatchMarking(payload.members);
+      }
+      else {
+        createTeamObjectsForSingDelivMarking(payload.members);
+      }
+    })
+    .then((newTeamInsertList: any) => {
+      return insertTeamDocuments(newTeamInsertList);
+    })
+    .catch(err => {
+      logger.error(`TeamController::createCustomTeam() ERROR ${err}`);
+    });
+
+    function createTeamObjectsForBatchMarking(teamIdList: string[]) {
+
+      let userIds: string[] = [];
+      console.log('teamIdList, eh', teamIdList);
+      return User.find({ username: { '$in': teamIdList } })
+        .exec()
+        .then((users: IUserDocument[]) => {
+          if (users) {
+            users.map((user: IUserDocument) => {
+              userIds.push(user._id);
+            });
+            return userIds;
+          } else {
+            throw `Could not find User Ids for team creation in ${teamIdList}`;
+          }
+        })
+        .then((userIds: any) => {
+          let bulkInsertArray = new Array();
+          if (delivs.length > 0) {
+            let deliverableIds = new Array();
+
+            for (let i = 0; i < delivs.length; i++) {
+              deliverableIds.push(delivs[i]._id);
+            }
+
+            for ( let i = 0; i < userIds.length; i++) {
+              let teamObject = {
+                courseId: course._id,
+                deliverableIds,
+                members: userIds,
+                githubState: defaultGithubState,
+              };
+              bulkInsertArray.push(teamObject);
+            }
+          } else {
+            throw `Could not find Deliverables for ${payload.deliverableName} and ${course._id}`;
+          }
+    
+          // adds the team number Name property used by AutoTest
+          let counter = teamIdList.length + 1;
+          for (let i = 0; i < bulkInsertArray.length; i++) {
+            bulkInsertArray[i].name = TEAM_PREPENDAGE + counter;
+            counter++;
+          }
+    
+          return bulkInsertArray;
+        })
+        .catch(err => {
+          logger.error(`TeamController::createCustomTeam() createTeamObjectsForBatchMarking() ERROR ${err}`);
+        });
+    }
+    
+
+    function createTeamObjectsForSingDelivMarking(teamIdList: string[]) {
+      
+            let userIds: string[] = [];
+            return User.find({ username: { '$in': teamIdList } })
+              .exec()
+              .then((users: IUserDocument[]) => {
+                if (users) {
+                  users.map((user: IUserDocument) => {
+                    userIds.push(user._id);
+                  });
+                  return userIds;
+                } else {
+                  throw `Could not find User Ids for team creation in ${teamIdList}`;
+                }
+              })
+              .then((userIds: any) => {
+                let bulkInsertArray = new Array();
+                if (deliv) {
+                  let deliverableId = deliv._id;
+      
+                  for ( let i = 0; i < userIds.length; i++) {
+                    let teamObject = {
+                      courseId: course._id,
+                      deliverableId,
+                      members: userIds,
+                      githubState: defaultGithubState,
+                    };
+                    bulkInsertArray.push(teamObject);
+                  }
+                } else {
+                  throw `Could not find Deliverables for ${payload.deliverableName} and ${course._id}`;
+                }
+          
+                // adds the team number Name property used by AutoTest
+                let counter = teamIdList.length + 1;
+                for (let i = 0; i < bulkInsertArray.length; i++) {
+                  bulkInsertArray[i].name = TEAM_PREPENDAGE + counter;
+                  counter++;
+                }
+          
+                return bulkInsertArray;
+              })
+              .catch(err => {
+                logger.error(`TeamController::createCustomTeam() createTeamObjectsForBatchMarking() ERROR ${err}`);
+              });
+          }      
+
+    function validateGithubNames(teamMembers: string[], course: ICourseDocument): boolean {
+      console.log('members', teamMembers);
+
+      let classList: any = course.classList;
+      let validTeamMembers: boolean = true;
+
+      for (let i = 0; i < teamMembers.length; i++) {
+        let thisItemIsValid: boolean = false;
+        let teamMember: string = teamMembers[i].toString();
+        for (let j = 0; j < classList.length; j++) {
+          let classListUser = classList[j].username;
+          console.log(teamMember.indexOf(classListUser));
+          if (teamMember === classListUser) {
+            thisItemIsValid = true;
+          }
+        }
+        if (!thisItemIsValid) {
+          validTeamMembers = false;
+        }
+      }
+      return validTeamMembers;
+    }
+
+    function checkIfMembersOnTeamByBatch(teamMembers: string[], deliverables: IDeliverableDocument[]) {
+
+      return Team.find({ courseId: course.id, deliverableIds: { '$in': deliverables } })
+        .populate('members')
+        .then((teams: ITeamDocument[]) => {
+          let usersOnTeams: any = [];
+          let isOnTeam: boolean = false;
+          // console.log('teams', teams);
+          console.log('teamMembers1', teamMembers);
+          if (teams) {
+            teams.map((team: ITeamDocument) => {
+              for (let i = 0; i < team.members.length; i++) {
+                usersOnTeams.push(team.members[i].username);
+              }
+            });
+          }
+          console.log('usersOnTeams', usersOnTeams);
+          console.log('teamMembers', teamMembers);
+          console.log('Users On Teams', usersOnTeams);
+          for (let i = 0; i < usersOnTeams.length; i++) {
+            let userToAdd: string = usersOnTeams[i].toString();
+            for (let j = 0; j < teamMembers.length; j++) {
+              let newTeamMember: string = teamMembers[j].toString();
+              if (userToAdd === newTeamMember) {
+                isOnTeam = true;
+                console.log('Matched user' + userToAdd, newTeamMember);
+              }
+            }
+          }
+          return isOnTeam;
+    });
+  }
+
+  function checkIfMembersOnTeamBySingDeliv(teamMembers: string[], deliverable: IDeliverableDocument) {
+    
+    return Team.findOne({ courseId: course.id, deliverableId: deliverable._id })
+      .populate('members')
+      .then((teams: ITeamDocument) => {
+        let usersOnTeams: any = [];
+        let isOnTeam: boolean = false;
+        // console.log('teams', teams);
+        console.log('teamMembers1', teamMembers);
+        if (team) {
+          for (let i = 0; i < team.members.length; i++) {
+            usersOnTeams.push(team.members[i].username);
+          }
+        }
+        console.log('usersOnTeams', usersOnTeams);
+        console.log('teamMembers', teamMembers);
+        console.log('Users On Teams', usersOnTeams);
+        for (let i = 0; i < usersOnTeams.length; i++) {
+          let userToAdd: string = usersOnTeams[i].toString();
+          for (let j = 0; j < teamMembers.length; j++) {
+            let newTeamMember: string = teamMembers[j].toString();
+            if (userToAdd === newTeamMember) {
+              isOnTeam = true;
+              console.log('Matched user' + userToAdd, newTeamMember);
+            }
+          }
+        }
+        return isOnTeam;
+  });
+}
+}
 
 // if markInBatch is true in payload.markInBatch, then
 // teams will be created with multiple Deliverables under CourseSettings.
-// if inverse, Teams will be created with the specified single Deliverable property
+// if not true, Teams will be created with the specified single Deliverable property
 // in payload.deliverableName;
 /**
  * 
@@ -327,8 +601,6 @@ function getTeams(payload: any) {
  * @param markInBatch type of boolean
  * @param teamSize: The max team size we will create
  * @param deliverableName: ie. "d1", etc.
- * @param importUrl -- undefined for now
- * @param githubOrg -- undefined for now
  * @param courseId - ie. 310
  */
 function randomlyGenerateTeamsPerCourse(payload: any) {
@@ -416,16 +688,6 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
         return createTeamObjectsForSingleDelivMarking()
           .then((_teams: any) => {
             return insertTeamDocuments(_teams);
-          });
-      }
-
-      function insertTeamDocuments(_bulkInsertArray: any) {
-        return Team.collection.insertMany(_bulkInsertArray)
-          .then((documents: any) => {
-            return documents;
-          })
-          .catch(err => {
-            logger.error(`TeamController::bulkInsertOp ERROR ${err}`);
           });
       }
 
@@ -547,10 +809,23 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       }
     }
 
-    // Gets CourseSettings to see if markByBatch flag enabled, and then gets Deliverable(s) 
-    // based markByBatch flag.
+    // Gets Deliverables for course with markInBatch flag set to true
     function getDeliverables(course: ICourseDocument) {
-      return Deliverable.find({ courseId: course_id }).exec();
+      let deliverableIds: any = [];
+      return Deliverable.find({ courseId: course_id, markInBatch: true }).exec()
+        .then((deliverables: IDeliverableDocument[]) => {
+          if (deliverables) {
+            for (let i = 0; i < deliverables.length; i++) {
+              deliverableIds.push(deliverables[i]._id);
+            }
+            return deliverables;            
+          } else {
+            throw `No deliverables found under ${course.courseId} with markInBatch set as true.`;
+          }
+        })
+        .catch(err => {
+          logger.error(`TeamController::getDeliverables() ERROR ${err}`);
+        });
     }
 
     // Gets CourseSettings to see if markByBatch flag enabled, and then gets Deliverable(s) 
@@ -570,7 +845,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       let allTeamMembers: any = new Array();
       // compile all Team members on Teams to filter out in next method
       for (let i = 0; i < teams.length; i++) {
-        teams[i].members.map((delivId: string) => {
+        teams[i].members.map((delivId: IUserDocument) => {
           allTeamMembers.push(delivId);
         });
       }
@@ -767,7 +1042,15 @@ function update(req: any) {
     });
 }
 
-
+function insertTeamDocuments(_bulkInsertArray: any) {
+  return Team.collection.insertMany(_bulkInsertArray)
+    .then((documents: any) => {
+      return documents;
+    })
+    .catch(err => {
+      logger.error(`TeamController::bulkInsertOp ERROR ${err}`);
+    });
+}
 // One student per deliverable --> Maps to these conditions:
 // 1) Students must be unique on the team.
 // 2) Amongst the teams that exist with a particular Deliverable ID,
@@ -813,4 +1096,4 @@ function update(req: any) {
 // }
 
 export { createTeam, update, getTeams, createGithubTeam, createGithubRepo, getRepos, getCourseTeamsPerUser,
-         randomlyGenerateTeamsPerCourse, getUsersNotOnTeam, getMyTeams }
+         randomlyGenerateTeamsPerCourse, getUsersNotOnTeam, getMyTeams, createCustomTeam }

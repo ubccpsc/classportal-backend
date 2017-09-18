@@ -682,6 +682,43 @@ export default class GitHubManager {
 
     /**
      * NOTE: needs the team Id (number), not the team name (string)!
+     * *** STILL UNTESTED. NOT NECESSARY TO IMPLEMENT YET
+     * @param teamId
+     * @param newTeamName
+     * @returns {Promise<{}>}
+     */
+    public updateTeamName(teamId: number, newTeamName: string, permission: string) {
+        let ctx = this;
+        logger.info("GitHubManager::updateTeamName( " + teamId + ", " + newTeamName + " ) - start");
+        return new Promise(function (fulfill, reject) {
+
+            var options = {
+                method: 'PATCH',
+                uri: `${apiPath}/teams/` + teamId,
+                headers: {
+                    'Authorization': ctx.GITHUB_AUTH_TOKEN,
+                    'User-Agent': ctx.GITHUB_USER_NAME,
+                    'Accept': 'application/json'
+                },
+                body: {
+                    name: newTeamName
+                },
+                json: true
+            };
+
+            rp(options).then(function (body: any) {
+                logger.info("GitHubManager::updateTeamName(..) - success; team: " + teamId + "; new team name: " + newTeamName);
+                // onSuccess(body);
+                fulfill({name: newTeamName});
+            }).catch(function (err: any) {
+                logger.error("GitHubManager::updateTeamName(..) - ERROR: " + err);
+                reject(err);
+            });
+        });
+    }
+
+    /**
+     * NOTE: needs the team Id (number), not the team name (string)!
      *
      * @param teamId
      * @param repoName
@@ -1605,6 +1642,36 @@ export default class GitHubManager {
             });
         });
     }
+
+    // renameTeams(inputGroup: GroupRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<GroupRepoDescription> {
+    //     let that = this;
+    //     logger.info("GitHubManager::completeTeamProvision(..) - start: " + JSON.stringify(inputGroup));
+    //     return new Promise(function (fulfill, reject) {
+    //         let teamProvisionRecord: any;
+    //         const DELAY = that.DELAY_SEC * 3; // 2 would be enough, but let's just be safe
+    //         // slow down creation to avoid getting in trouble with GH
+    //         that.delay(inputGroup.teamIndex * DELAY).then(function () {
+    //             logger.info("GitHubManager::completeTeamProvision(..) - creating project: " + inputGroup.projectName);
+    //             return that.updateTeamName(inputGroup._team.githubState.team.id, inputGroup.teamName);           
+    //         })
+    //         .then(function () {
+    //             logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
+    //             fulfill(inputGroup);
+    //         })
+    //         .catch(function (err: any) {
+    //             // logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
+    //             logger.error("******");
+    //             logger.error("******");
+    //             logger.error("Input Description: " + JSON.stringify(inputGroup));
+    //             logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
+    //             logger.error("******");
+    //             logger.error("******");
+
+    //             inputGroup.url = "";
+    //             reject(err);
+    //         });
+    //     });
+    // }
 
     repairTeamProvision(inputGroup: GroupRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<GroupRepoDescription> {
         let that = this;

@@ -52,6 +52,7 @@ const routes = (server: restify.Server) => {
     routeHandler.repairIndividualProvisions);
   server.put('/:courseId/admin/projectGeneration', adminAuthenticated, routeHandler.generateProjects);
   server.put('/:courseId/admin/teamGeneration', adminAuthenticated, routeHandler.randomlyGenerateTeamsPerCourse);
+  server.put('/:courseId/admin/customTeam', adminAuthenticated, routeHandler.createCustomTeam);  
   server.get('/:courseId/admin/github/repos/:orgName', adminAuthenticated, routeHandler.getRepos);
   server.del('/:courseId/admin/github/repos/:orgName', adminAuthenticated, routeHandler.deleteRepos);
   server.put('/admin/:courseId', adminAuthenticated, routeHandler.createCourse);
