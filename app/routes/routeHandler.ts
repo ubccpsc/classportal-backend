@@ -314,8 +314,8 @@ const createCustomTeam = (req: restify.Request, res: restify.Response, next: res
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-const isStudentInClass = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return userCtrl.isStudentInClass(req.params)
+const isStudentInSameLab = (req: any, res: restify.Response, next: restify.Next) => {
+  return userCtrl.isStudentInSameLab(req.params, req.user.username)
   .then((enrollmentStatus: object) => res.json(200, { response: enrollmentStatus }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };
@@ -327,4 +327,4 @@ export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList
    getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
    addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects,
    getUsersNotOnTeam, getCourse, getMyTeams, generateProjects, repairIndividualProvisions, repairGithubReposForTeams,
-   createCustomTeam, isStudentInClass };
+   createCustomTeam, isStudentInSameLab };

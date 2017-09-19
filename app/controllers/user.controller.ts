@@ -7,12 +7,12 @@ import { logger } from '../../utils/logger';
 import { config } from '../../config/env';
 import * as request from '../helpers/request';
 
-function isStudentInClass(payload: any): Promise<object> {
+function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object> {
   let course: ICourseDocument;
-  let user: IUserDocument;
-  let isInClass: boolean = false;  
+  let loggedInUser: IUserDocument;
+  let comparisonUser: IUserDocument;
+  let isInLab: boolean = false;
 
-  console.log(payload);
   return Course.findOne({ courseId: payload.courseId })
     .exec()
     .then((_course: ICourseDocument) => {
@@ -21,25 +21,60 @@ function isStudentInClass(payload: any): Promise<object> {
     })
     .then(() => {
       return User.findOne({ username: payload.username })
-        .then((u: IUserDocument) => {
-          user = u;
-          return u;
+        .then((_user: IUserDocument) => {
+          if (_user) {
+            comparisonUser = _user;
+            return _user;
+          }
+          return _user;
+        })
+        .catch(err => {
+          logger.error(`UserController::isStudentInSameLab ERROR ${err}`);
+        });
+    })
+    .then(() => {
+      return User.findOne({ username: _loggedInUser })
+        .then((_user: IUserDocument) => {
+          if (_user) {
+            loggedInUser = _user;
+            return _user;
+          }
+          return _user;
+        })
+        .catch(err => {
+          logger.error(`UserController::isStudentInSameLab ERROR ${err}`);
         });
     })
     .then((u) => {
-      if (!u) {
-        return { username: payload.username, enrolled: isInClass };
+      if (!comparisonUser || !loggedInUser) {
+        return { username: payload.username, sameLab: isInLab };
       }
-      let classList: Object[] = course.classList;
-      for (let i = 0; i < classList.length; i++) {
-        let student: string = String(classList[i]);
-        console.log('student', student);
-        console.log('user', user);
-        if (typeof user !== 'undefined' && student.indexOf(user._id) > -1) {
-          isInClass = true;
+      // cannot add one's self to a team
+      if (_loggedInUser === String(payload.username)) {
+        return { username: payload.username, sameLab: isInLab };
+      }
+
+      let labSections: any = course.labSections;
+      let loggedInUserLabId: string;
+      let labIndexNum: number;
+
+      // FIRST: Get logged in user labId 
+      for (let i = 0; i < labSections.length; i++) {
+        let labId: string = String(labSections[i].users.indexOf(loggedInUser._id) );
+        
+        if (labSections[i].users.indexOf(loggedInUser._id) > -1) {
+          console.log((labSections[i].users.indexOf(loggedInUser._id) > -1));
+          loggedInUserLabId = labSections[i].labId;
+          labIndexNum = i;
         }
       }
-      return { username: payload.username, enrolled: isInClass };
+
+      // SECOND: Check if comparisonUser is in same LabId
+      if (labSections[labIndexNum].users.indexOf(comparisonUser._id) > -1) {
+        isInLab = true;
+      }
+
+      return { username: payload.username, sameLab: isInLab };
     });
 }
 
@@ -167,4 +202,4 @@ function isUsernameRegistered(user: IUserDocument) {
 }
 
 
-export { login, logout, checkRegistration, load, validateRegistration, addGithubUsername, isStudentInClass };
+export { login, logout, checkRegistration, load, validateRegistration, addGithubUsername, isStudentInSameLab };
