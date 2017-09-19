@@ -87,6 +87,9 @@ function addAdmins(payload: any) {
 }
 
 function addLabList(reqFiles: any, courseId: string) {
+  let newlyCompiledLabSections: any = [];
+  let labSectionsSet = new Set();
+
   console.log(reqFiles);
   const options = {
     columns: true,
@@ -94,62 +97,89 @@ function addLabList(reqFiles: any, courseId: string) {
     trim: true,
   };
 
+
   let rs = fs.createReadStream(reqFiles['labList'].path);
+  let courseQuery = Course.findOne({ 'courseId': courseId }).exec();
+  
   let parser = parse(options, (err, data) => {
     
-    let courseQuery = Course.findOne({ 'courseId': courseId }).exec();
     let usersRepo = User;
-    let newLabSections: any = [];
 
+    let numOfKeys: number = Object.keys(data).length;
+    let count = 0;
+    let userQueries: any = [];
+    
     Object.keys(data).forEach((key: string) => {
+      count++;
       let student = data[key];
+      let course: ICourseDocument;
       logger.info('Parsing student into user model: ' + JSON.stringify(student));
-      usersRepo.findOne({
+      userQueries.push(usersRepo.findOne({
         csid : student.CSID,
         snum : student.SNUM,
-      })
-        .then(user => {
-          courseQuery
-            .then((course: ICourseDocument) => {
+      }).then((u: IUserDocument) => {
+        return u;
+      }));
+      });
+      console.log('The set', labSectionsSet);
 
-              let labSectionExists: Boolean = false;
+      courseQuery.then((course: ICourseDocument) => {
 
-              let random = course.labSections.some( function(labSection: any) {
-                if (labSection.labId === student.LAB) {
-                  labSectionExists = true;
+        return Promise.all(userQueries)
+        .then((results: any) => {
+
+          // FIRST: Create lab sections that need to exist
+          Object.keys(data).forEach(function(key) {
+            let student: any = data[key];
+            let tentativeNewLab = String(student.LAB);
+            let labSectionExists = false;
+            for (let i = 0; i < newlyCompiledLabSections.length; i++) {
+              let compiledLabId = String(newlyCompiledLabSections[i].labId);
+              if (compiledLabId === tentativeNewLab) {
+                labSectionExists = true;
+              }
+            }
+            if (!labSectionExists) {
+              newlyCompiledLabSections.push({ 'labId' : student.LAB, 'users': new Array() });
+            }
+          });
+
+          // SECOND: Add student to correct section
+          Object.keys(data).forEach(function(key) {
+            let parsedSNUM: string = String(data[key].SNUM);
+            let parsedLAB: string = String(data[key].LAB);
+
+            Object.keys(results).forEach(function(resultKey) {
+              let dbStudent: IUserDocument = results[resultKey];              
+              let dbStudentSNUM: string = results[resultKey].snum;
+              
+              // IF student matches CSID and SNUM, add to section of parsed LabId
+
+              if (dbStudentSNUM === parsedSNUM) {
+
+                for (let i = 0; i < newlyCompiledLabSections.length; i++) {
+                  let labIdSection: string = String(newlyCompiledLabSections[i].labId);
+
+                  if (labIdSection === parsedLAB) {
+                    newlyCompiledLabSections[i].users.push(dbStudent._id);
+                  }
                 }
-                return labSection.labId === student.LAB;
-              });
-
-              // creates lab section if it does not exist
-              if (!labSectionExists) {
-                console.log('CREATES Lab SECTION');
-                newLabSections.push({ 'labId' : student.LAB, 'users': new Array() });
               }
 
-              for (let i = 0; i < newLabSections.length; i++) {
-                if (student.LAB === newLabSections[i].labId && newLabSections[i].users.indexOf(user._id) < 0) {
-                  newLabSections[i].users.push(user._id);
-                }
-              }
-
-              course.labSections = newLabSections;
-              course.save();
-              return course;
             });
-        })
-        .catch( (err) => { 
-          logger.error(`CourseController::updateLabList ERROR ${err}`);
+          });
+          course.labSections = newlyCompiledLabSections;
+          course.save();
         });
       });
-    
+
     if (err) {
       throw Error(err);
     }
   });
 
   rs.pipe(parser);
-
+  
   return Course.findOne({ courseId })
     .populate({ path: 'labSections.courses' })
     .exec()

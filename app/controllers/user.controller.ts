@@ -2,10 +2,46 @@ import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
 import { IUserDocument, User } from '../models/user.model';
+import { ICourseDocument, Course } from '../models/course.model';
 import { logger } from '../../utils/logger';
 import { config } from '../../config/env';
 import * as request from '../helpers/request';
 
+function isStudentInClass(payload: any): Promise<object> {
+  let course: ICourseDocument;
+  let user: IUserDocument;
+  let isInClass: boolean = false;  
+
+  console.log(payload);
+  return Course.findOne({ courseId: payload.courseId })
+    .exec()
+    .then((_course: ICourseDocument) => {
+      course = _course;
+      return course;
+    })
+    .then(() => {
+      return User.findOne({ username: payload.username })
+        .then((u: IUserDocument) => {
+          user = u;
+          return u;
+        });
+    })
+    .then((u) => {
+      if (!u) {
+        return { username: payload.username, enrolled: isInClass };
+      }
+      let classList: Object[] = course.classList;
+      for (let i = 0; i < classList.length; i++) {
+        let student: string = String(classList[i]);
+        console.log('student', student);
+        console.log('user', user);
+        if (typeof user !== 'undefined' && student.indexOf(user._id) > -1) {
+          isInClass = true;
+        }
+      }
+      return { username: payload.username, enrolled: isInClass };
+    });
+}
 
 /**
  * User login
@@ -131,4 +167,4 @@ function isUsernameRegistered(user: IUserDocument) {
 }
 
 
-export { login, logout, checkRegistration, load, validateRegistration, addGithubUsername };
+export { login, logout, checkRegistration, load, validateRegistration, addGithubUsername, isStudentInClass };

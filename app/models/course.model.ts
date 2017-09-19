@@ -87,7 +87,6 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
       },
       labId: {
         type: String,
-        required: true,
       },
     },
   ],

@@ -19,15 +19,16 @@ restify.CORS.ALLOW_HEADERS.push('Accept-Language');
 
 // allow cors
 app.use(restify.CORS({
-  origins: [`${config.app_path}`, `${config.app_path}`],
   credentials: true,
 }));
 console.log('App path', `${config.app_path}`);
 
 // set cors options
 app.opts(/.*/, (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  res.header('Access-Control-Allow-Methods', req.header('Access-Control-Request-Method'));
-  res.header('Access-Control-Allow-Headers', req.header('Access-Control-Request-Headers'));
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.send(200);
   return next();
 });

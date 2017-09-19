@@ -393,7 +393,7 @@ function createCustomTeam(payload: any) {
         return createTeamObjectsForBatchMarking(payload.members);
       }
       else {
-        createTeamObjectsForSingDelivMarking(payload.members);
+        return createTeamObjectsForSingDelivMarking(payload.members);
       }
     })
     .then((newTeamInsertList: any) => {
