@@ -47,11 +47,11 @@ function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object
     })
     .then((u) => {
       if (!comparisonUser || !loggedInUser) {
-        return { username: payload.username, sameLab: isInLab };
+        return { username: payload.username, inSameLab: isInLab };
       }
       // cannot add one's self to a team
       if (_loggedInUser === String(payload.username)) {
-        return { username: payload.username, sameLab: isInLab };
+        return { username: payload.username, inSameLab: isInLab };
       }
 
       let labSections: any = course.labSections;
@@ -74,7 +74,7 @@ function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object
         isInLab = true;
       }
 
-      return { username: payload.username, sameLab: isInLab };
+      return { username: payload.username, inSameLab: isInLab };
     });
 }
 
