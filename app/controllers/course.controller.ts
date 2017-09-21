@@ -121,47 +121,59 @@ function addLabList(reqFiles: any, courseId: string) {
 
         return Promise.all(userQueries)
         .then((results: any) => {
-
-          // FIRST: Create lab sections that need to exist
-          Object.keys(data).forEach(function(key) {
-            let student: any = data[key];
-            let tentativeNewLab = String(student.LAB);
-            let labSectionExists = false;
-            for (let i = 0; i < newlyCompiledLabSections.length; i++) {
-              let compiledLabId = String(newlyCompiledLabSections[i].labId);
-              if (compiledLabId === tentativeNewLab) {
-                labSectionExists = true;
-              }
-            }
-            if (!labSectionExists) {
-              newlyCompiledLabSections.push({ 'labId' : student.LAB, 'users': new Array() });
-            }
-          });
-
-          // SECOND: Add student to correct section
-          Object.keys(data).forEach(function(key) {
-            let parsedSNUM: string = String(data[key].SNUM);
-            let parsedLAB: string = String(data[key].LAB);
-
-            Object.keys(results).forEach(function(resultKey) {
-              let dbStudent: IUserDocument = results[resultKey];              
-              let dbStudentSNUM: string = results[resultKey].snum;
-              
-              // IF student matches CSID and SNUM, add to section of parsed LabId
-
-              if (dbStudentSNUM === parsedSNUM) {
-
-                for (let i = 0; i < newlyCompiledLabSections.length; i++) {
-                  let labIdSection: string = String(newlyCompiledLabSections[i].labId);
-
-                  if (labIdSection === parsedLAB) {
-                    newlyCompiledLabSections[i].users.push(dbStudent._id);
-                  }
+          console.log('THE RESULTS', results);
+          try {
+            // FIRST: Create lab sections that need to exist
+            Object.keys(data).forEach(function(key) {
+              let student: any = data[key];
+              let tentativeNewLab = String(student.LAB);
+              let labSectionExists = false;
+              for (let i = 0; i < newlyCompiledLabSections.length; i++) {
+                let compiledLabId = String(newlyCompiledLabSections[i].labId);
+                if (compiledLabId === tentativeNewLab) {
+                  labSectionExists = true;
                 }
               }
-
+              if (!labSectionExists) {
+                newlyCompiledLabSections.push({ 'labId' : student.LAB, 'users': new Array() });
+              }
             });
-          });
+          }
+          catch (err) {
+            logger.error(`CourseController:: Create lab sections ERROR ${err}`);
+          }
+
+          try {
+            // SECOND: Add student to correct lab section
+            Object.keys(data).forEach(function(key) {
+              console.log('data', data[key]);
+              let parsedSNUM: string = String(data[key].SNUM);
+              let parsedLAB: string = String(data[key].LAB);
+
+              Object.keys(results).forEach(function(resultKey) {
+                console.log('results', results[resultKey]);
+                let dbStudent: IUserDocument = results[resultKey];              
+                let dbStudentSNUM: string = results[resultKey].snum;
+                
+                // IF student matches CSID and SNUM, add to section of parsed LabId
+
+                if (dbStudentSNUM === parsedSNUM) {
+
+                  for (let i = 0; i < newlyCompiledLabSections.length; i++) {
+                    let labIdSection: string = String(newlyCompiledLabSections[i].labId);
+
+                    if (labIdSection === parsedLAB) {
+                      newlyCompiledLabSections[i].users.push(dbStudent._id);
+                    }
+                  }
+                }
+
+              });
+            });
+          } catch (err) {
+            logger.error(`CourseController:: Add student to correct lab section ERROR ${err}`);            
+          }
+
           course.labSections = newlyCompiledLabSections;
           course.save();
         });

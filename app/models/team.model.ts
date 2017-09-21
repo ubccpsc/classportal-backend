@@ -13,9 +13,9 @@ interface ITeamDocument extends mongoose.Document {
   deliverableId: IDeliverableDocument;
   deliverableIds: IDeliverableDocument[];
   name: string;
+  disbanded: boolean;
   githubOrg: string;
   githubState: GithubState;
-
   TAs: Object[];
 }
 
@@ -44,6 +44,9 @@ const TeamSchema = new mongoose.Schema({
   },
   repoId: {
     type: Number,
+  },
+  disbanded: {
+    type: Boolean,
   },
   courseId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',

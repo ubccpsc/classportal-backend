@@ -39,7 +39,7 @@ function getMyTeams(req: any) {
       return Team.findOne({ courseId: course._id, members: user._id })
         .populate({ 
           path: 'members deliverableIds deliverableId', 
-          select: 'username fname lname _id name url gradesReleased open close',
+          select: 'username _id name url gradesReleased open close',
       })
         .then((team: ITeamDocument) => {
           if (team) {
@@ -400,9 +400,6 @@ function createCustomTeam(payload: any) {
     })
     .then((newTeamInsertList: any) => {
       return insertTeamDocuments(newTeamInsertList);
-    })
-    .catch(err => {
-      logger.error(`TeamController::createCustomTeam() ERROR ${err}`);
     });
 
     function createTeamObjectsForBatchMarking(teamIdList: string[]) {
