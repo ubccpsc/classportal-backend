@@ -49,10 +49,10 @@ function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object
       if (!comparisonUser || !loggedInUser) {
         return { username: payload.username, inSameLab: isInLab };
       }
-      // cannot add one's self to a team
-      if (_loggedInUser === String(payload.username)) {
-        return { username: payload.username, inSameLab: isInLab };
-      }
+      // cannot add one's self to a team (disabled because it turns out to be useful)
+      // if (_loggedInUser === String(payload.username)) {
+      //   return { username: payload.username, inSameLab: isInLab };
+      // }
 
       let labSections: any = course.labSections;
       let loggedInUserLabId: string;

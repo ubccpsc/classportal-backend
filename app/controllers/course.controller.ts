@@ -90,7 +90,6 @@ function addLabList(reqFiles: any, courseId: string) {
   let newlyCompiledLabSections: any = [];
   let labSectionsSet = new Set();
 
-  console.log(reqFiles);
   const options = {
     columns: true,
     skip_empty_lines: true,
@@ -104,13 +103,9 @@ function addLabList(reqFiles: any, courseId: string) {
   let parser = parse(options, (err, data) => {
     
     let usersRepo = User;
-
-    let numOfKeys: number = Object.keys(data).length;
-    let count = 0;
     let userQueries: any = [];
     
     Object.keys(data).forEach((key: string) => {
-      count++;
       let student = data[key];
       let course: ICourseDocument;
       logger.info('Parsing student into user model: ' + JSON.stringify(student));
@@ -120,8 +115,7 @@ function addLabList(reqFiles: any, courseId: string) {
       }).then((u: IUserDocument) => {
         return u;
       }));
-      });
-      console.log('The set', labSectionsSet);
+    });
 
       courseQuery.then((course: ICourseDocument) => {
 

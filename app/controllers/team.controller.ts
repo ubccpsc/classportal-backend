@@ -389,6 +389,8 @@ function createCustomTeam(payload: any) {
       if (membersAlreadyOnTeam) {
         throw `Members are already on team. Cannot add team member to multiple teams per 
           deliverable or sets of deliverables`;
+      } else if (payload.members.length > course.maxTeamSize) {
+        throw `Cannot have a team larger than ${course.maxTeamSize}`;
       } else if (payload.markInBatch) {
         return createTeamObjectsForBatchMarking(payload.members);
       }
@@ -428,7 +430,6 @@ function createCustomTeam(payload: any) {
               deliverableIds.push(delivs[i]._id);
             }
 
-            for ( let i = 0; i < userIds.length; i++) {
               let teamObject = {
                 courseId: course._id,
                 deliverableIds,
@@ -436,17 +437,18 @@ function createCustomTeam(payload: any) {
                 githubState: defaultGithubState,
               };
               bulkInsertArray.push(teamObject);
-            }
+
           } else {
             throw `Could not find Deliverables for ${payload.deliverableName} and ${course._id}`;
           }
     
           // adds the team number Name property used by AutoTest
-          let counter = teamIdList.length + 1;
+          let counter = course.batchTeamCount + 1;
           for (let i = 0; i < bulkInsertArray.length; i++) {
             bulkInsertArray[i].name = TEAM_PREPENDAGE + counter;
-            counter++;
           }
+          course.batchTeamCount = counter;
+          course.save();
     
           return bulkInsertArray;
         })

@@ -7,6 +7,7 @@ interface ICourseDocument extends mongoose.Document {
   minTeamSize: number;
   maxTeamSize: number;
   modules: string[];
+  batchTeamCount: number;
   customData: any;
   classList: Object[];
   batchDeliverables: Object[];
@@ -103,6 +104,10 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   },
   githubOrg: {
     type: String,
+  },
+  batchTeamCount: {
+    type: Number,
+    default: 0,
   },
   batchImportUrl: {
     type: String,
