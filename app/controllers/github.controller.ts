@@ -220,9 +220,13 @@ function createGithubReposForTeams(payload: any): Promise<any> {
   let courseSettings: any;
   let teams: ITeamDocument[];
   let team: ITeamDocument;
+  let buildByBatch: boolean;
   let inputGroup: GroupRepoDescription;
   let deliverable: IDeliverableDocument;
-  let courseWebhook: string;
+
+  if (typeof payload.buildByBatch !== 'undefined') {
+    buildByBatch = true;
+  }
 
   return Course.findOne({ courseId: payload.courseId }).exec()
     .then((_course: ICourseDocument) => {
@@ -250,13 +254,13 @@ function createGithubReposForTeams(payload: any): Promise<any> {
 
       // IMPORTANT NOTE: Two Types of Teams Can Be Built.
       // Team type #1: Build teams where all deliverables are in one repo
-      // Team type #2: Build teams where each deliverable is in individual 
-      // respective repo.
+      // Team type #2: Build teams where each deliverable is in respective
+      // repo.
       //
       // courseSettings contains markByBatch bool to change configuration.
       // Configuration cannot change after Teams have been built.
 
-      if (!courseSettings.markDelivsByBatch) {
+      if (courseSettings.markDelivsByBatch) {
         return getTeamsToBuildByBatch(course)
           .then((teams: ITeamDocument[]) => {
             return buildTeamsByBatch(teams);
@@ -297,7 +301,7 @@ function createGithubReposForTeams(payload: any): Promise<any> {
     function buildTeamsByBatch(_teams: ITeamDocument[]) {
       for (let i = 0; i < _teams.length; i++) {
         let inputGroup = {
-          teamName: createRepoName(course, payload.deliverableName, _teams[i].name),
+          teamName: 'cpsc310_d1_' + _teams[i].name, // createRepoName(course, payload.deliverableName, _teams[i].name),
           members: _teams[i].members.map((user: IUserDocument) => {
             return user.username;
           }),
@@ -312,13 +316,14 @@ function createGithubReposForTeams(payload: any): Promise<any> {
     }
 
     function getTeamsToBuildByBatch(course: ICourseDocument) {
-      return Team.find({ courseId: course._id })
+      return Team.find({ courseId: course._id, $where: 'this.deliverableIds.length > 0' })
         .populate({ path: 'members' })
         .exec()
         .then((_teams: any) => {
           if (_teams.length == 0) {
             throw `No Teams found. Must add teams before you can build Repos.`;
           }
+          console.log('teams found', teams);
           teams = _teams;
           return _teams;
         })
