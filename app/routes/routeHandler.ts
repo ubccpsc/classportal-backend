@@ -309,7 +309,7 @@ const repairGithubReposForTeams = (req: restify.Request, res: restify.Response, 
 };
 
 const createCustomTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return teamCtrl.createCustomTeam(req.params)
+  return teamCtrl.createCustomTeam(req, req.params)
   .then((projects: any) => res.json(200, { response: projects }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };

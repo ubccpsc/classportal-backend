@@ -37,7 +37,7 @@ function getMyTeams(req: any) {
     })
     .then((course: ICourseDocument) => {
       return Team.findOne({ courseId: course._id, members: user._id })
-        .populate({ 
+        .populate({
           path: 'members deliverableIds deliverableId', 
           select: 'username _id name url gradesReleased open close',
       })
@@ -328,12 +328,16 @@ function getTeams(payload: any) {
  * @param members array of github usernames
  * @param courseId - ie. 310
  */
-function createCustomTeam(payload: any) {
+function createCustomTeam(req: any, payload: any) {
   let course: ICourseDocument;
   let deliv: IDeliverableDocument;
   let delivs: IDeliverableDocument[];
   let team: ITeamDocument;
-
+  let user: IUserDocument;
+  
+  const CURRENT_USER: string = req.user.username;
+  const STUDENT_ROLE: string = 'student';
+  
   return Course.findOne({ courseId: payload.courseId })
     .populate('classList')
     .exec()
@@ -344,6 +348,13 @@ function createCustomTeam(payload: any) {
       } else {
         throw `Could not find course ${payload.courseId}`;
       }
+    })
+    .then(() => {
+      return User.findOne({ username: CURRENT_USER })
+        .exec()
+        .then((_user: IUserDocument) => {
+          user = _user;
+        });
     })
     .then(() => {
       return Deliverable.findOne({ name: payload.deliverableName, courseId: course._id })
@@ -389,7 +400,7 @@ function createCustomTeam(payload: any) {
       if (membersAlreadyOnTeam) {
         throw `Members are already on team. Cannot add team member to multiple teams per 
           deliverable or sets of deliverables`;
-      } else if (payload.members.length > course.maxTeamSize) {
+      } else if (payload.members.length > course.maxTeamSize && user.userrole === STUDENT_ROLE) {
         throw `Cannot have a team larger than ${course.maxTeamSize}`;
       } else if (payload.markInBatch) {
         return createTeamObjectsForBatchMarking(payload.members);
