@@ -9,7 +9,7 @@ import { config } from '../../config/env';
 const routes = (server: restify.Server) => {
   // Accessible by anyone
   server.get('/ping', routeHandler.pong);
-  server.get('/course', isAuthenticated, routeHandler.getCourse);
+  server.get('/:courseId/course', isAuthenticated, routeHandler.getCourse);
   server.get('/courses', isAuthenticated, routeHandler.getAllCourses);
   server.get('/myCourses', isAuthenticated, routeHandler.getMyCourses);
   server.get('/:courseId/myTeams', routeHandler.getMyTeams);

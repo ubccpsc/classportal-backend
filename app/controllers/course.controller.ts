@@ -389,7 +389,9 @@ function create(course: ICourseDocument) {
 
 function getCourse(payload: any) {
   logger.info(`CourseController::getCourse(${payload.courseId}`);
-  return Course.findOne({ 'courseId': payload.courseId }).exec();
+  return Course.findOne({ 'courseId': payload.courseId })
+    .select('-labSections -classList -grades')
+    .exec();
 }
 
 /**
