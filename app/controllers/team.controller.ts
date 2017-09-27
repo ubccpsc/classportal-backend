@@ -217,8 +217,8 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<ITeamDocument[]> 
     let teamQueryObject: any = new Object();
     if (course) {
       return Team.find({ courseId: course._id, $where: 'this.deliverableIds.length > 0' })
-        .populate('deliverable course TAs')
-        .populate({ path: 'members', select: 'fname lname' })
+        .populate({ path: 'members', select: 'fname lname username' })
+        .populate({ path: 'deliverableIds' })
         .exec()
         .then((teams: ITeamDocument[]) => {
           if (!teams) {
