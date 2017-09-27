@@ -25,6 +25,7 @@ const routes = (server: restify.Server) => {
   server.put('/register', isAuthenticated, routeHandler.validateRegistration);
   server.get('/:courseId/:userId/teams', isAuthenticated, routeHandler.getCourseTeamsPerUser);
   server.put('/:courseId/team', routeHandler.createTeam);
+  server.put('/:courseId/admin/customTeam', isAuthenticated, routeHandler.createCustomTeam);    
   server.get('/:courseId/students', isAuthenticated, routeHandler.getStudentNamesFromCourse);
   server.put('/:courseId/students/customTeam', isAuthenticated, routeHandler.createCustomTeam);    
   // OAuth routes by logged-in users only
@@ -45,7 +46,6 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/admin/teams/byBatch', adminAuthenticated, routeHandler.getCourseTeamsWithBatchMarking);  
   server.get('/:courseId/admin/courseSettings', routeHandler.getCourseSettings);
   server.post('/admin/classList', adminAuthenticated, routeHandler.getClassList);
-  server.put('/:courseId/admin/customTeam', adminAuthenticated, routeHandler.createCustomTeam);  
 
 
   // -- Admin or Super Admin Only Routes
