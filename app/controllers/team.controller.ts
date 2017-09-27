@@ -36,7 +36,7 @@ function getMyTeams(req: any) {
         });
     })
     .then((course: ICourseDocument) => {
-      return Team.findOne({ courseId: course._id, members: user._id })
+      return Team.findOne({ courseId: course._id, members: user._id, '$where': 'this.deliverableIds.length > 0' })
         .populate({
           path: 'members deliverableIds deliverableId', 
           select: 'username _id name url gradesReleased open close',
