@@ -319,6 +319,13 @@ const isStudentInSameLab = (req: any, res: restify.Response, next: restify.Next)
   .then((enrollmentStatus: object) => res.json(200, { response: enrollmentStatus }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };
+
+const getCourseTeamsWithBatchMarking = (req: any, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.getCourseTeamsWithBatchMarking(req.params)
+  .then((enrollmentStatus: object) => res.json(200, { response: enrollmentStatus }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
 export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
    getCurrentUserInfo, validateRegistration, addGithubUsername, updateDeliverable, getDeliverables,
    getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
@@ -327,4 +334,4 @@ export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList
    getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
    addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects,
    getUsersNotOnTeam, getCourse, getMyTeams, generateProjects, repairIndividualProvisions, repairGithubReposForTeams,
-   createCustomTeam, isStudentInSameLab };
+   createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking };

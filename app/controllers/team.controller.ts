@@ -206,6 +206,35 @@ function createTeam(req: any): Promise<ITeamDocument> {
     });
 }
 
+function getCourseTeamsWithBatchMarking(payload: any): Promise<ITeamDocument[]> {
+
+
+  let courseId = payload.courseId;
+
+  let courseQuery = Course.findOne({ courseId }).exec();
+
+  return courseQuery.then((course: ICourseDocument) => {
+    let teamQueryObject: any = new Object();
+    if (course) {
+      return Team.find({ courseId: course._id, $where: 'this.deliverableIds.length > 0' })
+        .populate('deliverable course TAs')
+        .populate({ path: 'members', select: 'fname lname' })
+        .exec()
+        .then((teams: ITeamDocument[]) => {
+          if (!teams) {
+            return Promise.reject(Error(`TeamController::getCourseTeamsPerUser No teams were found under
+            Course Number ${courseId}`));
+          }
+          return Promise.resolve(teams);
+        });
+    }
+    else {
+      return Promise.reject(Error(`TeamController::getCourseTeamsPerUser Course was not 
+      found under Course Number ${courseId}`));
+    }
+  });
+}
+
 function getCourseTeamsPerUser(req: any): Promise<ITeamDocument[]> {
   let courseId = req.params.courseId;
   let userId = req.user._id;
@@ -1106,4 +1135,5 @@ function insertTeamDocuments(_bulkInsertArray: any) {
 // }
 
 export { createTeam, update, getTeams, createGithubTeam, createGithubRepo, getRepos, getCourseTeamsPerUser,
-         randomlyGenerateTeamsPerCourse, getUsersNotOnTeam, getMyTeams, createCustomTeam }
+         randomlyGenerateTeamsPerCourse, getUsersNotOnTeam, getMyTeams, createCustomTeam, 
+         getCourseTeamsWithBatchMarking }
