@@ -6,11 +6,13 @@ import * as delivCtrl from '../controllers/deliverable.controller';
 import * as gradeCtrl from '../controllers/grade.controller';
 import * as teamCtrl from '../controllers/team.controller';
 import * as testCtrl from '../controllers/test.controller';
+import * as projectCtrl from '../controllers/project.controller';
 import * as githubCtrl from '../controllers/github.controller';
 import { logger } from '../../utils/logger';
 import { Course, ICourseDocument } from '../models/course.model';
 import { Grade, IGradeDocument } from '../models/grade.model';
 import { User, IUserDocument } from '../models/user.model';
+import { Project, IProjectDocument } from '../models/project.model';
 import { Deliverable, IDeliverableDocument } from '../models/deliverable.model';
 import { Team, ITeamDocument } from '../models/team.model';
 
@@ -23,19 +25,50 @@ const createCourse = (req: restify.Request, res: restify.Response) => {
     .catch((err: Error) => res.json(500, { 'err': err.message }));
 };
 
-const getCourseList = (req: restify.Request, res: restify.Response) => {
-  return courseCtrl.get(req.params)
+
+const addTokenToDB = (req: restify.Request, res: restify.Response) => {
+  return authCtrl.addTokenToDB(req, res)
+    .then(() => res.json(200, { response: 'Added token to DB' }))
+    .catch((err: Error) => res.json(500, { 'err': err.message }));
+};
+
+const getAllCourses = (req: restify.Request, res: restify.Response) => {
+  return courseCtrl.getAllCourses(req.params)
     .then((courseList) => res.json(200, { response: courseList }))
     .catch((err: Error) => res.json(500, { 'err': err.message }));
 };
 
+const getMyCourses = (req: restify.Request, res: restify.Response) => {
+  return courseCtrl.getMyCourses(req)
+    .then((courseList) => res.json(200, { response: courseList }))
+    .catch((err: Error) => res.json(500, { 'err': err.message }));
+};
+
+const getLabSectionsFromCourse = (req: restify.Request, res: restify.Response) => {
+  return courseCtrl.getLabSectionsFromCourse(req)
+    .then((courseList) => res.json(200, { response: courseList }))
+    .catch((err: Error) => res.json(500, { 'err': err.message }));
+};
+
+const getCourseLabSectionList = (req: restify.Request, res: restify.Response) => {
+  return courseCtrl.getCourseLabSectionList(req)
+    .then((courseList) => res.json(200, { response: courseList }))
+    .catch((err: Error) => res.json(500, { 'err': err.message }));
+};
+
+const addLabList = (req: restify.Request, res: restify.Response) => {
+return courseCtrl.addLabList(req.files, req.params.courseId)
+    .then((course: ICourseDocument) => res.json(200, { response: course.labSections }))
+    .catch((err: Error) => res.json(500, { 'err': err.message }));
+};
+
 const addStudentList = (req: restify.Request, res: restify.Response) => {
-  return courseCtrl.updateClassList(req.files['classList'], req.params.courseId)
+  return courseCtrl.updateClassList(req.files, req.params.courseId)
     .then(() => res.json(200, { response: 'Successfully updated Class List on course #' + req.params.courseId }))
     .catch((err: any) => res.json(500, { 'err': err.message }));
 };
 
-const getStudentList = (req: restify.Request, res: restify.Response) => {
+const getClassList = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.getClassList(req.params.courseId)
     .then((classList) => res.json(200, { response: classList }))
     .catch((err: Error) => res.json(500, { err: err.message }));
@@ -55,7 +88,7 @@ const testRoute = (req: restify.Request, res: restify.Response) => {
 
 const logout = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return authCtrl.logout(req, res, next)
-    .then(() => res.json(200, { response: 'Successfully logged out' }))
+    .then(() => res.json(200, { response: 'Successfully logged out.' }))
     .catch((err: any) => res.json(500, { err: err.errmsg }));
 };
 
@@ -66,18 +99,24 @@ const getCurrentUserInfo = (req: restify.Request, res: restify.Response, next: r
 
 const oauthCallback = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return authCtrl.oauthCallback(req, res, next)
-    .then(() => res.json(200, { response: 'Successfully authenticated user' }))
+    .then(() => res.json(200, { response: 'Successfully authenticated user.' }))
     .catch((err: any) => res.json(500, { err: err.errmsg }));
 };
 
-const addDeliverables = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return delivCtrl.create(req.params)
-    .then((d: IDeliverableDocument) => res.json(200, { response: 'Successfully updated/added Deliverable.' }))
+const updateDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return delivCtrl.updateDeliverable(req.params)
+    .then((d: IDeliverableDocument) => res.json(200, { response: 'Successfully updated Deliverable.' }))
+    .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const addDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return delivCtrl.addDeliverable(req)
+    .then((d: IDeliverableDocument) => res.json(200, { response: 'Successfully added Deliverable.' }))
     .catch((err: any) => res.json(500, { err: err.message }));
 };
 
 const getDeliverables = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return delivCtrl.read(req.params)
+  return delivCtrl.getDeliverablesByCourse(req.params)
     .then((deliverables) => res.json(200, { response: deliverables }))
     .catch((err: any) => res.json(500, { err: err.message }));
 };
@@ -123,12 +162,11 @@ const addGithubUsername = (req: restify.Request, res: restify.Response, next: re
    .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-const addTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return teamCtrl.add(req)
-   .then(() => res.json(200, { response: 'Successfully added a new team.' }))
+const createTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.createTeam(req)
+   .then((team: ITeamDocument) => res.json(200, { response: `Successfully added new team ${team.githubOrg}` }))
    .catch((err: any) => {
      logger.info(err);
-     console.log('routeHandler error: ' + err);
      res.json(500, { 'err': err.message });
    });
 };
@@ -150,8 +188,8 @@ const addAdmins = (req: restify.Request, res: restify.Response, next: restify.Ne
    .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-const getAdmins = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return courseCtrl.getAdmins(req.params)
+const getAllAdmins = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.getAllAdmins(req.params)
    .then((course: ICourseDocument) => res.json(200, { response: course.admins }))
    .catch((err: any) => res.json(500, { err: err.message }));
 };
@@ -174,9 +212,21 @@ const createGithubTeam = (req: restify.Request, res: restify.Response, next: res
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-const createGithubRepo = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return githubCtrl.createGithubRepo(req.params)
+const createGithubReposForTeams = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return githubCtrl.createGithubReposForTeams(req.params)
   .then((githubResponse: Object) => res.json(200, { response: 'Successfully created repo with teams and members.' }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const createGithubReposForProjects = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return githubCtrl.createGithubReposForProjects(req.params)
+  .then((githubResponse: Object) => res.json(200, { response: 'Successfully created repo with teams and members.' }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const repairIndividualProvisions = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return githubCtrl.repairIndividualProvisions(req.params)
+  .then((githubResponse: any) => res.json(200, { response: githubResponse }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
@@ -192,14 +242,96 @@ const deleteRepos = (req: restify.Request, res: restify.Response, next: restify.
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-const getUserRole = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return authCtrl.getUserRole(req, res, next)
-  .then((userRole: string) => res.json(200, { response: userRole }))
+const getCurrentUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return authCtrl.getCurrentUser(req, res, next)
+  .then((currentUser: object) => res.json(200, { response: currentUser }))
   .catch((err: any) => res.json(500, { err: err.message }));
 };
 
-export { pong, createCourse, getCourseList, logout, addStudentList, getStudentList, testRoute,
-   getCurrentUserInfo, validateRegistration, addGithubUsername, addDeliverables, getDeliverables,
-   getGradesAdmin, getGradesStudent, addGrades, addTeam, updateTeam, getStudentNamesFromCourse,
-   addAdmins, getAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubRepo, getRepos,
-   deleteRepos, getUserRole };
+const isAuthenticated = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return authCtrl.isAuthenticated(req, res, next)
+  .then((authStatus: boolean) => res.json(200, { response: authStatus }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const getCourseSettings = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.getCourseSettings(req)
+  .then((courseSettings: Object) => res.json(200, { response: courseSettings }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const getCourseTeamsPerUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.getCourseTeamsPerUser(req)
+  .then((teams: ITeamDocument[]) => res.json(200, { response: teams }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const randomlyGenerateTeamsPerCourse = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.randomlyGenerateTeamsPerCourse(req.params)
+  .then((teams: any) => res.json(200, { response: teams }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const getUsersNotOnTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.getUsersNotOnTeam(req.params)
+  .then((notOnTeamList: IUserDocument[]) => res.json(200, { response: notOnTeamList }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const getCourse = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.getCourse(req.params)
+  .then((course: ICourseDocument) => res.json(200, { response: course }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const getMyTeams = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.getMyTeams(req)
+  .then((teams: ITeamDocument) => res.json(200, { response: teams }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+// const generateProjects = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+//   return projectCtrl.generateProjects(req.params)
+//   .then((newProjects: any) => res.json(200, { response: newProjects }))
+//   .catch((err: any) => res.json(500, { err: err.message }));
+// };
+
+const generateProjects = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return projectCtrl.generateProjects(req.params)
+  .then((projects: any) => res.json(200, { response: projects }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const repairGithubReposForTeams = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return githubCtrl.repairGithubReposForTeams(req.params)
+  .then((projects: any) => res.json(200, { response: projects }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const createCustomTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.createCustomTeam(req, req.params)
+  .then((projects: any) => res.json(200, { response: projects }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const isStudentInSameLab = (req: any, res: restify.Response, next: restify.Next) => {
+  return userCtrl.isStudentInSameLab(req.params, req.user.username)
+  .then((enrollmentStatus: object) => res.json(200, { response: enrollmentStatus }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+const getCourseTeamsWithBatchMarking = (req: any, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.getCourseTeamsWithBatchMarking(req.params)
+  .then((enrollmentStatus: object) => res.json(200, { response: enrollmentStatus }))
+  .catch((err: any) => res.json(500, { err: err.message }));
+};
+
+export { pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
+   getCurrentUserInfo, validateRegistration, addGithubUsername, updateDeliverable, getDeliverables,
+   getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
+   addAdmins, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
+   deleteRepos, getCurrentUser, addTokenToDB, isAuthenticated, getMyCourses,
+   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
+   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects,
+   getUsersNotOnTeam, getCourse, getMyTeams, generateProjects, repairIndividualProvisions, repairGithubReposForTeams,
+   createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking };

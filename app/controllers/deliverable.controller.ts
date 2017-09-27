@@ -6,8 +6,8 @@ import { Course, ICourseDocument } from '../models/course.model';
 import { User, IUserDocument } from '../models/user.model';
 import { logger } from '../../utils/logger';
 
-// Retrives and updates Deliverables object.
-function updateDeliverables(course: ICourseDocument, deliverable: any): Promise<IDeliverableDocument> {
+// Retrieves and updates Deliverable object.
+function queryAndUpdateDeliverable(course: ICourseDocument, deliverable: any): Promise<IDeliverableDocument> {
   logger.info('updateDeliverables() in Deliverable Controller');
   let deliverableList = new Array;
 
@@ -58,25 +58,78 @@ function addDeliverablesToCourse(course: any, deliverable: IDeliverableDocument)
   return course.save();
 }
 
-function create(payload: any) {
-  logger.info('create() in Deliverable Controller');
+function updateDeliverable(payload: any) {
+  logger.info('updateDeliverable() in Deliverable Controller');
   return Course.findOne({ 'courseId' : payload.courseId })
     .exec()
     .then( c => {
       if (c) {
-        return updateDeliverables(c, payload);
+        return queryAndUpdateDeliverable(c, payload);
       } else {
         return Promise.reject(Error('Error assigning deliverables to course #' + payload.courseId + '.'));
       }
     });
 }
 
-function read(payload: any) {
-  logger.info('read() in Deliverable Controller');
-  let searchParams = { courseId : payload.courseId };
-  let populateParams = { path: 'deliverables', select: 'id name url open close isReleased' };
+// Adds a deliverable. Rejects if Deliverable exists with same Course Name and Course._id
+// Adds Deliverable reference to Course object
+function addDeliverable(payload: any): Promise<IDeliverableDocument> {
+  logger.info('DeliverableController::addDeliverable() in Deliverable Controller');
+  console.log(payload.params);
+  let newDeliverable = payload.params.deliverable;
+  let courseQuery = { courseId: newDeliverable.courseId };
+  let queriedCourse: ICourseDocument;
+  return Course.findOne(courseQuery)
+    .then((course: ICourseDocument) => {
+      // replace "310" courseId with a refernece to _id object
+      newDeliverable.courseId = course._id;
+      queriedCourse = course;
+      return findDelivWithCourse(newDeliverable.name, course._id);
+    })
+    .then(() => {      
+      return Deliverable.findOrCreate(newDeliverable)
+        .then((newDeliv: IDeliverableDocument) => {
+          return newDeliv;
+        })
+        .then((createdDeliv: IDeliverableDocument) => {
+          queriedCourse.deliverables.push(createdDeliv._id);
+          return queriedCourse.save()
+            .then(() => {
+              return createdDeliv;
+            });
+        });
+    })
+    .catch(err => {
+      logger.error(`DeliverableController::addDeliverable ERROR ${err}`);
+    });
 
-  return Course.findOne(searchParams).populate(populateParams)
+  function findDelivWithCourse(name: string, course_id: string) {
+    let delivQuery = { name: newDeliverable.name, courseId: course_id };
+    return Deliverable.findOne(delivQuery)
+      .then((deliv: IDeliverableDocument) => {
+        if (deliv) {
+          throw `Deliverable with same Name and CourseId already exist.`;
+        }
+        return deliv;
+      })
+      .catch(err => {
+        logger.error(`DeliverableController::findDelivWithCourse() ERROR ${err}`);
+      });
+  }
+}
+
+function getDeliverablesByCourse(payload: any) {
+  console.log(payload);
+  logger.info('DeliverableController::getDeliverablesByCourse() in Deliverable Controller');
+  let searchParams = { courseId : payload.courseId };
+  let populateParams = { 
+    path: 'deliverables', 
+    select: 'id name url open close isReleased gradesReleased reposCreated buildingRepos', 
+    options: { sort: { name: 1 } } 
+  };
+
+  return Course.findOne(searchParams)
+    .populate(populateParams)
     .exec()
     .then( c => {
       if (c) {
@@ -88,4 +141,4 @@ function read(payload: any) {
     .catch((err) => logger.info('Error retrieving deliverable: ' + err));
 }
 
-export { create, read }
+export { updateDeliverable, getDeliverablesByCourse, addDeliverable }

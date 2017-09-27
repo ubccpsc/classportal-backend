@@ -1,13 +1,21 @@
 import * as mongoose from 'mongoose';
 import { logger } from '../../utils/logger';
+import { User, IUserDocument } from '../models/user.model';
+import { Deliverable, IDeliverableDocument } from '../models/deliverable.model';
+import { GithubState, GithubRepo, GithubTeam, defaultGithubState, 
+  defaultGithubRepo } from './github.interfaces';
 
 interface ITeamDocument extends mongoose.Document {
   course: Object;
   teamId: number;
-  members: Object[];
+  members: IUserDocument[];
   deliverable: Object;
+  deliverableId: IDeliverableDocument;
+  deliverableIds: IDeliverableDocument[];
   name: string;
-  githubUrl: string;
+  disbanded: boolean;
+  githubOrg: string;
+  githubState: GithubState;
   TAs: Object[];
 }
 
@@ -17,37 +25,57 @@ interface ITeamModel extends mongoose.Model<ITeamDocument> {
 }
 
 const TeamSchema = new mongoose.Schema({
-  teamId: {
-    type: Number,
-    required: true,
-    unique: true,
-  },
   name: {
     type: String,
     required: true,
   },
+  githubOrg: {
+    type: String,
+    default: null,
+  },
   githubUrl: {
     type: String,
-    required: true,
   },
-  course: {
+  githubTeamId: {
+    type: Number,
+  },
+  multiDeliverableRepo: {
+    type: Boolean,
+  },
+  repoId: {
+    type: Number,
+  },
+  disbanded: {
+    type: Boolean,
+  },
+  courseId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
     required: true,
   },
-  deliverable: {
+  deliverableId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable',
-    required: true,
   },
+  deliverableIds: [
+    { type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }
+  ],
   members: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    required: true,
+    default: [],
   },
   TAs: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
-  org: {
-    type: String,
-    default: null,
+  githubState: {
+    repo: {
+      url: { type: String, default: '' },
+      id: { type: Number, default: 0 },
+      name: { type: String, default: '' },
+      webhookId: { type: Number, default: 0 },
+      webhookUrl: { type: String, default: '' },
+    },
+    team: {
+      id: { type: Number, default: 0 }
+    }
   },
 });
 

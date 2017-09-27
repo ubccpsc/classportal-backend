@@ -16,20 +16,22 @@ let updateUserrole = function(u: IUserDocument, c: ICourseDocument, userrole: st
   return u.save();
 };
 
-let addCourseDataToUser = function(user: IUserDocument, course: ICourseDocument) {
+// checks to see if course already on user. If not, then adds Course reference under User object.
+let addCourseDataToUser = function(user: IUserDocument, course: ICourseDocument): Promise<ICourseDocument> {
   let courseAlreadyInUser: boolean;
-  courseAlreadyInUser = user.courses.some( function(c: CourseData) {
-    return course._id.equals(c.courseId);
-  });
+  courseAlreadyInUser = user.courses.indexOf(course._id) >= 0 ? true : false;
+
   if (!courseAlreadyInUser) {
-    user.courses.push({ courseId: course._id, role: null , team: null, repos: null });
+    user.courses.push(course._id);
   }
-  return user.save();
+  return user.save().then(() => {
+    return course;
+  });
 };
 
-function getAdmins(payload: any) {
+function getAllAdmins(payload: any) {
   return Course.findOne({ courseId: payload.courseId })
-    .populate({ path: 'admins', select: 'fname lname snum csid username -_id' })
+    .populate({ path: 'admins', select: 'fname lname snum csid username _id' })
     .then( c => {
       if ( c !== null && c.admins.length < 1) {
         return Promise.reject(Error('There are no admins under course ' + payload.courseId + '.'));
@@ -84,12 +86,9 @@ function addAdmins(payload: any) {
   });
 }
 
-/**
- * Update a class list
- * Input: CSV
- */
-
-function updateClassList(classList: any, courseId: string) {
+function addLabList(reqFiles: any, courseId: string) {
+  let newlyCompiledLabSections: any = [];
+  let labSectionsSet = new Set();
 
   const options = {
     columns: true,
@@ -97,12 +96,149 @@ function updateClassList(classList: any, courseId: string) {
     trim: true,
   };
 
-  let rs = fs.createReadStream(classList.path);
-  let parser = parse(options, (err, data) => {
 
+  let rs = fs.createReadStream(reqFiles['labList'].path);
+  let courseQuery = Course.findOne({ 'courseId': courseId }).exec();
+  
+  let parser = parse(options, (err, data) => {
+    
+    let usersRepo = User;
+    let userQueries: any = [];
+    
+    Object.keys(data).forEach((key: string) => {
+      let student = data[key];
+      let course: ICourseDocument;
+      logger.info('Parsing student into user model: ' + JSON.stringify(student));
+      userQueries.push(usersRepo.findOne({
+        csid : student.CSID,
+        snum : student.SNUM,
+      }).then((u: IUserDocument) => {
+        return u;
+      }));
+    });
+
+      courseQuery.then((course: ICourseDocument) => {
+
+        return Promise.all(userQueries)
+        .then((results: any) => {
+          console.log('THE RESULTS', results);
+          try {
+            // FIRST: Create lab sections that need to exist
+            Object.keys(data).forEach(function(key) {
+              let student: any = data[key];
+              let tentativeNewLab = String(student.LAB);
+              let labSectionExists = false;
+              for (let i = 0; i < newlyCompiledLabSections.length; i++) {
+                let compiledLabId = String(newlyCompiledLabSections[i].labId);
+                if (compiledLabId === tentativeNewLab) {
+                  labSectionExists = true;
+                }
+              }
+              if (!labSectionExists) {
+                newlyCompiledLabSections.push({ 'labId' : student.LAB, 'users': new Array() });
+              }
+            });
+          }
+          catch (err) {
+            logger.error(`CourseController:: Create lab sections ERROR ${err}`);
+          }
+
+          try {
+            // SECOND: Add student to correct lab section
+            Object.keys(data).forEach(function(key) {
+              console.log('data', data[key]);
+              let parsedSNUM: string = String(data[key].SNUM);
+              let parsedLAB: string = String(data[key].LAB);
+
+              Object.keys(results).forEach(function(resultKey) {
+                console.log('results', results[resultKey]);
+                let dbStudent: IUserDocument = results[resultKey];              
+                let dbStudentSNUM: string = results[resultKey].snum;
+                
+                // IF student matches CSID and SNUM, add to section of parsed LabId
+
+                if (dbStudentSNUM === parsedSNUM) {
+
+                  for (let i = 0; i < newlyCompiledLabSections.length; i++) {
+                    let labIdSection: string = String(newlyCompiledLabSections[i].labId);
+
+                    if (labIdSection === parsedLAB) {
+                      newlyCompiledLabSections[i].users.push(dbStudent._id);
+                    }
+                  }
+                }
+
+              });
+            });
+          } catch (err) {
+            logger.error(`CourseController:: Add student to correct lab section ERROR ${err}`);            
+          }
+
+          course.labSections = newlyCompiledLabSections;
+          course.save();
+        });
+      });
+
+    if (err) {
+      throw Error(err);
+    }
+  });
+
+  rs.pipe(parser);
+  
+  return Course.findOne({ courseId })
+    .populate({ path: 'labSections.courses' })
+    .exec()
+    .then(( course: ICourseDocument) => {
+      return course;
+    })
+    .catch(err => {
+      logger.error(`CourseController::addLabList ERROR ${err}`);
+    });
+}
+
+
+function getLabSectionsFromCourse(req: any): Promise<object> {
+  return Course.findOne({ courseId: req.params.courseId })
+    .populate({ path: 'labSections.courses', select: 'labSections' })
+    .exec()
+    .then((course: ICourseDocument) => {
+      return course;
+    });
+}
+
+
+function getCourseLabSectionList(req: any): Promise<object> {
+  return Course.findOne({ courseId: req.params.courseId })
+    .populate({ path: 'labSections.courses', select: 'fname lname' })
+    .exec()
+    .then((course: ICourseDocument) => {
+      return course;
+    });
+}
+
+
+
+/**
+ * Update a class list
+ * Input: CSV
+ */
+
+function updateClassList(reqFiles: any, courseId: string) {
+  console.log(reqFiles['classList']);
+  const options = {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+  };
+
+  let rs = fs.createReadStream(reqFiles['classList'].path);
+  let parser = parse(options, (err, data) => {
+    
+    let courseQuery = Course.findOne({ 'courseId': courseId });
     let lastCourseNum = null;
     let course = null;
-    let newClassList = new Array();
+    let newClassList = new Array<object>();
     let usersRepo = User;
 
     for (let key in data) {
@@ -113,28 +249,30 @@ function updateClassList(classList: any, courseId: string) {
         snum : student.SNUM,
         lname : student.LAST,
         fname : student.FIRST,
+        username : student.USERNAME,
       })
         .then(user => {
-          newClassList.push(user);
+          newClassList.push(user._id);
           courseQuery
             .then( c => {
+              // add new Course information to User object
               return addCourseDataToUser(user, c);
+            })
+            .then(() => {
+              courseQuery
+              .exec()
+              .then( c => {
+                c.classList = newClassList;
+                c.save();
+                return c;
+              });
             });
         })
-        .catch( (err) => { logger.info('Error creating user in class controller' + err); });
+        .catch( (err) => { 
+          logger.error(`CourseController::updateClassList ERROR ${err}`);
+        });
     }
-
-    let courseQuery = Course.findOne({ 'courseId': courseId });
-
-    courseQuery
-      .exec()
-      .then( c => {
-        c.classList = newClassList;
-        c.save();
-        return c;
-      })
-        .catch((err) => logger.info('Error retrieving course information: ' + err));
-
+    
     if (err) {
       throw Error(err);
     }
@@ -153,16 +291,18 @@ function updateClassList(classList: any, courseId: string) {
 }
 
 function getClassList(courseId: string) {
-  let courseQuery = Course.findOne({ 'courseId': courseId })
-    .populate({ path: 'classList', select: 'snum fname lname teamUrl' }).exec();
-
-  return courseQuery.then(result => {
-    if ( result === null ) {
-      return Promise.reject(Error('Course #' + courseId + ' does not exist.'));
-    } else {
-      return Promise.resolve(result.classList);
-    }
-  });
+  return Course.findOne({ 'courseId': courseId })
+    .populate({ path: 'classList', 
+      select: 'snum csid fname lname username userrole id courses' })
+    .exec()
+    .then(course => {
+      if (!course) {
+        console.log(course);
+        return Promise.reject(Error('Course #' + courseId + ' does not exist.'));
+      } else {
+        return Promise.resolve(course.classList);
+      }
+    });
 }
 
 function getStudentNamesFromCourse(courseId: string) {
@@ -183,9 +323,11 @@ function getStudentNamesFromCourse(courseId: string) {
  * Get a list of courses
  * @return Course[] All courses in DB
  */
-function get(req: restify.Request) {
+function getAllCourses(req: restify.Request) {
   logger.info('get() in Courses Controller');
-  let query = Course.find({}, 'courseId icon name -_id').sort({ courseId: -1 }).exec();
+  let query = Course.find({}, `courseId minTeamSize maxTeamSize studentsSetTeams description
+  teamsMustBeInSameLab icon name -_id`)
+    .sort({ courseId: -1 }).exec();
 
   return query.then( result => {
     if ( result === null ) {
@@ -195,6 +337,38 @@ function get(req: restify.Request) {
     }
   });
 }
+
+/**
+ * Gets user role from perspective of a student
+* @param {restify.Request} restify request object
+* @param {restify.Response} restify response object
+* @returns an array of Courses for user
+ */
+function getMyCourses(req: any): Promise<object[]> {
+
+  return User.findOne({ username: req.user.username })
+    .populate({ path: 'courses', select: 'courseId studentsSetTeams teamsMustBeInSameLab' })
+    .exec()
+    .then((user: any) => {
+      return user.courses;
+    });
+}
+
+/**
+ * Gets user role
+* @param {restify.Request} restify request object
+* @param {restify.Response} restify response object
+* @returns an array of Courses for user
+ */
+// function getAdminCourseList(req: any): Promise<object[]> {
+//   // should find all admins, and the courses that they are in.
+//   return Course.find({ username: req.user.username })
+//     .populate({ path: 'courses.courseId', select: 'courseId name icon description' })
+//     .exec()
+//     .then((user: IUserDocument) => {
+//       return user.courses;
+//     });
+// }
 
 /**
  * Create a team
@@ -213,6 +387,13 @@ function create(course: ICourseDocument) {
   });
 }
 
+function getCourse(payload: any) {
+  logger.info(`CourseController::getCourse(${payload.courseId}`);
+  return Course.findOne({ 'courseId': payload.courseId })
+    .select('-labSections -classList -grades')
+    .exec();
+}
+
 /**
  * Create a team
  */
@@ -222,6 +403,22 @@ function update(req: restify.Request, res: restify.Response, next: restify.Next)
   return next();
 }
 
+/**
+* Gets logged in username
+* @param {restify.Request} restify request object
+* @returns {boolean} true value if valid CSID/SNUM aka. real user in database
+**/
+function getCourseSettings(req: restify.Request): Promise<object> {
+  let courseId = req.params.courseId;
+  return Course.findOne({ courseId: req.params.courseId })
+    .then((course: ICourseDocument) => {
+      if (course) {
+        return Promise.resolve(course.settings);
+      } else {
+        return Promise.reject(`CourseController::GetCourseSettings Could not find course ${courseId}`);
+      }
+    });
+} 
 
 
 
@@ -234,5 +431,6 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
   return next();
 }
 
-export { get, create, update, remove, updateClassList, getClassList, getStudentNamesFromCourse, addAdmins,
-         getAdmins, }
+export { getAllCourses, create, update, updateClassList, remove, addLabList, getClassList, getStudentNamesFromCourse, 
+         addAdmins, getAllAdmins, getMyCourses, getCourseSettings, getLabSectionsFromCourse, 
+         getCourseLabSectionList, getCourse }

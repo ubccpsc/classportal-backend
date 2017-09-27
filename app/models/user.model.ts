@@ -16,6 +16,7 @@ interface IUserDocument extends mongoose.Document {
   snum: string;
   csid: string;
   username: string;
+  userrole: string;
   fname: string;
   lname: string;
   courses: CourseData[];
@@ -38,13 +39,16 @@ const UserSchema = new mongoose.Schema({
   username: {
     type: String,
     default: '',
+    unique: true,
   },
   snum: {
     type: String,
+    unique: true,
     required: true,
   },
   csid: {
     type: String,
+    unique: true,
     required: true,
   },
   fname: {
@@ -53,23 +57,11 @@ const UserSchema = new mongoose.Schema({
   lname: {
     type: String,
   },
-  courses: [
-    {
-      courseId: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'Course',
-        required: true,
-      },
-      role: {
-        type: String,
-      },
-      team: {
-        type: [Number],
-      },
-      repos: {
-        type: [String],
-      },
-    },
-  ],
+  userrole: {
+    type: String,
+    default: 'student',
+  },
+  courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true }],
 });
 
 UserSchema.methods = {
@@ -140,12 +132,16 @@ UserSchema.statics = {
       .exec()
       .then((user) => {
         if (user) {
-          return Promise.resolve(user);
+          console.log('test of course' + user.username);
+          return user;
         } else {
           return User.create(query)
             .then((q) => { return q.save(); })
             .catch((err) => { logger.info(err); });
         }
+      })
+      .catch((err) => {
+        logger.error('UserModel::findOrCreate() ERROR' + err);
       });
   },
 };

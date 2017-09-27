@@ -5,8 +5,6 @@ import { routes } from '../app/routes';
 import { logger } from '../utils/logger';
 import { session, CookieParser, passport } from './auth';
 
-let sslIntCert = fs.readFileSync(config.ssl_int_cert_path);
-
 
 // create https server
 const app = restify.createServer({
@@ -16,19 +14,24 @@ const app = restify.createServer({
   ca: fs.readFileSync(config.ssl_int_cert_path).toString(),
 });
 
-// set cors options
-app.opts(/.*/, (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  res.header('Access-Control-Allow-Methods', req.header('Access-Control-Request-Method'));
-  res.header('Access-Control-Allow-Headers', req.header('Access-Control-Request-Headers'));
-  res.send(200);
-  return next();
-});
+restify.CORS.ALLOW_HEADERS.push('Accept-Encoding');
+restify.CORS.ALLOW_HEADERS.push('Accept-Language');
 
 // allow cors
 app.use(restify.CORS({
-  origins: ['http://localhost:3000', 'http://localhost:5000'],
   credentials: true,
 }));
+console.log('App path', `${config.app_path}`);
+
+// set cors options
+app.opts(/.*/, (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.send(200);
+  return next();
+});
 
 // parse the http query string into req.query, but not into req.params
 app.use(restify.queryParser({ mapParams: false }));

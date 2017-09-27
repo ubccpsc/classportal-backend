@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { logger } from '../../utils/logger';
+import { ITeamDocument } from './team.model';
 
 interface IDeliverableDocument extends mongoose.Document {
   courseId: string;
@@ -7,6 +8,8 @@ interface IDeliverableDocument extends mongoose.Document {
   url: string;
   open: Date;
   close: Date;
+  projectCount: number;
+  teamCount: number;
   gradesReleased: Boolean;
 }
 
@@ -18,12 +21,27 @@ const DeliverableSchema = new mongoose.Schema({
   courseId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
   },
+  teamCount: {
+    type: Number,
+  },
   name: {
     type: String,
     required: true,
   },
+  githubOrg: {
+    type: String,
+  },
   url: {
     type: String,
+  },
+  projectCount: {
+    type: Number,
+  },
+  team: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'Team',
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'User',
   },
   open: {
     type: Date,
@@ -34,6 +52,10 @@ const DeliverableSchema = new mongoose.Schema({
   gradesReleased: {
     type: Boolean,
   },
+  reposCreated: {
+    type: Boolean,
+    default: false,
+  }
 });
 
 // Deliverable Name must be unique per Course
@@ -55,8 +77,8 @@ DeliverableSchema.static({
           return deliverable;
         } else {
           return Deliverable.create(query)
-            .then((q) => {
-              return q.save();
+            .then((d) => {
+              return d.save();
             })
             .catch((err) => { logger.info(err); });
         }

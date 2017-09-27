@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import { UserSchema } from '../models/user.model';
+import { UserSchema, IUserDocument } from '../models/user.model';
 import { logger } from '../../utils/logger';
 
 interface ICourseDocument extends mongoose.Document {
@@ -7,12 +7,27 @@ interface ICourseDocument extends mongoose.Document {
   minTeamSize: number;
   maxTeamSize: number;
   modules: string[];
+  batchTeamCount: number;
   customData: any;
   classList: Object[];
+  batchDeliverables: Object[];
   deliverables: Object[];
   grades: [Object];
+  labSections: [Object];
   admins: [Object];
+  batchImportUrl: string;
+  urlWebhook: string;
+  githubOrg: string;
   teamMustBeInSameLab: Boolean;
+  settings: CourseSettings;
+}
+
+interface CourseSettings {
+  bootstrapImage: string;
+  testingDelay: boolean;
+  delayTime: Date;
+  markDelivsByBatch: boolean;
+  deliverables: Object;
 }
 
 interface ICourseModel extends mongoose.Model<ICourseDocument> {
@@ -33,6 +48,9 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     default: '',
     unique: false,
   },
+  urlWebhook: {
+    type: String,
+  },
   icon: {
     type: String,
     default: '//cdn.ubc.ca/clf/7.0.5/img/favicon.ico',
@@ -49,24 +67,56 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   classList: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
+  batchDeliverables: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }],
+  },
   deliverables: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }],
   },
   grades: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Grade' }],
   },
+  admins: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    default: [],
+  },
+  labSections: [
+    {
+      users: {
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        default: [],
+      },
+      labId: {
+        type: String,
+      },
+    },
+  ],
   studentsSetTeams: {
     type: Boolean,
   },
   customData: {
     type: Object,
   },
-  admins: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    default: [],
-  },
   teamMustBeInSameLab: {
     type: Boolean,
+    required: true,
+    default: true,
+  },
+  githubOrg: {
+    type: String,
+  },
+  batchTeamCount: {
+    type: Number,
+    default: 0,
+  },
+  batchImportUrl: {
+    type: String,
+  },
+  settings: {
+    type: Object,
+  },
+  description: {
+    type: String,
   },
 });
 

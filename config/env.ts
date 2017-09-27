@@ -9,17 +9,20 @@ const config = {
   host: process.env.DEV_HOST,
   port: process.env.DEV_PORT,
   db: process.env.DEV_DB,
+  app_path: process.env.DEV_APP_PATH,
   ssl_key_path: process.env.SSL_KEY_PATH,
   ssl_cert_path: process.env.SSL_CERT_PATH,
   ssl_int_cert_path: process.env.SSL_INT_CERT_PATH,
   github_client_id: process.env.GITHUB_CLIENT_ID,
   github_client_secret: process.env.GITHUB_CLIENT_SECRET,
-  github_callback_url: 'http://localhost:5000/auth/login/return',
+  github_callback_url: process.env.GITHUB_OAUTH_CALLBACK,
   super_admin: process.env.DEV_SUPER_ADMIN,
   admins: process.env.DEV_ADMINS.split(' '),
   auth_strategy: 'github',
   github_auth_token: process.env.GITHUB_AUTH_TOKEN,
+  github_clone_token: process.env.GITHUB_CLONE_TOKEN,
   github_user_name: process.env.GITHUB_USER_NAME,
+  github_api_path: process.env.GITHUB_API_PATH,
 };
 
 // specific to test config
@@ -37,6 +40,8 @@ if (config.env === 'test') {
 if (config.env === 'production') {
   config.host = process.env.PROD_HOST;
   config.port = process.env.PROD_PORT;
+  config.app_path = process.env.PROD_APP_PATH;
+  config.debug = process.env.DEBUG || false;
   config.db = process.env.PROD_DB;
   config.super_admin = process.env.PROD_SUPER_ADMIN;
   config.admins = process.env.PROD_ADMINS.split(' ');

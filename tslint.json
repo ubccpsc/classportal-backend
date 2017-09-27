@@ -55,14 +55,14 @@
       "always"
     ],
     "brace-style": [
-      true,
+      false,
       "1tbs",
       {
         "allowSingleLine": true
       }
     ],
     "ter-indent": [
-      true,
+      false,
       2
     ],
     "ter-max-len": [
@@ -88,7 +88,7 @@
     "no-duplicate-variable": true,
     "no-eval": true,
     "no-internal-module": true,
-    "no-trailing-whitespace": true,
+    "no-trailing-whitespace": false,
     "no-unsafe-finally": true,
     "no-var-keyword": true,
     "one-line": [
@@ -97,7 +97,7 @@
       "check-whitespace"
     ],
     "quotemark": [
-      true,
+      false,
       "single"
     ],
     "semicolon": [
@@ -134,7 +134,7 @@
       "check-accessor"
     ],
     "trailing-comma": [
-      true,
+      false,
       {
         "multiline": "always",
         "singleline": "never"
