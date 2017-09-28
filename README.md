@@ -84,9 +84,10 @@ $ yarn run cover
 
 ### Run
 
-Development build:
+Development build; this will start the app server on `localhost:5000`.
+
 ```sh
-yarn run start
+yarn run dev
 ```
 
 Production build:
@@ -104,12 +105,14 @@ TBD.
 
 Once you have installed Mongo, Node, and the packages you will need to configure the environment.
 
+Note: `node_modules/passport-github/lib/strategy.js` will need to be modified to update the OAuth target.
+
 ## ENV structure:
 
 ### Instructions:
-1. Copy and rename this file to '.env'
-2. Set env variables - eg. APP_NAME=ClassPortal
-3. Update this example file with new env variables as necessary.
+1. Create a `.env` file with the structure below.
+2. Update the `.env` file with appropriate references.
+3. Ensure the certificate files are configured correctly.
 
 ### Warning: DO NOT set TEST_DB to the same value as PROD_DB, because the test suite overwrites TEST_DB multiple times.
 
