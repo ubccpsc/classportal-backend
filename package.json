@@ -64,7 +64,7 @@
     "test:debug": "DEBUG=true npm run test",
     "cover": "npm run build && NODE_ENV='test' node_modules/.bin/istanbul cover node_modules/.bin/_mocha \"test/**/*.spec.js\"",
     "dev": "npm run build && DEBUG=true node ./build/server.js",
-    "start:prod": "npm run build && NODE_ENV='production' forever start --spinSleepTime 10000 -l LOGFILE -o OUTPUT -e ERRFILE ./build/server.js",
+    "start:prod": "npm run build && NODE_ENV='production' forever start --spinSleepTime 10000 -l LOGFILE -o OUTPUT -e ERRFILE --append ./build/server.js",
     "seed:test": "npm run build && NODE_ENV='test' node ./build/utils/seed.js"
   }
 }
