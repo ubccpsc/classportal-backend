@@ -27,6 +27,16 @@ export class ITeamTuple {
 
 export class TeamController {
 
+  /**
+   * Find the team information for a user in a course. We return the ITeamTuple here
+   * so we can still track the 'no teams' case for a user within promises (e.g., if
+   * we returned null, and were using this within Promise.all, we wouldn't know who
+   * the null was for.
+   *
+   * @param courseId
+   * @param userName
+   * @returns {Promise<ITeamTuple | ITeamError>}
+   */
   public getUserTeam(courseId: string, userName: string): Promise<ITeamTuple | ITeamError> {
     return this.queryUserTeam(courseId, userName).then(function (team) {
       if (team !== null) {
@@ -40,6 +50,12 @@ export class TeamController {
     });
   }
 
+  /**
+   * Gets all the teams for a given course.
+   *
+   * @param courseId
+   * @returns {Promise<ITeamDocument[] | ITeamError>} If there are no teams, return [].
+   */
   public getAllTeams(courseId: string): Promise<ITeamDocument[] | ITeamError> {
     return this.queryAllTeams(courseId).then(function (teams) {
       return Promise.resolve(teams);
@@ -50,6 +66,10 @@ export class TeamController {
   }
 
   /**
+   * Creates a team for a given set of users. If isAdmin is true, some basic safeguards
+   * are overridden (e.g., team sizes), but some are honoured for all users (e.g.,
+   * if a user is on a team they cannot be put on another team).
+   *
    * NOTE: This is missing the deliv aspect.
    * We need to think a bit harder about how tying teams to multiple deliverables works.
    *
