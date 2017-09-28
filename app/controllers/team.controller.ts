@@ -27,6 +27,14 @@ export class ITeamTuple {
 
 export class TeamController {
 
+  private _orgName: string;
+  private _courseId: string;
+
+  constructor(orgName: string, courseId: string) {
+    this._orgName = orgName;
+    this._courseId = courseId;
+  }
+
   /**
    * Find the team information for a user in a course. We return the ITeamTuple here
    * so we can still track the 'no teams' case for a user within promises (e.g., if
@@ -37,12 +45,12 @@ export class TeamController {
    * @param userName
    * @returns {Promise<ITeamTuple | ITeamError>}
    */
-  public getUserTeam(courseId: string, userName: string): Promise<ITeamTuple | ITeamError> {
-    return this.queryUserTeam(courseId, userName).then(function (team) {
+  public getUserTeam(userName: string): Promise<ITeamTuple | ITeamError> {
+    return this.queryUserTeam(userName).then(function (team) {
       if (team !== null) {
         return Promise.resolve(team);
       } else {
-        throw new Error(`You are not on any teams under ${courseId}.`);
+        throw new Error(`You are not on any teams under ${this._courseId}.`);
       }
     }).catch(function (err: Error) {
       logger.error('TeamController::getUserTeam() - ERROR: ' + err.message);
@@ -56,8 +64,8 @@ export class TeamController {
    * @param courseId
    * @returns {Promise<ITeamDocument[] | ITeamError>} If there are no teams, return [].
    */
-  public getAllTeams(courseId: string): Promise<ITeamDocument[] | ITeamError> {
-    return this.queryAllTeams(courseId).then(function (teams) {
+  public getAllTeams(): Promise<ITeamDocument[] | ITeamError> {
+    return this.queryAllTeams().then(function (teams) {
       return Promise.resolve(teams);
     }).catch(function (err: Error) {
       logger.error('TeamController::getAllTeams() - ERROR: ' + err.message);
@@ -78,11 +86,11 @@ export class TeamController {
    * @param isAdmin
    * @returns {{status: string, message: string}}
    */
-  public createTeam(courseId: string, userNames: string[], isAdmin: boolean): Promise<ITeamDocument | ITeamError> {
+  public createTeam(userNames: string[], isAdmin: boolean): Promise<ITeamDocument | ITeamError> {
 
     let userPromises = [];
     for (let userName of userNames) {
-      userPromises.push(this.getUserTeam(courseId, userName));
+      userPromises.push(this.getUserTeam(userName));
     }
 
     return Promise.all(userPromises).then(function (userTeams: ITeamTuple[]) {
@@ -117,7 +125,7 @@ export class TeamController {
         }
       }
 
-      return this.queryCreateTeam(courseId, users).then(function (team: ITeamDocument) {
+      return this.queryCreateTeam(users).then(function (team: ITeamDocument) {
         if (team !== null) {
           return Promise.resolve(team);
         } else {
@@ -133,14 +141,13 @@ export class TeamController {
     });
   }
 
-
   /**
    *
-   * @param courseId
    * @param userName
    * @returns {ITeamDocument | null} the user's ITeamDocument for that course (if it exists) or null.
    */
-  private queryUserTeam(courseId: string, userName: string): Promise<ITeamTuple> {
+  private queryUserTeam(userName: string): Promise<ITeamTuple> {
+    // also use this._orgName, this._courseId
     let ret: ITeamTuple = {userName, team: null}; // 'userName: userName' causes lint error
     return Promise.resolve(ret);
   }
@@ -150,7 +157,8 @@ export class TeamController {
    * @param courseId
    * @returns {ITeamDocument} if no teams returns []
    */
-  private queryAllTeams(courseId: string): Promise<ITeamDocument[]> {
+  private queryAllTeams(): Promise<ITeamDocument[]> {
+    // also use this._orgName, this._courseId
     return Promise.resolve([]); // TODO: implement
   }
 
@@ -160,7 +168,8 @@ export class TeamController {
    * @param users
    * @returns {ITeamDocument} the created team document
    */
-  private queryCreateTeam(courseId: string, users: string[]): Promise<ITeamDocument | null> {
+  private queryCreateTeam(users: string[]): Promise<ITeamDocument | null> {
+    // also use this._orgName, this._courseId
     return Promise.resolve(null); // TODO: implement
   }
 
@@ -169,24 +178,28 @@ export class TeamController {
 
 function getMyTeams(req: any) {
 
+  // params from req
+  let userName = req.user.username;
+  let courseId = req.params.courseId;
+
   let user: IUserDocument;
   let course: ICourseDocument;
   let deliv: IDeliverableDocument;
-  return User.findOne({username: req.user.username})
+  return User.findOne({username: userName})
     .then((_user: IUserDocument) => {
       if (_user) {
         user = _user;
         return _user;
       }
-      throw `Could not find user ${req.user.username}`;
+      throw `Could not find user ${userName}`;
     })
     .then((_user: IUserDocument) => {
-      return Course.findOne({courseId: req.params.courseId})
+      return Course.findOne({courseId: courseId})
         .then((course: ICourseDocument) => {
           if (course) {
             return course;
           }
-          throw `Could not find course ${req.params.courseId}`;
+          throw `Could not find course ${courseId}`;
         })
         .catch(err => {
           logger.error(`TeamController::getMyTeams() ERROR ${err}`);
@@ -203,7 +216,7 @@ function getMyTeams(req: any) {
             return team;
           }
           else {
-            return `You are not on any teams under ${req.params.courseId}.`;
+            return `You are not on any teams under ${courseId}.`;
           }
         });
     })
