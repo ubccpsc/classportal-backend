@@ -199,7 +199,8 @@ function getMyTeams(req: any) {
         });
     })
     .then((course: ICourseDocument) => {
-      return Team.findOne({courseId: course._id, members: user._id, '$where': 'this.deliverableIds.length > 0'})
+      return Team.findOne({courseId: course._id, members: user._id, 
+          $where: 'this.deliverableIds.length > 0 && this.disbanded !== true'})
         .populate({
           path:   'members deliverableIds deliverableId',
           select: 'username _id name url gradesReleased open close',
@@ -368,6 +369,21 @@ function createTeam(req: any): Promise<ITeamDocument> {
     })
     .catch(err => {
       logger.error(`TeamController::createTeam() Promise.all() ERROR ${err}`);
+    });
+}
+
+function disbandTeamById(payload: any): Promise<string> {
+  return Team.findOne({_id: payload.teamId})
+    .then((_team: ITeamDocument) => {
+      _team.disbanded = true;
+      _team.save();
+      return _team;
+    })
+    .then((_team: ITeamDocument) => {
+      if (_team.disbanded === true) {
+        return 'Team disbanded.';
+      }
+      return 'Team could not be disbanded.';
     });
 }
 
@@ -611,7 +627,6 @@ function createCustomTeam(req: any, payload: any) {
   function createTeamObjectsForBatchMarking(teamIdList: string[]) {
 
     let userIds: string[] = [];
-    console.log('teamIdList, eh', teamIdList);
     return User.find({username: {'$in': teamIdList}})
       .exec()
       .then((users: IUserDocument[]) => {
@@ -709,7 +724,7 @@ function createCustomTeam(req: any, payload: any) {
   }
 
   function validateGithubNames(teamMembers: string[], course: ICourseDocument): boolean {
-    console.log('members', teamMembers);
+    console.log('validate members', teamMembers);
 
     let classList: any = course.classList;
     let validTeamMembers: boolean = true;
@@ -719,7 +734,6 @@ function createCustomTeam(req: any, payload: any) {
       let teamMember: string = teamMembers[i].toString();
       for (let j = 0; j < classList.length; j++) {
         let classListUser = classList[j].username;
-        console.log(teamMember.indexOf(classListUser));
         if (teamMember === classListUser) {
           thisItemIsValid = true;
         }
@@ -728,12 +742,13 @@ function createCustomTeam(req: any, payload: any) {
         validTeamMembers = false;
       }
     }
+    console.log('isValid', validTeamMembers);
     return validTeamMembers;
   }
 
   function checkIfMembersOnTeamByBatch(teamMembers: string[], deliverables: IDeliverableDocument[]) {
 
-    return Team.find({courseId: course.id, deliverableIds: {'$in': deliverables}})
+    return Team.find({courseId: course.id, deliverableIds: {'$in': deliverables}, disbanded: false})
       .populate('members')
       .then((teams: ITeamDocument[]) => {
         let usersOnTeams: any = [];
@@ -766,7 +781,7 @@ function createCustomTeam(req: any, payload: any) {
 
   function checkIfMembersOnTeamBySingDeliv(teamMembers: string[], deliverable: IDeliverableDocument) {
 
-    return Team.findOne({courseId: course.id, deliverableId: deliverable._id})
+    return Team.findOne({courseId: course.id, disbanded: false, deliverableId: deliverable._id})
       .populate('members')
       .then((teams: ITeamDocument) => {
         let usersOnTeams: any = [];
@@ -1303,5 +1318,5 @@ function insertTeamDocuments(_bulkInsertArray: any) {
 export {
   createTeam, update, getTeams, createGithubTeam, createGithubRepo, getRepos, getCourseTeamsPerUser,
   randomlyGenerateTeamsPerCourse, getUsersNotOnTeam, getMyTeams, createCustomTeam,
-  getCourseTeamsWithBatchMarking
+  getCourseTeamsWithBatchMarking, disbandTeamById
 };
