@@ -8,10 +8,9 @@ Built with [Node.js][nodejs], [TypeScript][typescript], [Restify][restify], and 
 
 * [Directory Layout](#directory-layout)
 * [Getting Started](#getting-started)
-* [Develop](#develop)
 * [Contribute](#contribute)
+* [Develop](#develop)
 
-<a name="directory-layout"/>
 ## Directory Layout
 
 ```sh
@@ -43,19 +42,18 @@ Built with [Node.js][nodejs], [TypeScript][typescript], [Restify][restify], and 
 └── server.ts                        # Main entry point - Instantiate Restify server and open MongoDB connection
 ```
 
-<a name="getting-started"/>
 ## Getting Started
 
 ### Requirements
 
-* [Node.js][nodejs] >= 6.x
-* [MongoDB][mongodb] installed
+* Install: [Node.js](https://nodejs.org/en/download/) ~v6.x
+* Install: [MongoDB](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/) ~v3.2
 
 ### Install
 
 ```sh
-git clone https://github.com/mksarge/classportal-api.git
-npm install
+git clone https://github.com/ubccpsc/classportal-backend.git
+yarn install
 ```
 
 ### Lint
@@ -64,68 +62,63 @@ Lint with TSLint.
 Rules are configured in ```tslint.json```
 
 ```sh
-npm run lint
+yarn run lint
 ```
 
 ### Test
 
 Test with Mocha + Supertest:
 ```sh
-$ npm run test
+$ yarn run test
 ```
 
 With logger enabled:
 ```sh
-$ npm run test:debug
+$ yarn run test:debug
 ```
 
 With instanbul coverage:
 ```sh
-$ npm run cover
+$ yarn run cover
 ```
 
 ### Run
 
-Development build:
-```sh
-npm run start
+Development build; this will start the app server on `localhost:5000`.
 
+```sh
+yarn run dev
 ```
 
 Production build:
 ```sh
-npm run start:prod
-
+yarn run start:prod
 ```
 
-<a name="develop"/>
-## Develop
 
-under construction
-
-<a name="contribute"/>
 ## Contribute
 
-under construction
-
-[classportal]: <https://github.com/mksarge/classportal-ui>
-[nodejs]: <https://nodejs.org>
-[typescript]: <https://www.typescriptlang.org/>
-[restify]: <http://restify.com>
-[mongoose]: <http://mongoosejs.com/>
-[mongodb]: <https://mongodb.org>
+TBD.
 
 
-ENV structure:
+## Develop
 
-# Instructions:
-# 1. Copy and rename this file to '.env'
-# 2. Set env variables - eg. APP_NAME=ClassPortal
-# 3. Update this example file with new env variables as necessary.
-#
-# Warning: DO NOT set TEST_DB to the same value as PROD_DB, because the test suite overwrites TEST_DB multiple times.
+Once you have installed Mongo, Node, and the packages you will need to configure the environment.
 
-# Common
+Note: `node_modules/passport-github/lib/strategy.js` will need to be modified to update the OAuth target.
+
+## ENV structure:
+
+### Instructions:
+1. Create a `.env` file with the structure below.
+2. Update the `.env` file with appropriate references.
+3. Ensure the certificate files are configured correctly.
+
+### Warning: DO NOT set TEST_DB to the same value as PROD_DB, because the test suite overwrites TEST_DB multiple times.
+
+### Common
+
+```
 APP_NAME="UBC Original Class Portal https://github.com/ubccpsc/classportal"
 GITHUB_CLIENT_ID="999999999999999999"
 GITHUB_CLIENT_SECRET="999999999999999999999999999999999999"
@@ -134,26 +127,36 @@ SSL_CERT_PATH="/path/to/crt.crt"
 SSL_INT_CERT_PATH="/path/to/ca-cacerts.pem"
 GITHUB_AUTH_TOKEN="token 999999999999999999999999999999999999111"
 GITHUB_USER_NAME="username"
+```
 
-# Development
+### Development
+
+```
 DEV_HOST=localhost
 DEV_PORT=5000
 DEV_DB=mongodb://localhost:27017/development
 DEV_ADMINS=admin1 admin2 admin3
 DEV_SUPER_ADMIN=superadmin1
 NODE_TLS_REJECT_UNAUTHORIZED=1
+```
 
-# Test
+### Test
+
+```
 TEST_HOST=localhost
 TEST_PORT=9000
 TEST_DB=mongodb://localhost:27017/test
 TEST_ADMINS=admin1 admin2 admin3
 TEST_SUPER_ADMIN=superadmin1
 NODE_TLS_REJECT_UNAUTHORIZED=0
+```
 
 # Production
+
+```
 PROD_HOST=localhost
 PROD_PORT=8080
 PROD_DB=mongodb://localhost:27017/production
 PROD_ADMINS=admin1 admin2 admin3
 PROD_SUPER_ADMIN=superadmin1
+```

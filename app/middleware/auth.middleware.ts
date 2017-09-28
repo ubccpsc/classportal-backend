@@ -1,8 +1,8 @@
-import { passport } from '../../config/auth';
-import { User } from '../models/user.model';
+import {passport} from '../../config/auth';
+import {User} from '../models/user.model';
 import * as restify from 'restify';
-import { config } from '../../config/env';
-import { logger } from '../../utils/logger';
+import {config} from '../../config/env';
+import {logger} from '../../utils/logger';
 let errors = require('restify-errors');
 
 const ADMIN_ROLE: string = 'admin';
@@ -42,7 +42,7 @@ const adminAuthenticated = (req: any, res: restify.Response, next: restify.Next)
 const superAuthenticated = (req: any, res: restify.Response, next: restify.Next) => {
   if (req.isAuthenticated()) {
     let loggedInUser = req.user.username;
-    let superAdmin = function() {
+    let superAdmin = function () {
       return config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
     };
     if (superAdmin()) {
@@ -55,7 +55,7 @@ const superAuthenticated = (req: any, res: restify.Response, next: restify.Next)
 const adminOrProfAuthenticated = (req: any, res: restify.Response, next: restify.Next) => {
   if (req.isAuthenticated()) {
     let loggedInUser = req.user.username;
-    let superAdmin = function() {
+    let superAdmin = function () {
       return config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
     };
     if (isAdminOrProf) {
@@ -68,7 +68,7 @@ const adminOrProfAuthenticated = (req: any, res: restify.Response, next: restify
 const isAdmin = (req: any, res: restify.Response, next: restify.Next) => {
   if (req.isAuthenticated()) {
     let loggedInUser = req.user.username;
-    let adminOrSuperAdmin = function() {
+    let adminOrSuperAdmin = function () {
       return config.admins.indexOf(loggedInUser) >= 0 || config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
     };
     if (adminOrSuperAdmin()) {
@@ -83,12 +83,12 @@ const isAdminOrProf = (req: any, res: restify.Response, next: restify.Next) => {
   if (req.isAuthenticated()) {
     let loggedInUser = req.user.username;
     let userrole: string;
-    let userQuery = User.findOne({ username: req.user.username })
-      .exec( u => {
+    let userQuery = User.findOne({username: req.user.username})
+      .exec(u => {
         userrole = u.userrole;
       });
 
-    let answer = userQuery.then( () => {
+    let answer = userQuery.then(() => {
       authenticated = config.admins.indexOf(loggedInUser) >= 0 || loggedInUser == userrole;
       return Promise.resolve(authenticated);
     });
@@ -100,4 +100,4 @@ const isAdminOrProf = (req: any, res: restify.Response, next: restify.Next) => {
   return next(new errors.UnauthorizedError('Permission denied.'));
 };
 
-export { isAuthenticated, adminAuthenticated, superAuthenticated, isAdmin, adminOrProfAuthenticated }
+export {isAuthenticated, adminAuthenticated, superAuthenticated, isAdmin, adminOrProfAuthenticated};

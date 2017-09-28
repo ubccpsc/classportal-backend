@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
-import { logger } from '../../utils/logger';
-import { ITeamDocument } from './team.model';
+import {logger} from '../../utils/logger';
+import {ITeamDocument} from './team.model';
 
 interface IDeliverableDocument extends mongoose.Document {
   courseId: string;
@@ -18,56 +18,56 @@ interface IDeliverableModel extends mongoose.Model<IDeliverableDocument> {
 }
 
 const DeliverableSchema = new mongoose.Schema({
-  courseId: {
+  courseId:       {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
   },
-  teamCount: {
+  teamCount:      {
     type: Number,
   },
-  name: {
-    type: String,
+  name:           {
+    type:     String,
     required: true,
   },
-  githubOrg: {
+  githubOrg:      {
     type: String,
   },
-  url: {
+  url:            {
     type: String,
   },
-  projectCount: {
+  projectCount:   {
     type: Number,
   },
-  team: {
+  team:           {
     type: mongoose.Schema.Types.ObjectId, ref: 'Team',
   },
-  user: {
+  user:           {
     type: mongoose.Schema.Types.ObjectId, ref: 'User',
   },
-  open: {
+  open:           {
     type: Date,
   },
-  close: {
+  close:          {
     type: Date,
   },
   gradesReleased: {
     type: Boolean,
   },
-  reposCreated: {
-    type: Boolean,
+  reposCreated:   {
+    type:    Boolean,
     default: false,
   }
 });
 
 // Deliverable Name must be unique per Course
-DeliverableSchema.index({ courseId: 1, name: 1 }, { unique: true });
+DeliverableSchema.index({courseId: 1, name: 1}, {unique: true});
 
 DeliverableSchema.static({
 
-    /**
-  * Find a Deliverable by object query. If doesn't exist, creates it based on object query and returns it.
-  * @param {object} search parameters
-  * @returns {Promise<IDeliverableDocument>} Returns a Promise of the user.
-  */
+  /**
+   * Find a Deliverable by object query. If doesn't exist, creates it based on object query and returns it.
+   * @param {object} search parameters
+   * @returns {Promise<IDeliverableDocument>} Returns a Promise of the user.
+   */
   findOrCreate: (query: Object): Promise<IDeliverableDocument> => {
     return Deliverable
       .findOne(query)
@@ -80,7 +80,9 @@ DeliverableSchema.static({
             .then((d) => {
               return d.save();
             })
-            .catch((err) => { logger.info(err); });
+            .catch((err) => {
+              logger.info(err);
+            });
         }
       });
   },
@@ -88,4 +90,4 @@ DeliverableSchema.static({
 
 const Deliverable: IDeliverableModel = <IDeliverableModel>mongoose.model('Deliverable', DeliverableSchema);
 
-export { IDeliverableDocument, IDeliverableModel, Deliverable };
+export {IDeliverableDocument, IDeliverableModel, Deliverable};

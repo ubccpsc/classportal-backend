@@ -1,16 +1,16 @@
-import fetch, { Response } from 'node-fetch';
-import { config } from '../../config/env';
+import fetch, {Response} from 'node-fetch';
+import {config} from '../../config/env';
 
 function retrieveAccessToken(authcode: string): Promise<any> {
   return fetch('https://github.com/login/oauth/access_token', {
-    method: 'POST',
+    method:  'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      client_id: config.github_client_id,
+    body:    JSON.stringify({
+      client_id:     config.github_client_id,
       client_secret: config.github_client_secret,
-      code: authcode,
+      code:          authcode,
     }),
   })
     .then((res: Response) => res.json())
@@ -24,10 +24,10 @@ function retrieveAccessToken(authcode: string): Promise<any> {
 
 function retrieveUsername(token: any): Promise<any> {
   return fetch('https://api.github.com/user', {
-    method: 'GET',
+    method:  'GET',
     headers: {
-      'Content-Type': 'application/json',
-      'User-Agent': 'ClasslistPortal-Student',
+      'Content-Type':  'application/json',
+      'User-Agent':    'ClasslistPortal-Student',
       'Authorization': 'token ' + token,
     },
   })
@@ -40,4 +40,4 @@ function retrieveUsername(token: any): Promise<any> {
     });
 }
 
-export { retrieveAccessToken, retrieveUsername };
+export {retrieveAccessToken, retrieveUsername};
