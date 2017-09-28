@@ -10,6 +10,125 @@ import * as auth from '../middleware/auth.middleware';
 
 const TEAM_PREPENDAGE = 'team';
 
+
+// One problem with this just being functions like this instead of having them in a class
+// is that we can't distinguish between the public interface and the private interface.
+
+export class ITeamError {
+  public status: string;
+  public message: string;
+}
+
+export class TeamController {
+
+  public getUserTeam(courseId: string, userName: string): ITeamDocument | ITeamError {
+    try {
+      let team = this.queryUserTeam(courseId, userName);
+      if (team === null) {
+        return {status: 'error', message: `You are not on any teams under ${courseId}.`};
+      } else {
+        return team;
+      }
+    } catch (err) {
+      logger.error('TeamController::getUserTeam() - ERROR: ' + err.message);
+      return {status: 'error', message: err.message};
+    }
+  }
+
+  public getAllTeams(courseId: string): ITeamDocument[] | ITeamError {
+    try {
+      let teams = this.queryAllTeams(courseId);
+      return teams;
+    } catch (err) {
+      logger.error('TeamController::getAllTeams() - ERROR: ' + err.message);
+      return {status: 'error', message: err.message};
+    }
+  }
+
+  /**
+   * NOTE: This is missing the deliv aspect. We need to think a bit harder about how tying teams to multiple deliverables works.
+   *
+   * @param courseId
+   * @param userNames
+   * @param isAdmin
+   * @returns {{status: string, message: string}}
+   */
+  public createTeam(courseId: string, userNames: string[], isAdmin: boolean) {
+
+    let users = [];
+    let alreadyOnTeam = [];
+    for (let userName of userNames) {
+      let user = this.getUserTeam(courseId, userName);
+      if (user === null) {
+        users.push(userName);
+      } else {
+        alreadyOnTeam.push(userName);
+      }
+    }
+
+    // even admins can't put someone on a team who is already teamed up
+    if (alreadyOnTeam.length > 0) {
+      return {status: 'error', message: 'Some user(s) are already on teams: ' + JSON.stringify(alreadyOnTeam)};
+    }
+
+    if (isAdmin === true) {
+      // ignore safeguards
+    } else {
+      const MIN_MEMBERS = 1; // should come from somewhere
+      const MAX_MEMBERS = 1; // should come from somewhere
+
+      if (users.length < MIN_MEMBERS) {
+        return {status: 'error', message: 'Insufficient members specified'};
+      }
+
+      if (users.length > MAX_MEMBERS) {
+        return {status: 'error', message: 'Too many members specified'};
+      }
+    }
+
+    try {
+      let team = this.queryCreateTeam(courseId, users);
+      return team;
+    } catch (err) {
+      logger.error('TeamController::createTeam() - ERROR: ' + err.message);
+      return {status: 'error', message: err.message};
+    }
+
+
+  }
+
+  /**
+   *
+   * @param courseId
+   * @param userName
+   * @returns {ITeamDocument | null} the user's ITeamDocument for that course (if it exists) or null.
+   */
+  private queryUserTeam(courseId: string, userName: string): ITeamDocument | null {
+    return null;
+  }
+
+  /**
+   *
+   * @param courseId
+   * @returns {ITeamDocument} if no teams returns []
+   */
+  private queryAllTeams(courseId: string): ITeamDocument[] {
+    return null;
+  }
+
+  /**
+   *
+   * @param courseId
+   * @param users
+   * @returns {ITeamDocument} the created team document
+   */
+  private queryCreateTeam(courseId: string, users: string[]): ITeamDocument {
+    return null;
+  }
+
+}
+
+
 function getMyTeams(req: any) {
 
   let user: IUserDocument;
