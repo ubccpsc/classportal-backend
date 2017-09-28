@@ -73,6 +73,9 @@ const routes = (server: restify.Server) => {
   server.put('/:courseId/admin/deliverable', adminAuthenticated, routeHandler.addDeliverable);
   server.get('/settings', isAuthenticated, isAuthenticated, routeHandler.getCurrentUserInfo);
   server.get('/logout', isAuthenticated, routeHandler.logout);
+
+  // commented out for safety
+  // server.get('/:courseId/admin/dashboard/:orgName/:delivId', adminAuthenticated, routeHandler.getDashForDeliverable);
 };
 
 export {routes};

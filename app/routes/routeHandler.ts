@@ -6,6 +6,7 @@ import * as delivCtrl from '../controllers/deliverable.controller';
 import * as gradeCtrl from '../controllers/grade.controller';
 import * as teamCtrl from '../controllers/team.controller';
 import * as testCtrl from '../controllers/test.controller';
+import * as dashCtrl from '../controllers/dashboard.controller';
 import * as projectCtrl from '../controllers/project.controller';
 import * as githubCtrl from '../controllers/github.controller';
 import {logger} from '../../utils/logger';
@@ -330,6 +331,12 @@ const getCourseTeamsWithBatchMarking = (req: any, res: restify.Response, next: r
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
+const getDashForDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return dashCtrl.getDashboard(req, req.params, next)
+    .then((rows: any) => res.json(200, {response: rows}))
+    .catch((err: any) => res.json(500, {err: err.message}));
+};
+
 export {
   pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
   getCurrentUserInfo, validateRegistration, addGithubUsername, updateDeliverable, getDeliverables,
@@ -339,5 +346,5 @@ export {
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects,
   getUsersNotOnTeam, getCourse, getMyTeams, generateProjects, repairIndividualProvisions, repairGithubReposForTeams,
-  createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking
+  createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking, getDashForDeliverable
 };
