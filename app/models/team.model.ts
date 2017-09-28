@@ -1,9 +1,11 @@
 import * as mongoose from 'mongoose';
-import { logger } from '../../utils/logger';
-import { User, IUserDocument } from '../models/user.model';
-import { Deliverable, IDeliverableDocument } from '../models/deliverable.model';
-import { GithubState, GithubRepo, GithubTeam, defaultGithubState, 
-  defaultGithubRepo } from './github.interfaces';
+import {logger} from '../../utils/logger';
+import {User, IUserDocument} from '../models/user.model';
+import {Deliverable, IDeliverableDocument} from '../models/deliverable.model';
+import {
+  GithubState, GithubRepo, GithubTeam, defaultGithubState,
+  defaultGithubRepo
+} from './github.interfaces';
 
 interface ITeamDocument extends mongoose.Document {
   course: Object;
@@ -25,71 +27,70 @@ interface ITeamModel extends mongoose.Model<ITeamDocument> {
 }
 
 const TeamSchema = new mongoose.Schema({
-  name: {
-    type: String,
+  name:                 {
+    type:     String,
     required: true,
   },
-  githubOrg: {
-    type: String,
+  githubOrg:            {
+    type:    String,
     default: null,
   },
-  githubUrl: {
+  githubUrl:            {
     type: String,
   },
-  githubTeamId: {
+  githubTeamId:         {
     type: Number,
   },
   multiDeliverableRepo: {
     type: Boolean,
   },
-  repoId: {
+  repoId:               {
     type: Number,
   },
-  disbanded: {
+  disbanded:            {
     type: Boolean,
   },
-  courseId: {
-    type: mongoose.Schema.Types.ObjectId, ref: 'Course',
+  courseId:             {
+    type:     mongoose.Schema.Types.ObjectId, ref: 'Course',
     required: true,
   },
-  deliverableId: {
+  deliverableId:        {
     type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable',
   },
-  deliverableIds: [
-    { type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }
+  deliverableIds:       [
+    {type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable'}
   ],
-  members: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  members:              {
+    type:    [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
     default: [],
   },
-  TAs: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  TAs:                  {
+    type: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
   },
-  githubState: {
+  githubState:          {
     repo: {
-      url: { type: String, default: '' },
-      id: { type: Number, default: 0 },
-      name: { type: String, default: '' },
-      webhookId: { type: Number, default: 0 },
-      webhookUrl: { type: String, default: '' },
+      url:        {type: String, default: ''},
+      id:         {type: Number, default: 0},
+      name:       {type: String, default: ''},
+      webhookId:  {type: Number, default: 0},
+      webhookUrl: {type: String, default: ''},
     },
     team: {
-      id: { type: Number, default: 0 }
+      id: {type: Number, default: 0}
     }
   },
 });
 
 // Methods
-TeamSchema.method({
-});
+TeamSchema.method({});
 
 // Statics
 TeamSchema.static({
   /**
-  * Find a team by object ID. If does not exist, then team is created in DB.
-  * @param {object} recommended courseId
-  * @returns {Promise<ITeamDocument>} Returns a Promise of the user.
-  */
+   * Find a team by object ID. If does not exist, then team is created in DB.
+   * @param {object} recommended courseId
+   * @returns {Promise<ITeamDocument>} Returns a Promise of the user.
+   */
   findOrCreate: (query: Object): Promise<ITeamDocument> => {
     return Team
       .findOne(query)
@@ -99,8 +100,12 @@ TeamSchema.static({
           return Promise.resolve(team);
         } else {
           return Team.create(query)
-            .then((q) => { return q.save(); })
-            .catch((err) => { logger.info(err); });
+            .then((q) => {
+              return q.save();
+            })
+            .catch((err) => {
+              logger.info(err);
+            });
         }
       });
   },
@@ -108,4 +113,4 @@ TeamSchema.static({
 
 const Team: ITeamModel = <ITeamModel>mongoose.model('Team', TeamSchema);
 
-export { ITeamDocument, ITeamModel, Team };
+export {ITeamDocument, ITeamModel, Team};

@@ -71,7 +71,7 @@
     ],
     "object-curly-spacing": [
       true,
-      "always"
+      "never"
     ],
     /*
      * Standard rules from tslint

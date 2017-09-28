@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
-import { UserSchema, IUserDocument } from '../models/user.model';
-import { logger } from '../../utils/logger';
+import {UserSchema, IUserDocument} from '../models/user.model';
+import {logger} from '../../utils/logger';
 
 interface ICourseDocument extends mongoose.Document {
   courseId: string;
@@ -38,52 +38,52 @@ interface ICourseModel extends mongoose.Model<ICourseDocument> {
 }
 
 const CourseSchema: mongoose.Schema = new mongoose.Schema({
-  courseId: {
-    type: String,
+  courseId:            {
+    type:     String,
     required: true,
-    unique: true,
+    unique:   true,
   },
-  name: {
-    type: String,
+  name:                {
+    type:    String,
     default: '',
-    unique: false,
+    unique:  false,
   },
-  urlWebhook: {
+  urlWebhook:          {
     type: String,
   },
-  icon: {
-    type: String,
+  icon:                {
+    type:    String,
     default: '//cdn.ubc.ca/clf/7.0.5/img/favicon.ico',
   },
-  minTeamSize: {
+  minTeamSize:         {
     type: Number,
   },
-  maxTeamSize: {
+  maxTeamSize:         {
     type: Number,
   },
-  modules: {
+  modules:             {
     type: [String],
   },
-  classList: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  classList:           {
+    type: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
   },
-  batchDeliverables: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }],
+  batchDeliverables:   {
+    type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable'}],
   },
-  deliverables: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable' }],
+  deliverables:        {
+    type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable'}],
   },
-  grades: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Grade' }],
+  grades:              {
+    type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Grade'}],
   },
-  admins: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  admins:              {
+    type:    [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
     default: [],
   },
-  labSections: [
+  labSections:         [
     {
       users: {
-        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        type:    [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
         default: [],
       },
       labId: {
@@ -91,45 +91,45 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
       },
     },
   ],
-  studentsSetTeams: {
+  studentsSetTeams:    {
     type: Boolean,
   },
-  customData: {
+  customData:          {
     type: Object,
   },
   teamMustBeInSameLab: {
-    type: Boolean,
+    type:     Boolean,
     required: true,
-    default: true,
+    default:  true,
   },
-  githubOrg: {
+  githubOrg:           {
     type: String,
   },
-  batchTeamCount: {
-    type: Number,
+  batchTeamCount:      {
+    type:    Number,
     default: 0,
   },
-  batchImportUrl: {
+  batchImportUrl:      {
     type: String,
   },
-  settings: {
+  settings:            {
     type: Object,
   },
-  description: {
+  description:         {
     type: String,
   },
 });
 
 CourseSchema.static({
 
-    /**
-  * Gets a list of Users in the course.classList object.
-  * @param {string} search parameters
-  * @returns {Promise<IUserDocument>} Returns a Promise of the user.
-  */
+  /**
+   * Gets a list of Users in the course.classList object.
+   * @param {string} search parameters
+   * @returns {Promise<IUserDocument>} Returns a Promise of the user.
+   */
   findUsersInCourse: (courseId: string): Promise<ICourseDocument> => {
     return Course
-      .findOne({ 'courseId' : courseId })
+      .findOne({'courseId': courseId})
       .populate('classList')
       .exec()
       .then((course) => {
@@ -143,10 +143,10 @@ CourseSchema.static({
   },
 
   /**
-  * Finds a Grade and updates it, or creates the Grade if it does not exist.
-  * @param {ICourseDocument} search parameters
-  * @returns {Promise<ICourseDocument>} Returns a Promise of the user.
-  */
+   * Finds a Grade and updates it, or creates the Grade if it does not exist.
+   * @param {ICourseDocument} search parameters
+   * @returns {Promise<ICourseDocument>} Returns a Promise of the user.
+   */
   createOrUpdate: (query: ICourseDocument): Promise<ICourseDocument> => {
     return Course.findOne(query).exec()
       .then((course) => {
@@ -158,14 +158,14 @@ CourseSchema.static({
             .then((course) => {
               return course.save();
             })
-            .catch((err) => { logger.info(err); });
+            .catch((err) => {
+              logger.info(err);
+            });
         }
       });
   },
 });
 
-
-
 const Course: ICourseModel = <ICourseModel>mongoose.model('Course', CourseSchema);
 
-export { ICourseDocument, ICourseModel, Course };
+export {ICourseDocument, ICourseModel, Course};

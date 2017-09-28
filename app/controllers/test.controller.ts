@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
-import { IUserDocument, User } from '../models/user.model';
-import { logger } from '../../utils/logger';
-import { config } from '../../config/env';
+import {IUserDocument, User} from '../models/user.model';
+import {logger} from '../../utils/logger';
+import {config} from '../../config/env';
 import * as request from '../helpers/request';
 
 /**
@@ -13,7 +13,9 @@ import * as request from '../helpers/request';
  */
 function consoleLogRequest(req: restify.Request) {
   console.log(req);
-  return Promise.resolve('test').catch((err) => { console.log(err); } );
+  return Promise.resolve('test').catch((err) => {
+    console.log(err);
+  });
 }
 
 /**
@@ -24,9 +26,10 @@ function consoleLogRequest(req: restify.Request) {
  * @returns {string} the logged in username
  */
 function getCurrentUserInfo(req: any, res: any, next: any) {
-  return Promise.resolve(res.json(200, { user: req.user, headers: req.headers }))
-    .catch((err) => { logger.info('Error loading user info: ' + err); });
+  return Promise.resolve(res.json(200, {user: req.user, headers: req.headers}))
+    .catch((err) => {
+      logger.info('Error loading user info: ' + err);
+    });
 }
 
-export { consoleLogRequest, getCurrentUserInfo };
-
+export {consoleLogRequest, getCurrentUserInfo};
