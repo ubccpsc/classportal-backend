@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
-import { logger } from '../../utils/logger';
-import { GithubState, GithubRepo, defaultGithubState, defaultGithubRepo } from './github.interfaces';
+import {logger} from '../../utils/logger';
+import {GithubState, GithubRepo, defaultGithubState, defaultGithubRepo} from './github.interfaces';
 
 interface IProjectDocument extends mongoose.Document {
   student: Student;
@@ -21,60 +21,59 @@ interface IProjectModel extends mongoose.Model<IProjectDocument> {
 }
 
 const ProjectSchema = new mongoose.Schema({
-  githubOrg: {
-    type: String,
+  githubOrg:      {
+    type:    String,
     default: null,
   },
-  labId: {
+  labId:          {
     type: String,
   },
-  name: {
+  name:           {
     type: String,
   },
-  githubUrl: {
+  githubUrl:      {
     type: String,
   },
   githubRepoName: {
     type: String,
   },
-  githubRepoId: {
+  githubRepoId:   {
     type: Number,
   },
-  courseId: {
+  courseId:       {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
   },
-  deliverableId: {
+  deliverableId:  {
     type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable',
   },
-  student: {
+  student:        {
     type: mongoose.Schema.Types.ObjectId, ref: 'User',
   },
-  TAs: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  TAs:            {
+    type: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
   },
-  githubState: {
-      repo: {
-        url: { type: String, default: '' },
-        id: { type: Number, default: 0 },
-        name: { type: String, default: '' },
-        webhookId: { type: Number, default: 0 },
-        webhookUrl: { type: String, default: 0 },
-      },
+  githubState:    {
+    repo: {
+      url:        {type: String, default: ''},
+      id:         {type: Number, default: 0},
+      name:       {type: String, default: ''},
+      webhookId:  {type: Number, default: 0},
+      webhookUrl: {type: String, default: 0},
+    },
   },
 });
 
 
 // Methods
-ProjectSchema.method({
-});
+ProjectSchema.method({});
 
 // Statics
 ProjectSchema.static({
   /**
-  * Find a team by object ID. If does not exist, then team is created in DB.
-  * @param {object} recommended courseId
-  * @returns {Promise<ITeamDocument>} Returns a Promise of the user.
-  */
+   * Find a team by object ID. If does not exist, then team is created in DB.
+   * @param {object} recommended courseId
+   * @returns {Promise<ITeamDocument>} Returns a Promise of the user.
+   */
   test: (query: Object): Promise<IProjectDocument> => {
     return Project
       .findOne(query)
@@ -84,8 +83,12 @@ ProjectSchema.static({
           return Promise.resolve(team);
         } else {
           return Project.create(query)
-            .then((q: any) => { return q.save(); })
-            .catch((err: any) => { logger.info(err); });
+            .then((q: any) => {
+              return q.save();
+            })
+            .catch((err: any) => {
+              logger.info(err);
+            });
         }
       });
   },
@@ -93,5 +96,4 @@ ProjectSchema.static({
 
 const Project: IProjectModel = <IProjectModel>mongoose.model('Project', ProjectSchema);
 
-export { IProjectDocument, IProjectModel, Project };
-
+export {IProjectDocument, IProjectModel, Project};

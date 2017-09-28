@@ -4,7 +4,7 @@ export interface GithubRepo {
   name: string;
 }
 
-export interface GithubState { 
+export interface GithubState {
   repo: GithubRepo;
   team: GithubTeam;
 }
@@ -14,10 +14,10 @@ export interface GithubTeam {
 }
 
 export const defaultGithubRepo = {
-  url: '',
-  id: 0,
-  name: '',
-  webhookId: 0,
+  url:        '',
+  id:         0,
+  name:       '',
+  webhookId:  0,
   webhookUrl: '',
 };
 
@@ -26,7 +26,6 @@ export const defaultTeam = {
 };
 
 export const defaultGithubState = {
-    repo: defaultGithubRepo,
-    team: defaultTeam,
-  };
-
+  repo: defaultGithubRepo,
+  team: defaultTeam,
+};

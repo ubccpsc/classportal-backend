@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
-import { Deliverable, IDeliverableDocument } from '../models/deliverable.model';
-import { Course, ICourseDocument } from '../models/course.model';
-import { User, IUserDocument } from '../models/user.model';
-import { logger } from '../../utils/logger';
+import {Deliverable, IDeliverableDocument} from '../models/deliverable.model';
+import {Course, ICourseDocument} from '../models/course.model';
+import {User, IUserDocument} from '../models/user.model';
+import {logger} from '../../utils/logger';
 
 // Retrieves and updates Deliverable object.
 function queryAndUpdateDeliverable(course: ICourseDocument, deliverable: any): Promise<IDeliverableDocument> {
@@ -13,7 +13,7 @@ function queryAndUpdateDeliverable(course: ICourseDocument, deliverable: any): P
 
   if (deliverable !== null && course !== null) {
 
-    let searchParams = { name : deliverable.name, courseId : course._id };
+    let searchParams = {name: deliverable.name, courseId: course._id};
 
     return Deliverable.findOne(searchParams)
       .then(d => {
@@ -26,25 +26,25 @@ function queryAndUpdateDeliverable(course: ICourseDocument, deliverable: any): P
           return d.save();
         } else {
           return Deliverable.create({
-            url: deliverable.url,
-            open: deliverable.open,
-            name: deliverable.name,
-            close: deliverable.close,
+            url:            deliverable.url,
+            open:           deliverable.open,
+            name:           deliverable.name,
+            close:          deliverable.close,
             gradesreleased: deliverable.gradesReleased,
-            courseId: course._id,
-          }).then( d => {
+            courseId:       course._id,
+          }).then(d => {
             course.deliverables.push(d);
             course.save();
             return d;
           })
-          .then(() => {
-            return addDeliverablesToCourse(course, d);
-          });
+            .then(() => {
+              return addDeliverablesToCourse(course, d);
+            });
         }
       });
   }
   logger.info(Error('updateDeliverables(): Insufficient deliverable payload or CourseId' +
-  ' does not match'));
+    ' does not match'));
   return Promise.reject(Error('Insufficient deliverable payload or CourseId does not match'));
 }
 
@@ -60,9 +60,9 @@ function addDeliverablesToCourse(course: any, deliverable: IDeliverableDocument)
 
 function updateDeliverable(payload: any) {
   logger.info('updateDeliverable() in Deliverable Controller');
-  return Course.findOne({ 'courseId' : payload.courseId })
+  return Course.findOne({'courseId': payload.courseId})
     .exec()
-    .then( c => {
+    .then(c => {
       if (c) {
         return queryAndUpdateDeliverable(c, payload);
       } else {
@@ -77,7 +77,7 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
   logger.info('DeliverableController::addDeliverable() in Deliverable Controller');
   console.log(payload.params);
   let newDeliverable = payload.params.deliverable;
-  let courseQuery = { courseId: newDeliverable.courseId };
+  let courseQuery = {courseId: newDeliverable.courseId};
   let queriedCourse: ICourseDocument;
   return Course.findOne(courseQuery)
     .then((course: ICourseDocument) => {
@@ -86,7 +86,7 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
       queriedCourse = course;
       return findDelivWithCourse(newDeliverable.name, course._id);
     })
-    .then(() => {      
+    .then(() => {
       return Deliverable.findOrCreate(newDeliverable)
         .then((newDeliv: IDeliverableDocument) => {
           return newDeliv;
@@ -104,7 +104,7 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
     });
 
   function findDelivWithCourse(name: string, course_id: string) {
-    let delivQuery = { name: newDeliverable.name, courseId: course_id };
+    let delivQuery = {name: newDeliverable.name, courseId: course_id};
     return Deliverable.findOne(delivQuery)
       .then((deliv: IDeliverableDocument) => {
         if (deliv) {
@@ -121,17 +121,17 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
 function getDeliverablesByCourse(payload: any) {
   console.log(payload);
   logger.info('DeliverableController::getDeliverablesByCourse() in Deliverable Controller');
-  let searchParams = { courseId : payload.courseId };
-  let populateParams = { 
-    path: 'deliverables', 
-    select: 'id name url open close isReleased gradesReleased reposCreated buildingRepos', 
-    options: { sort: { name: 1 } } 
+  let searchParams = {courseId: payload.courseId};
+  let populateParams = {
+    path:    'deliverables',
+    select:  'id name url open close isReleased gradesReleased reposCreated buildingRepos',
+    options: {sort: {name: 1}}
   };
 
   return Course.findOne(searchParams)
     .populate(populateParams)
     .exec()
-    .then( c => {
+    .then(c => {
       if (c) {
         return Promise.resolve(c.deliverables);
       } else {
@@ -141,4 +141,4 @@ function getDeliverablesByCourse(payload: any) {
     .catch((err) => logger.info('Error retrieving deliverable: ' + err));
 }
 
-export { updateDeliverable, getDeliverablesByCourse, addDeliverable }
+export {updateDeliverable, getDeliverablesByCourse, addDeliverable};

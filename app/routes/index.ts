@@ -1,10 +1,12 @@
 import * as restify from 'restify';
 import * as routeHandler from './routeHandler';
 import * as auth from './auth';
-import { isAuthenticated, adminAuthenticated, superAuthenticated,
-   adminOrProfAuthenticated } from '../../app/middleware/auth.middleware';
-import { passport } from '../../config/auth';
-import { config } from '../../config/env';
+import {
+  isAuthenticated, adminAuthenticated, superAuthenticated,
+  adminOrProfAuthenticated
+} from '../../app/middleware/auth.middleware';
+import {passport} from '../../config/auth';
+import {config} from '../../config/env';
 
 const routes = (server: restify.Server) => {
   // Accessible by anyone
@@ -25,15 +27,15 @@ const routes = (server: restify.Server) => {
   server.put('/register', isAuthenticated, routeHandler.validateRegistration);
   server.get('/:courseId/:userId/teams', isAuthenticated, routeHandler.getCourseTeamsPerUser);
   server.put('/:courseId/team', routeHandler.createTeam);
-  server.put('/:courseId/admin/customTeam', isAuthenticated, routeHandler.createCustomTeam);    
+  server.put('/:courseId/admin/customTeam', isAuthenticated, routeHandler.createCustomTeam);
   server.get('/:courseId/students', isAuthenticated, routeHandler.getStudentNamesFromCourse);
-  server.put('/:courseId/students/customTeam', isAuthenticated, routeHandler.createCustomTeam);    
+  server.put('/:courseId/students/customTeam', isAuthenticated, routeHandler.createCustomTeam);
   // OAuth routes by logged-in users only
   server.put('/register/username', isAuthenticated, routeHandler.addGithubUsername);
   server.post('/logout', auth.loadUser, routeHandler.logout);
   server.get('/auth/login', passport.authenticate(config.auth_strategy), routeHandler.getCurrentUserInfo);
-  server.get('/auth/login/return', passport.authenticate(config.auth_strategy, { failureRedirect: '/failed' }),
-    ( req: any, res: any, next: restify.Next) => {
+  server.get('/auth/login/return', passport.authenticate(config.auth_strategy, {failureRedirect: '/failed'}),
+    (req: any, res: any, next: restify.Next) => {
       res.redirect(`${config.app_path}/postLogin`, next);
     });
 
@@ -43,7 +45,7 @@ const routes = (server: restify.Server) => {
   server.post('/:courseId/admin/admins', /* adminOrProfAuthenticated, */ routeHandler.addAdmins);
   server.get('/:courseId/admin/admins', adminAuthenticated, routeHandler.getAllAdmins);
   server.get('/:courseId/admin/teams', adminAuthenticated, routeHandler.getTeams);
-  server.get('/:courseId/admin/teams/byBatch', adminAuthenticated, routeHandler.getCourseTeamsWithBatchMarking);  
+  server.get('/:courseId/admin/teams/byBatch', adminAuthenticated, routeHandler.getCourseTeamsWithBatchMarking);
   server.get('/:courseId/admin/courseSettings', routeHandler.getCourseSettings);
   server.post('/admin/classList', adminAuthenticated, routeHandler.getClassList);
 
@@ -51,9 +53,9 @@ const routes = (server: restify.Server) => {
   // -- Admin or Super Admin Only Routes
   server.put('/:courseId/admin/github/team', adminAuthenticated, routeHandler.createGithubTeam);
   server.put('/:courseId/admin/github/repo/team', adminAuthenticated, routeHandler.createGithubReposForTeams);
-  server.put('/:courseId/admin/github/repo/team/repair', adminAuthenticated, routeHandler.repairGithubReposForTeams);  
+  server.put('/:courseId/admin/github/repo/team/repair', adminAuthenticated, routeHandler.repairGithubReposForTeams);
   server.put('/:courseId/admin/github/repo/project', adminAuthenticated, routeHandler.createGithubReposForProjects);
-  server.put('/:courseId/admin/github/repo/project/repair', adminAuthenticated, 
+  server.put('/:courseId/admin/github/repo/project/repair', adminAuthenticated,
     routeHandler.repairIndividualProvisions);
   server.put('/:courseId/admin/projectGeneration', adminAuthenticated, routeHandler.generateProjects);
   server.put('/:courseId/admin/teamGeneration', adminAuthenticated, routeHandler.randomlyGenerateTeamsPerCourse);
@@ -73,4 +75,4 @@ const routes = (server: restify.Server) => {
   server.get('/logout', isAuthenticated, routeHandler.logout);
 };
 
-export { routes };
+export {routes};

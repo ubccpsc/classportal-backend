@@ -1,12 +1,12 @@
 import * as restify from 'restify';
-import { IUserDocument, User } from '../models/user.model';
-import { logger } from '../../utils/logger';
-import { config } from '../../config/env';
+import {IUserDocument, User} from '../models/user.model';
+import {logger} from '../../utils/logger';
+import {config} from '../../config/env';
 
 const loadUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   const token = req.header('token');
   if (token) {
-    User.findWith({ token })
+    User.findWith({token})
       .then((user: IUserDocument) => {
         req.params.user = user;
         return next();
@@ -19,4 +19,4 @@ const loadUser = (req: restify.Request, res: restify.Response, next: restify.Nex
   }
 };
 
-export { loadUser };
+export {loadUser};

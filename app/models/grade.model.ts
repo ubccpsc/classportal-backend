@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import { logger } from '../../utils/logger';
+import {logger} from '../../utils/logger';
 
 
 interface IGradeDocument extends mongoose.Document {
@@ -14,17 +14,17 @@ interface IGradeModel extends mongoose.Model<IGradeDocument> {
 }
 
 const GradeSchema = new mongoose.Schema({
-  snum: {
-    type: String,
+  snum:    {
+    type:     String,
     required: true,
   },
-  deliv: {
+  deliv:   {
     required: true,
-    type: String,
+    type:     String,
   },
   delivId: {
     required: true,
-    type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable',
+    type:     mongoose.Schema.Types.ObjectId, ref: 'Deliverable',
   },
   details: {
     type: Object,
@@ -34,10 +34,10 @@ const GradeSchema = new mongoose.Schema({
 GradeSchema.static({
 
   /**
-  * Find a Grade by object query. If doesn't exist, creates it based on object query and returns it.
-  * @param {object} search parameters
-  * @returns {Promise<IGradeDocument>} Returns a Promise of the user.
-  */
+   * Find a Grade by object query. If doesn't exist, creates it based on object query and returns it.
+   * @param {object} search parameters
+   * @returns {Promise<IGradeDocument>} Returns a Promise of the user.
+   */
   findOrCreate: (query: Object): Promise<IGradeDocument> => {
     Grade.ensureIndexes(function (err) {
       if (err) return console.log(err);
@@ -51,19 +51,21 @@ GradeSchema.static({
             .then((grade) => {
               return grade.save();
             })
-            .catch((err) => { logger.info(err); });
+            .catch((err) => {
+              logger.info(err);
+            });
         }
       });
   },
 
   /**
-  * Finds a Grade and updates it, or creates the Grade if it does not exist.
-  * @param {ICourseDocument} search parameters
-  * @returns {Promise<IGradeDocument>} Returns a Promise of the user.
-  */
+   * Finds a Grade and updates it, or creates the Grade if it does not exist.
+   * @param {ICourseDocument} search parameters
+   * @returns {Promise<IGradeDocument>} Returns a Promise of the user.
+   */
   createOrUpdate: (query: IGradeDocument): Promise<IGradeDocument> => {
     return Grade.findOne({
-      snum: query.snum,
+      snum:  query.snum,
       deliv: query.deliv,
     })
       .then((grade) => {
@@ -75,14 +77,14 @@ GradeSchema.static({
             .then((grade) => {
               return grade.save();
             })
-            .catch((err) => { logger.info(err); });
+            .catch((err) => {
+              logger.info(err);
+            });
         }
       });
   },
 });
 
-
-
 const Grade: IGradeModel = <IGradeModel>mongoose.model('Grade', GradeSchema);
 
-export { IGradeDocument, IGradeModel, Grade, GradeSchema };
+export {IGradeDocument, IGradeModel, Grade, GradeSchema};

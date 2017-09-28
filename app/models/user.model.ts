@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 let Schema = mongoose.Schema;
 let findOrCreate = require('mongoose-findorcreate');
-import { logger } from '../../utils/logger';
+import {logger} from '../../utils/logger';
 
 
 interface CourseData {
@@ -33,35 +33,35 @@ interface IUserModel extends mongoose.Model<IUserDocument> {
 }
 
 const UserSchema = new mongoose.Schema({
-  token: {
+  token:    {
     type: String,
   },
   username: {
-    type: String,
+    type:    String,
     default: '',
-    unique: true,
+    unique:  true,
   },
-  snum: {
-    type: String,
-    unique: true,
+  snum:     {
+    type:     String,
+    unique:   true,
     required: true,
   },
-  csid: {
-    type: String,
-    unique: true,
+  csid:     {
+    type:     String,
+    unique:   true,
     required: true,
   },
-  fname: {
+  fname:    {
     type: String,
   },
-  lname: {
+  lname:    {
     type: String,
   },
   userrole: {
-    type: String,
+    type:    String,
     default: 'student',
   },
-  courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true }],
+  courses:  [{type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true}],
 });
 
 UserSchema.methods = {
@@ -79,13 +79,13 @@ UserSchema.methods = {
 
 UserSchema.statics = {
   /**
-  * Find a user by username.
-  * @param {string} username - The GitHub username of the user.
-  * @returns {Promise<IUserDocument>} Returns a Promise of the user.
-  */
+   * Find a user by username.
+   * @param {string} username - The GitHub username of the user.
+   * @returns {Promise<IUserDocument>} Returns a Promise of the user.
+   */
   findByUsername: (username: string): Promise<IUserDocument> => {
     return this
-      .find({ username })
+      .find({username})
       .exec()
       .then((user: IUserDocument[]) => {
         return (user && user.length) ? Promise.resolve(user[0]) : Promise.reject('err');
@@ -93,14 +93,14 @@ UserSchema.statics = {
   },
 
   /**
-  * Find a user by csid and snum
-  * @param {string} csid - CS ID
-  * @param {string} snum - user number
-  * @returns {Promise<IUserDocument>} Returns a Promise of the user.
-  */
+   * Find a user by csid and snum
+   * @param {string} csid - CS ID
+   * @param {string} snum - user number
+   * @returns {Promise<IUserDocument>} Returns a Promise of the user.
+   */
   findByCsidSnum: (csid: string, snum: string): Promise<IUserDocument> => {
     return this
-      .find({ csid, snum })
+      .find({csid, snum})
       .exec()
       .then((user: IUserDocument[]) => {
         return (user && user.length) ? Promise.resolve(user[0]) : Promise.reject('err');
@@ -108,10 +108,10 @@ UserSchema.statics = {
   },
 
   /**
-  * Find a user with a query
-  * @param {Object} query query object
-  * @returns {Promise<IUserDocument>} Returns a Promise of the user.
-  */
+   * Find a user with a query
+   * @param {Object} query query object
+   * @returns {Promise<IUserDocument>} Returns a Promise of the user.
+   */
   findWith: (query: Object): Promise<IUserDocument> => {
     return this
       .find(query)
@@ -122,10 +122,10 @@ UserSchema.statics = {
   },
 
   /**
-  * Find a user by Github username. If does not exist, then user created in DB.
-  * @param {string} github username
-  * @returns {Promise<IUserDocument>} Returns a Promise of the user.
-  */
+   * Find a user by Github username. If does not exist, then user created in DB.
+   * @param {string} github username
+   * @returns {Promise<IUserDocument>} Returns a Promise of the user.
+   */
   findOrCreate: (query: Object): Promise<IUserDocument> => {
     return User
       .findOne(query)
@@ -136,8 +136,12 @@ UserSchema.statics = {
           return user;
         } else {
           return User.create(query)
-            .then((q) => { return q.save(); })
-            .catch((err) => { logger.info(err); });
+            .then((q) => {
+              return q.save();
+            })
+            .catch((err) => {
+              logger.info(err);
+            });
         }
       })
       .catch((err) => {
@@ -148,4 +152,4 @@ UserSchema.statics = {
 
 const User: IUserModel = <IUserModel>mongoose.model('User', UserSchema);
 
-export { IUserDocument, User, UserSchema, CourseData };
+export {IUserDocument, User, UserSchema, CourseData};

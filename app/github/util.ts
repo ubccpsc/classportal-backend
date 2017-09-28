@@ -8,7 +8,7 @@ let _ = require('lodash');
 let async = require('async');
 
 const pathToRoot = __dirname.substring(0, __dirname.lastIndexOf('classportal/')) + 'classportal/';
-import { config } from '../../deprecated_config';
+import {config} from '../../deprecated_config';
 
 /**
  * Grab bag of methods that probably shouldn't be in the default namespace.
@@ -64,9 +64,9 @@ export class Helper {
     Log.trace('Helper::readJSON(..) - reading file: ' + filename);
     let path = pathToRoot.concat(config.private_folder, filename);
 
-    fs.readFile(path, function(error: any, data: any) {
+    fs.readFile(path, function (error: any, data: any) {
       if (!error) {
-        Helper.safelyParseJSON(data, function(error: any, parsedJSON: any) {
+        Helper.safelyParseJSON(data, function (error: any, parsedJSON: any) {
           if (!error) {
             Log.trace('Helper::readJSON(..) - read and parsed file successfully.');
             return callback(null, parsedJSON);
@@ -89,7 +89,7 @@ export class Helper {
     Log.trace('Helper::updateEntry(..) - start');
     let path = pathToRoot.concat(config.private_folder, filename);
 
-    Helper.readJSON(filename, function(error: any, jsonFile: any) {
+    Helper.readJSON(filename, function (error: any, jsonFile: any) {
       if (!error) {
         // find index of entry containing values specified in identifierObject
         let index: number = _.findIndex(jsonFile, identifierObject);
@@ -109,7 +109,7 @@ export class Helper {
             },
             function end(error: any) {
               if (!error) {
-                fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function(error: any) {
+                fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function (error: any) {
                   if (!error) {
                     Log.trace('Helper::updateEntry(..) - successfully updated ' + count + ' value(s)!');
                     return callback(null);
@@ -142,12 +142,12 @@ export class Helper {
     Log.trace('Helper::addEntry(..) - start');
     let path = pathToRoot.concat(config.private_folder, filename);
 
-    Helper.readJSON(filename, function(error: any, jsonFile: any) {
+    Helper.readJSON(filename, function (error: any, jsonFile: any) {
       if (!error) {
         jsonFile.push(newEntry);
         Log.trace('Helper::addEntry(..) - adding new entry:\n' + JSON.stringify(newEntry, null, 2));
 
-        fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function(error: any) {
+        fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function (error: any) {
           if (!error) {
             Log.error('Helper::addEntry(..) - success!');
             return callback(null);
@@ -178,7 +178,7 @@ export class Helper {
     Log.trace('Helper::checkEntry(..) - start');
     let path = pathToRoot.concat(config.private_folder, filename);
 
-    Helper.readJSON(filename, function(error: any, jsonFile: any) {
+    Helper.readJSON(filename, function (error: any, jsonFile: any) {
       if (!error) {
         let entry = _.find(jsonFile, objectToCheck);
 
@@ -204,7 +204,7 @@ export class Helper {
     Log.trace('Helper::deleteEntry(..) - start');
     let path = pathToRoot.concat(config.private_folder, filename);
 
-    Helper.readJSON(filename, function(error: any, jsonFile: any) {
+    Helper.readJSON(filename, function (error: any, jsonFile: any) {
       if (!error) {
         let index: number = _.findIndex(jsonFile, identifierObject);
         if (index !== -1) {
@@ -212,14 +212,14 @@ export class Helper {
 
           // use async library to ensure that the write happens AFTER the splice.
           async.waterfall([
-            function splice_array(cb: any) {
-              jsonFile.splice(index, 1);
-              return cb();
-            },
-          ],
+              function splice_array(cb: any) {
+                jsonFile.splice(index, 1);
+                return cb();
+              },
+            ],
             function write_file(err: any) {
               Log.info('write_file()' + err);
-              fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function(error: any) {
+              fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function (error: any) {
                 if (error) {
                   Log.trace('Helper::deleteEntry(..) - write error: ' + error);
                   return callback(error);
@@ -249,7 +249,7 @@ export class Helper {
     let filename = 'admins.json';
     let path = pathToRoot.concat(config.private_folder, filename);
 
-    Helper.readJSON(filename, function(error: any, jsonFile: any) {
+    Helper.readJSON(filename, function (error: any, jsonFile: any) {
       if (!error) {
         let index: number = _.findIndex(jsonFile, {
           'username': username,
@@ -270,7 +270,7 @@ export class Helper {
     let filename = 'grades.json';
     let path = pathToRoot.concat(config.private_folder, filename);
 
-    Helper.readJSON(filename, function(error: any, jsonFile: any) {
+    Helper.readJSON(filename, function (error: any, jsonFile: any) {
       if (!error) {
         Log.trace('Helper::addGrade(..) - finding index of student in grades');
         let studentIndex: number = _.findIndex(jsonFile, {
@@ -293,8 +293,8 @@ export class Helper {
               } else {
                 Log.trace('Helper::addGrade(..) - assigning new grade');
                 let newGrade = {
-                  'assnId': assnId,
-                  'grade': grade,
+                  'assnId':  assnId,
+                  'grade':   grade,
                   'comment': comment,
                 };
                 jsonFile[studentIndex].grades.push(newGrade);
@@ -304,7 +304,7 @@ export class Helper {
           ], function write(error: any) {
             if (!error) {
               Log.trace('Helper::addGrade(..) - writing to file');
-              fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function(error: any) {
+              fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function (error: any) {
                 if (!error) {
                   Log.error('Helper::addGrade(..) - success!');
                   return callback(null);
@@ -343,7 +343,7 @@ export class Helper {
     let filename = 'grades.json';
     let path = pathToRoot.concat(config.private_folder, filename);
 
-    Helper.readJSON(filename, function(error: any, jsonFile: any) {
+    Helper.readJSON(filename, function (error: any, jsonFile: any) {
       if (!error) {
         Log.trace('Helper::addGrades(..) - finding index of student in grades');
         let studentIndex: number = _.findIndex(jsonFile, {
@@ -381,7 +381,7 @@ export class Helper {
           ], function write(error: any) {
             if (!error) {
               Log.trace('Helper::addGrades(..) - writing to file');
-              fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function(error: any) {
+              fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function (error: any) {
                 if (!error) {
                   Log.error('Helper::addGrades(..) - success!');
                   return callback(null);
@@ -417,14 +417,14 @@ export class Helper {
     Log.trace('Helper::addGrades(..) - start');
     let apps: any[] = [];
 
-    teamsArray.forEach(function(team) {
+    teamsArray.forEach(function (team) {
       let app: any = {};
       app['name'] = team['appName'];
       app['url'] = team['url'];
       app['id'] = team['id'];
       app['description'] = team['appDescription'];
       app['comments'] = [];
-      (team['comments'] as any[]).forEach(function(comment) {
+      (team['comments'] as any[]).forEach(function (comment) {
         let filteredComment: any = {};
         filteredComment['description'] = comment['description'];
         filteredComment['ratting'] = comment['ratting'];
@@ -458,7 +458,7 @@ export class Helper {
     let filename = 'teams.json';
     let path = pathToRoot.concat(config.private_folder, filename);
 
-    Helper.readJSON(filename, function(error: any, jsonFile: any) {
+    Helper.readJSON(filename, function (error: any, jsonFile: any) {
       if (!error) {
         Log.trace('Helper::addComment(..) - finding index of app in teams');
         let appIndex: number = _.findIndex(jsonFile, {
@@ -472,10 +472,10 @@ export class Helper {
             function assign(cb: any) {
               Log.trace('Helper::addComment(..) - adding new comment');
               let newComment = {
-                'sid': sid,
+                'sid':       sid,
                 description: comment,
-                approved: false,
-                'ratting': ratting,
+                approved:    false,
+                'ratting':   ratting,
               };
               jsonFile[appIndex].comments.push(newComment);
 
@@ -484,7 +484,7 @@ export class Helper {
           ], function write(error: any) {
             if (!error) {
               Log.trace('Helper::addComment(..) - writing to file');
-              fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function(error: any) {
+              fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function (error: any) {
                 if (!error) {
                   Log.error('Helper::addComment(..) - success!');
                   return callback(null);
@@ -522,7 +522,7 @@ export class Helper {
     let filename = 'teams.json';
     let path = pathToRoot.concat(config.private_folder, filename);
 
-    Helper.readJSON(filename, function(error: any, jsonFile: any) {
+    Helper.readJSON(filename, function (error: any, jsonFile: any) {
       if (!error) {
         Log.trace('Helper::updateComments(..) - finding index of app in teams');
         let appIndex: number = _.findIndex(jsonFile, {
@@ -532,12 +532,12 @@ export class Helper {
           // check if grade for that assnId already exists
 
           let updateComments: any[] = [];
-          comments.forEach(function(comment: any) {
+          comments.forEach(function (comment: any) {
             updateComments.push(function update(cb: any) {
               let commentIndex: number = _.findIndex(jsonFile[appIndex].comments, {
-                'sid': comment.sid,
+                'sid':         comment.sid,
                 'description': comment.description,
-                'ratting': parseInt(comment.ratting),
+                'ratting':     parseInt(comment.ratting),
               });
               if (commentIndex !== -1) {
                 Log.trace('Helper::updateComments(..) - updating comment');
@@ -551,7 +551,7 @@ export class Helper {
           async.waterfall(updateComments, function write(error: any) {
             if (!error) {
               Log.trace('Helper::updateComments(..) - writing to file');
-              fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function(error: any) {
+              fs.writeFile(path, JSON.stringify(jsonFile, null, 2), function (error: any) {
                 if (!error) {
                   Log.error('Helper::updateComments(..) - success!');
                   return callback(null);

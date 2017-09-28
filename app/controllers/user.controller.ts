@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
-import { IUserDocument, User } from '../models/user.model';
-import { ICourseDocument, Course } from '../models/course.model';
-import { logger } from '../../utils/logger';
-import { config } from '../../config/env';
+import {IUserDocument, User} from '../models/user.model';
+import {ICourseDocument, Course} from '../models/course.model';
+import {logger} from '../../utils/logger';
+import {config} from '../../config/env';
 import * as request from '../helpers/request';
 
 function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object> {
@@ -13,14 +13,14 @@ function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object
   let comparisonUser: IUserDocument;
   let isInLab: boolean = false;
 
-  return Course.findOne({ courseId: payload.courseId })
+  return Course.findOne({courseId: payload.courseId})
     .exec()
     .then((_course: ICourseDocument) => {
       course = _course;
       return course;
     })
     .then(() => {
-      return User.findOne({ username: payload.username })
+      return User.findOne({username: payload.username})
         .then((_user: IUserDocument) => {
           if (_user) {
             comparisonUser = _user;
@@ -33,7 +33,7 @@ function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object
         });
     })
     .then(() => {
-      return User.findOne({ username: _loggedInUser })
+      return User.findOne({username: _loggedInUser})
         .then((_user: IUserDocument) => {
           if (_user) {
             loggedInUser = _user;
@@ -47,7 +47,7 @@ function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object
     })
     .then((u) => {
       if (!comparisonUser || !loggedInUser) {
-        return { username: payload.username, inSameLab: isInLab };
+        return {username: payload.username, inSameLab: isInLab};
       }
       // cannot add one's self to a team (disabled because it turns out to be useful)
       // if (_loggedInUser === String(payload.username)) {
@@ -58,10 +58,10 @@ function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object
       let loggedInUserLabId: string;
       let labIndexNum: number;
 
-      // FIRST: Get logged in user labId 
+      // FIRST: Get logged in user labId
       for (let i = 0; i < labSections.length; i++) {
-        let labId: string = String(labSections[i].users.indexOf(loggedInUser._id) );
-        
+        let labId: string = String(labSections[i].users.indexOf(loggedInUser._id));
+
         if (labSections[i].users.indexOf(loggedInUser._id) > -1) {
           console.log((labSections[i].users.indexOf(loggedInUser._id) > -1));
           loggedInUserLabId = labSections[i].labId;
@@ -74,7 +74,7 @@ function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object
         isInLab = true;
       }
 
-      return { username: payload.username, inSameLab: isInLab };
+      return {username: payload.username, inSameLab: isInLab};
     });
 }
 
@@ -88,12 +88,12 @@ function login(authcode: string, csid: string, snum: string) {
     .then(request.retrieveAccessToken)
     .then(request.retrieveUsername)
     .then((username: string) => {
-      return User.findWith({ username })
+      return User.findWith({username})
         .then((user: any) => {
           return Promise.resolve(user);
         })
         .catch(() => {
-          return User.findWith({ csid, snum })
+          return User.findWith({csid, snum})
             .then((user: any) => {
               return Promise.resolve(user);
             })
@@ -111,10 +111,10 @@ function login(authcode: string, csid: string, snum: string) {
  * @returns {Promise<IUserDocument>}
  */
 function checkRegistration(csid: string, snum: string): Promise<IUserDocument> {
-  if ( !csid && !snum ) {
+  if (!csid && !snum) {
     return Promise.reject('CSID and SNUM not supplied');
   } else {
-    return User.findOne({ 'csid': csid, 'snum' : snum }).exec() || Promise.reject('User does not exist');
+    return User.findOne({'csid': csid, 'snum': snum}).exec() || Promise.reject('User does not exist');
   }
 }
 
@@ -131,7 +131,7 @@ function logout(user: IUserDocument) {
  */
 function load(user: IUserDocument) {
   return Promise.resolve(user)
-    // .then(loadGrades)
+  // .then(loadGrades)
     .then((user: IUserDocument) => {
       // todo: add more things to userdata
       return Object.assign({}, user);
@@ -141,18 +141,18 @@ function load(user: IUserDocument) {
 
 
 /**
-* Verifies that CSID and SNUM are valid before Github authentication/registration
-* @param {restify.Request} restify request object
-* @param {restify.Response} restify response object
-* @param {restify.Next} restify next object
-* @return {IUserDocument || void } that matches request object CSID and SNUM params
-**/
+ * Verifies that CSID and SNUM are valid before Github authentication/registration
+ * @param {restify.Request} restify request object
+ * @param {restify.Response} restify response object
+ * @param {restify.Next} restify next object
+ * @return {IUserDocument || void } that matches request object CSID and SNUM params
+ **/
 function validateRegistration(req: any, res: any, next: restify.Next) {
 
   let csid = req.params.csid;
   let snum = req.params.snum;
-  let query = User.findOne({ 'csid' : csid, 'snum' : snum }).exec();
-  return query.then( user => {
+  let query = User.findOne({'csid': csid, 'snum': snum}).exec();
+  return query.then(user => {
 
     if (user === null) {
       return Promise.reject(Error('Unable to validate CSID and SNUM'));
@@ -165,18 +165,18 @@ function validateRegistration(req: any, res: any, next: restify.Next) {
 }
 
 /**
-* Verifies that CSID and SNUM are valid before Github authentication/registration
-* @param {restify.Request} restify request object
-* @return {IUserDocument} that matches request object CSID and SNUM params
-**/
+ * Verifies that CSID and SNUM are valid before Github authentication/registration
+ * @param {restify.Request} restify request object
+ * @return {IUserDocument} that matches request object CSID and SNUM params
+ **/
 function addGithubUsername(req: any) {
   logger.info('addGithubUsername() in Courses Controller');
   let csid = req.params.csid;
   let snum = req.params.snum;
   let username = req.params.username;
-  let query = User.findOne({ 'csid' : csid, 'snum' : snum }).exec();
+  let query = User.findOne({'csid': csid, 'snum': snum}).exec();
 
-  return query.then( user => {
+  return query.then(user => {
     if (!user) {
       return Promise.reject(Error('Unable to validate CSID and SNUM'));
     } else if (isUsernameRegistered(user)) {
@@ -189,10 +189,10 @@ function addGithubUsername(req: any) {
 }
 
 /**
-* Determines if Github Username is already registered in User object
-* @param {IUserDocument} mongoose user instance
-* @return {boolean} true if exists
-**/
+ * Determines if Github Username is already registered in User object
+ * @param {IUserDocument} mongoose user instance
+ * @return {boolean} true if exists
+ **/
 function isUsernameRegistered(user: IUserDocument) {
   if (user.username !== '') {
     return true;
@@ -201,5 +201,4 @@ function isUsernameRegistered(user: IUserDocument) {
   return false;
 }
 
-
-export { login, logout, checkRegistration, load, validateRegistration, addGithubUsername, isStudentInSameLab };
+export {login, logout, checkRegistration, load, validateRegistration, addGithubUsername, isStudentInSameLab};
