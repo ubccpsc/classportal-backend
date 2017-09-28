@@ -5,6 +5,9 @@ import {config} from '../../config/env';
 import {logger} from '../../utils/logger';
 let errors = require('restify-errors');
 
+const ADMIN_ROLE: string = 'admin';
+const SUPERADMIN_ROLE: string = 'superadmin';
+
 /**
  * Verifies if authentication valid and redirects on basis of boolean result.
  * @return boolean
@@ -20,15 +23,18 @@ const isAuthenticated = (req: any, res: any, next: restify.Next) => {
 };
 
 const adminAuthenticated = (req: any, res: restify.Response, next: restify.Next) => {
-  console.log('super true ' + req.isAuthenticated());
-  if (req.isAuthenticated()) {
-    let loggedInUser = req.user.username;
-    let adminOrSuperAdmin = function () {
-      return config.admins.indexOf(loggedInUser) >= 0 || config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
-    };
-    if (adminOrSuperAdmin()) {
-      return next(); // authorized
-    }
+  console.log('admin authenticated', req.user.username);
+  let userrole: string = String(req.user.userrole);
+  if (req.isAuthenticated() === true && userrole === ADMIN_ROLE || userrole === SUPERADMIN_ROLE) {
+    return next();
+    // let loggedInUser = req.user.username;
+    // let adminOrSuperAdmin = function() {
+    // return config.admins.indexOf(loggedInUser) >= 0 || 
+    //   config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
+    // };
+    // if (adminOrSuperAdmin()) {
+    //   return next(); // authorized
+    // }
   }
   next(new errors.UnauthorizedError('Permission denied.'));
 };
