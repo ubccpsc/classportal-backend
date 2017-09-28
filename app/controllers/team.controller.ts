@@ -19,83 +19,106 @@ export class ITeamError {
   public message: string;
 }
 
+export class ITeamTuple {
+  public userName: string;
+  public team: ITeamDocument;
+}
+
+
 export class TeamController {
 
-  public getUserTeam(courseId: string, userName: string): ITeamDocument | ITeamError {
-    try {
-      let team = this.queryUserTeam(courseId, userName);
-      if (team === null) {
-        return {status: 'error', message: `You are not on any teams under ${courseId}.`};
+  public getUserTeam(courseId: string, userName: string): Promise<ITeamTuple | ITeamError> {
+    return this.queryUserTeam(courseId, userName).then(function (team) {
+      if (team !== null) {
+        return Promise.resolve(team);
       } else {
-        return team;
+        return Promise.reject({status: 'error', message: `You are not on any teams under ${courseId}.`});
       }
-    } catch (err) {
+    }).catch(function (err: Error) {
       logger.error('TeamController::getUserTeam() - ERROR: ' + err.message);
-      return {status: 'error', message: err.message};
-    }
+      return Promise.reject({status: 'error', message: err.message});
+    });
   }
 
-  public getAllTeams(courseId: string): ITeamDocument[] | ITeamError {
-    try {
-      let teams = this.queryAllTeams(courseId);
-      return teams;
-    } catch (err) {
+  public getAllTeams(courseId: string): Promise<ITeamDocument[] | ITeamError> {
+    return this.queryAllTeams(courseId).then(function (teams) {
+      return Promise.resolve(teams);
+    }).catch(function (err: Error) {
       logger.error('TeamController::getAllTeams() - ERROR: ' + err.message);
-      return {status: 'error', message: err.message};
-    }
+      return Promise.reject({status: 'error', message: err.message});
+    });
   }
 
   /**
-   * NOTE: This is missing the deliv aspect. We need to think a bit harder about how tying teams to multiple deliverables works.
+   * NOTE: This is missing the deliv aspect.
+   * We need to think a bit harder about how tying teams to multiple deliverables works.
    *
    * @param courseId
    * @param userNames
    * @param isAdmin
    * @returns {{status: string, message: string}}
    */
-  public createTeam(courseId: string, userNames: string[], isAdmin: boolean) {
+  public createTeam(courseId: string, userNames: string[], isAdmin: boolean): Promise<ITeamDocument | ITeamError> {
 
-    let users = [];
-    let alreadyOnTeam = [];
+    let userPromises = [];
     for (let userName of userNames) {
-      let user = this.getUserTeam(courseId, userName);
-      if (user === null) {
-        users.push(userName);
+      userPromises.push(this.getUserTeam(courseId, userName));
+    }
+
+    return Promise.all(userPromises).then(function (userTeams: ITeamTuple[]) {
+      let users = [];
+      let alreadyOnTeam = [];
+
+      for (let userTeam of userTeams) {
+        if (userTeam.team === null) {
+          users.push(userTeam.userName);
+        } else {
+          alreadyOnTeam.push(userTeam.userName);
+        }
+      }
+
+      // even admins can't put someone on a team who is already teamed up
+      if (alreadyOnTeam.length > 0) {
+        return Promise.reject({
+          status:  'error',
+          message: 'Some user(s) are already on teams: ' + JSON.stringify(alreadyOnTeam)
+        });
+      }
+
+      if (isAdmin === true) {
+        // ignore safeguards
       } else {
-        alreadyOnTeam.push(userName);
-      }
-    }
+        const MIN_MEMBERS = 1; // should come from somewhere
+        const MAX_MEMBERS = 1; // should come from somewhere
 
-    // even admins can't put someone on a team who is already teamed up
-    if (alreadyOnTeam.length > 0) {
-      return {status: 'error', message: 'Some user(s) are already on teams: ' + JSON.stringify(alreadyOnTeam)};
-    }
+        if (users.length < MIN_MEMBERS) {
+          return Promise.reject({status: 'error', message: 'Insufficient members specified'});
+        }
 
-    if (isAdmin === true) {
-      // ignore safeguards
-    } else {
-      const MIN_MEMBERS = 1; // should come from somewhere
-      const MAX_MEMBERS = 1; // should come from somewhere
-
-      if (users.length < MIN_MEMBERS) {
-        return {status: 'error', message: 'Insufficient members specified'};
+        if (users.length > MAX_MEMBERS) {
+          return Promise.reject({status: 'error', message: 'Too many members specified'});
+        }
       }
 
-      if (users.length > MAX_MEMBERS) {
-        return {status: 'error', message: 'Too many members specified'};
-      }
-    }
+      return this.queryCreateTeam(courseId, users).then(function (team: ITeamDocument) {
+        if (team !== null) {
+          return Promise.resolve(team);
+        } else {
+          logger.error('TeamController::createTeam() - team formation failed');
+          // not a very useful message; does this ever happen?
+          return Promise.reject({status: 'error', message: 'Team formation failed.'});
+        }
+      }).catch(function (err: Error) {
+        logger.error('TeamController::createTeam() - ERROR: ' + err.message);
+        return Promise.reject({status: 'error', message: err.message});
+      });
 
-    try {
-      let team = this.queryCreateTeam(courseId, users);
-      return team;
-    } catch (err) {
-      logger.error('TeamController::createTeam() - ERROR: ' + err.message);
-      return {status: 'error', message: err.message};
-    }
-
-
+    }).catch(function (err: Error) {
+      logger.error('TeamController::createTeam() - promise.all ERROR: ' + err.message);
+      return Promise.reject({status: 'error', message: err.message});
+    });
   }
+
 
   /**
    *
@@ -103,8 +126,8 @@ export class TeamController {
    * @param userName
    * @returns {ITeamDocument | null} the user's ITeamDocument for that course (if it exists) or null.
    */
-  private queryUserTeam(courseId: string, userName: string): ITeamDocument | null {
-    return null;
+  private queryUserTeam(courseId: string, userName: string): Promise<ITeamTuple> {
+    return Promise.resolve({userName: userName, team: null});
   }
 
   /**
@@ -112,8 +135,8 @@ export class TeamController {
    * @param courseId
    * @returns {ITeamDocument} if no teams returns []
    */
-  private queryAllTeams(courseId: string): ITeamDocument[] {
-    return null;
+  private queryAllTeams(courseId: string): Promise<ITeamDocument[]> {
+    return Promise.resolve([]); // TODO: implement
   }
 
   /**
@@ -122,8 +145,8 @@ export class TeamController {
    * @param users
    * @returns {ITeamDocument} the created team document
    */
-  private queryCreateTeam(courseId: string, users: string[]): ITeamDocument {
-    return null;
+  private queryCreateTeam(courseId: string, users: string[]): Promise<ITeamDocument | null> {
+    return Promise.resolve(null); // TODO: implement
   }
 
 }
