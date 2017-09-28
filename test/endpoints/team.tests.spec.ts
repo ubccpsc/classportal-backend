@@ -1,22 +1,22 @@
 import * as supertest from 'supertest';
-import { expect } from 'chai';
-import { app } from '../../server';
-import { logger } from '../../utils/logger';
-import { User, IUserDocument } from '../../app/models/user.model';
-import { Team, ITeamDocument } from '../../app/models/team.model';
+import {expect} from 'chai';
+import {app} from '../../server';
+import {logger} from '../../utils/logger';
+import {User, IUserDocument} from '../../app/models/user.model';
+import {Team, ITeamDocument} from '../../app/models/team.model';
 import * as mockData from '../assets/mockDataObjects';
-import { studentCookie } from './../assets/auth.agents';
+import {studentCookie} from './../assets/auth.agents';
 
-const SNUM_GITHUB_LOGIN = { username: 'thekitsch', snum: 5 };
-const SUCCESS_MSG_PUT = { response : 'Successfully added a new team.' };
-const SUCCESS_MSG_POST = { response : 'Successfully updated team.' };
-const DUPLICATE_ERROR_MSG = { err : 'Cannot add duplicate team members to deliverable.' };
+const SNUM_GITHUB_LOGIN = {username: 'thekitsch', snum: 5};
+const SUCCESS_MSG_PUT = {response: 'Successfully added a new team.'};
+const SUCCESS_MSG_POST = {response: 'Successfully updated team.'};
+const DUPLICATE_ERROR_MSG = {err: 'Cannot add duplicate team members to deliverable.'};
 const INVALID_TEAM_ID = 'asdc1f23123f12d3qedsf';
-const ERROR_PAYLOAD_MALFORMED = { err : 'Payload objects malformed. Cannot update team.' };
-const ERROR_INVALID_TEAM_OBJECT_ID = { err : 'Team ID 58fe2c246d533d25b63818f9 not found.' };
-const ERROR_MAX_TEAM_SIZE = { err : 'Cannot create team. The maximum team size is 8.' };
-const ERROR_MIN_TEAM_SIZE = { err : 'Cannot create team. The minimum team size is 2.' };
-const ERROR_0_TEAM_MEMBERS = { err : 'Cannot add team without team members.' };
+const ERROR_PAYLOAD_MALFORMED = {err: 'Payload objects malformed. Cannot update team.'};
+const ERROR_INVALID_TEAM_OBJECT_ID = {err: 'Team ID 58fe2c246d533d25b63818f9 not found.'};
+const ERROR_MAX_TEAM_SIZE = {err: 'Cannot create team. The maximum team size is 8.'};
+const ERROR_MIN_TEAM_SIZE = {err: 'Cannot create team. The minimum team size is 2.'};
+const ERROR_0_TEAM_MEMBERS = {err: 'Cannot add team without team members.'};
 let agent = supertest.agent(app);
 
 mockData.initializeData()
@@ -30,10 +30,10 @@ describe('PUT /:courseId/team', () => {
       .set('set-cookie', studentCookie)
       .send({
         deliverable: mockData.DELIVERABLE_1,
-        members: [mockData.RANDOM_STUDENT_1._id, mockData.RANDOM_STUDENT_2._id],
-        githubUrl: mockData.GITHUB_URL,
-        name: mockData.TEAM_NAME,
-        teamId: mockData.TEAM_ID,
+        members:     [mockData.RANDOM_STUDENT_1._id, mockData.RANDOM_STUDENT_2._id],
+        githubUrl:   mockData.GITHUB_URL,
+        name:        mockData.TEAM_NAME,
+        teamId:      mockData.TEAM_ID,
       })
       .end((err: any, res: supertest.Response) => {
         if (err) {
@@ -52,10 +52,10 @@ describe('PUT /:courseId/team', () => {
       .set('set-cookie', studentCookie)
       .send({
         deliverable: mockData.DELIVERABLE_1,
-        members: [mockData.RANDOM_STUDENT_1._id, mockData.RANDOM_STUDENT_2._id],
-        githubUrl: mockData.GITHUB_URL,
-        name: mockData.TEAM_NAME,
-        teamId: mockData.TEAM_ID,
+        members:     [mockData.RANDOM_STUDENT_1._id, mockData.RANDOM_STUDENT_2._id],
+        githubUrl:   mockData.GITHUB_URL,
+        name:        mockData.TEAM_NAME,
+        teamId:      mockData.TEAM_ID,
       })
       .end((err: any, res: supertest.Response) => {
         if (err) {
@@ -77,9 +77,9 @@ describe('PUT /:courseId/team', () => {
       .put('/710/team')
       .set('set-cookie', studentCookie)
       .send({
-        course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_2._id,
-        name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url',
-        members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id,
+        course:  mockData.COURSE_710._id, deliverable: mockData.DELIVERABLE_2._id,
+        name:    'Team Name', teamId: 123456, githubUrl: 'http://github.com/url',
+        members: [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id,
           mockData.RANDOM_STUDENT_4._id, mockData.RANDOM_STUDENT_4._id, mockData.RANDOM_STUDENT_4._id,
           mockData.RANDOM_STUDENT_4._id, mockData.RANDOM_STUDENT_4._id, mockData.RANDOM_STUDENT_4._id,
           mockData.RANDOM_STUDENT_4._id, mockData.RANDOM_STUDENT_4._id, mockData.RANDOM_STUDENT_4._id,
@@ -102,9 +102,9 @@ describe('PUT /:courseId/team', () => {
       .put('/610/team')
       .set('set-cookie', studentCookie)
       .send({
-        course : mockData.COURSE_610._id, deliverable : mockData.DELIVERABLE_2._id,
-        name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url',
-        members : [mockData.RANDOM_STUDENT_3._id],
+        course:  mockData.COURSE_610._id, deliverable: mockData.DELIVERABLE_2._id,
+        name:    'Team Name', teamId: 123456, githubUrl: 'http://github.com/url',
+        members: [mockData.RANDOM_STUDENT_3._id],
       })
       .end((err: any, res: supertest.Response) => {
         if (err) {
@@ -123,9 +123,9 @@ describe('PUT /:courseId/team', () => {
       .put('/710/team')
       .set('set-cookie', studentCookie)
       .send({
-        course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_2._id,
-        name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url',
-        members : [],
+        course:  mockData.COURSE_710._id, deliverable: mockData.DELIVERABLE_2._id,
+        name:    'Team Name', teamId: 123456, githubUrl: 'http://github.com/url',
+        members: [],
       })
       .end((err: any, res: supertest.Response) => {
         if (err) {
@@ -146,10 +146,12 @@ describe('POST /:courseId/admin/team', () => {
       .post('/710/admin/team')
       .set('set-cookie', studentCookie)
       .send({
-        teamId: mockData.TEAM_COMPUTATIONAL_THEORY._id,
-        updatedModel : { course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_1._id,
-          name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url', TAs : new Array(),
-          members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id] },
+        teamId:       mockData.TEAM_COMPUTATIONAL_THEORY._id,
+        updatedModel: {
+          course:  mockData.COURSE_710._id, deliverable: mockData.DELIVERABLE_1._id,
+          name:    'Team Name', teamId: 123456, githubUrl: 'http://github.com/url', TAs: new Array(),
+          members: [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id]
+        },
       })
       .end((err: any, res: supertest.Response) => {
         if (err) {
@@ -167,10 +169,12 @@ describe('POST /:courseId/admin/team', () => {
       .post('/710/admin/team')
       .set('set-cookie', studentCookie)
       .send({
-        teamId: mockData.TEAM_COMPUTATIONAL_THEORY._id,
-        updatedModel : { course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_1._id,
-          name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url', TAs : new Array(),
-          members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id] },
+        teamId:       mockData.TEAM_COMPUTATIONAL_THEORY._id,
+        updatedModel: {
+          course:  mockData.COURSE_710._id, deliverable: mockData.DELIVERABLE_1._id,
+          name:    'Team Name', teamId: 123456, githubUrl: 'http://github.com/url', TAs: new Array(),
+          members: [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id]
+        },
       })
       .end((err: any, res: supertest.Response) => {
         if (err) {
@@ -188,11 +192,13 @@ describe('POST /:courseId/admin/team', () => {
       .post('/710/admin/team')
       .set('set-cookie', studentCookie)
       .send({
-        teamId: mockData.TEAM_COMPUTATIONAL_THEORY._id,
-        updatedModel : { course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_1._id,
-          name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url',
-          TAs : [mockData.RANDOM_STUDENT_1._id, mockData.RANDOM_STUDENT_2._id],
-          members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id] },
+        teamId:       mockData.TEAM_COMPUTATIONAL_THEORY._id,
+        updatedModel: {
+          course:  mockData.COURSE_710._id, deliverable: mockData.DELIVERABLE_1._id,
+          name:    'Team Name', teamId: 123456, githubUrl: 'http://github.com/url',
+          TAs:     [mockData.RANDOM_STUDENT_1._id, mockData.RANDOM_STUDENT_2._id],
+          members: [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id]
+        },
       })
       .end((err: any, res: supertest.Response) => {
         if (err) {
@@ -210,10 +216,12 @@ describe('POST /:courseId/admin/team', () => {
       .post('/710/admin/team')
       .set('set-cookie', studentCookie)
       .send({
-        teamId: mockData.TEAM_COMPUTATIONAL_THEORY._id,
-        updatedModel : { course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_1._id,
-          name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url', TAs : new Array(),
-          members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id] },
+        teamId:       mockData.TEAM_COMPUTATIONAL_THEORY._id,
+        updatedModel: {
+          course:  mockData.COURSE_710._id, deliverable: mockData.DELIVERABLE_1._id,
+          name:    'Team Name', teamId: 123456, githubUrl: 'http://github.com/url', TAs: new Array(),
+          members: [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id]
+        },
       })
       .end((err: any, res: supertest.Response) => {
         if (err) {
@@ -231,18 +239,20 @@ describe('POST /:courseId/admin/team', () => {
       .post('/710/admin/team')
       .set('set-cookie', studentCookie)
       .send({
-        teamId: mockData.TEAM_COMPUTATIONAL_THEORY._id,
-        updatedModel : { course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_1._id,
-          name : 'Team Name', teamId : 123456, githubUrl : 'http://duplicate/TAs',
-          TAs : [mockData.RANDOM_STUDENT_2._id, mockData.RANDOM_STUDENT_2._id],
-          members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id] },
+        teamId:       mockData.TEAM_COMPUTATIONAL_THEORY._id,
+        updatedModel: {
+          course:  mockData.COURSE_710._id, deliverable: mockData.DELIVERABLE_1._id,
+          name:    'Team Name', teamId: 123456, githubUrl: 'http://duplicate/TAs',
+          TAs:     [mockData.RANDOM_STUDENT_2._id, mockData.RANDOM_STUDENT_2._id],
+          members: [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id]
+        },
       })
       .end((err: any, res: supertest.Response) => {
 
         Team.findOne({
           _id: mockData.TEAM_COMPUTATIONAL_THEORY._id,
         })
-          .then( t => {
+          .then(t => {
             if (err) {
               done(err);
             } else {
@@ -261,10 +271,12 @@ describe('POST /:courseId/admin/team', () => {
       .post('/710/admin/team')
       .set('set-cookie', studentCookie)
       .send({
-        teamId: mockData.TEAM_COMPUTATIONAL_THEORY._id,
-        updatedModel : { course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_1._id,
-          name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url',
-          members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id] },
+        teamId:       mockData.TEAM_COMPUTATIONAL_THEORY._id,
+        updatedModel: {
+          course:  mockData.COURSE_710._id, deliverable: mockData.DELIVERABLE_1._id,
+          name:    'Team Name', teamId: 123456, githubUrl: 'http://github.com/url',
+          members: [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id]
+        },
       })
       .end((err: any, res: supertest.Response) => {
         if (err) {
@@ -282,9 +294,10 @@ describe('POST /:courseId/admin/team', () => {
       .post('/710/admin/team')
       .set('set-cookie', studentCookie)
       .send({
-        teamId: mockData.TEAM_COMPUTATIONAL_THEORY._id,
-        updatedModel : { course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_1._id,
-          name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url', TAs : new Array(),
+        teamId:       mockData.TEAM_COMPUTATIONAL_THEORY._id,
+        updatedModel: {
+          course: mockData.COURSE_710._id, deliverable: mockData.DELIVERABLE_1._id,
+          name:   'Team Name', teamId: 123456, githubUrl: 'http://github.com/url', TAs: new Array(),
         },
       })
       .end((err: any, res: supertest.Response) => {
@@ -306,10 +319,12 @@ describe('POST /:courseId/admin/team', () => {
       .post('/710/admin/team')
       .set('set-cookie', studentCookie)
       .send({
-        teamId: INVALID_TEAM_OBJECT_ID,
-        updatedModel : { course : mockData.COURSE_710._id, deliverable : mockData.DELIVERABLE_1._id,
-          name : 'Team Name', teamId : 123456, githubUrl : 'http://github.com/url', TAs : new Array(),
-          members : [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id] },
+        teamId:       INVALID_TEAM_OBJECT_ID,
+        updatedModel: {
+          course:  mockData.COURSE_710._id, deliverable: mockData.DELIVERABLE_1._id,
+          name:    'Team Name', teamId: 123456, githubUrl: 'http://github.com/url', TAs: new Array(),
+          members: [mockData.RANDOM_STUDENT_3._id, mockData.RANDOM_STUDENT_4._id]
+        },
       })
       .end((err: any, res: supertest.Response) => {
         if (err) {

@@ -1,11 +1,11 @@
 import * as supertest from 'supertest';
-import { expect } from 'chai';
-import { app } from '../../server';
-import { logger } from '../../utils/logger';
-import { User, IUserDocument } from '../../app/models/user.model';
-import { Team, ITeamDocument } from '../../app/models/team.model';
+import {expect} from 'chai';
+import {app} from '../../server';
+import {logger} from '../../utils/logger';
+import {User, IUserDocument} from '../../app/models/user.model';
+import {Team, ITeamDocument} from '../../app/models/team.model';
 import * as mockData from '../assets/mockDataObjects';
-import { studentCookie } from './../assets/auth.agents';
+import {studentCookie} from './../assets/auth.agents';
 
 
 let agent = supertest.agent(app);
@@ -13,15 +13,15 @@ let faker = require('faker');
 
 const TEST_ORG = 'ubccpsc-githubtest';
 const TEST_REPO_DELIN = 'test_';
-const SUCCESS_RESPONSE_CREATE = { 'response': 'Successfully created repo with teams and members.' };
+const SUCCESS_RESPONSE_CREATE = {'response': 'Successfully created repo with teams and members.'};
 const NEW_TEST_REPO = {
-  'orgName' : 'ubccpsc-githubtest',
-  'name' : 'test_repo_name_instance_' + faker.random.number(9999),
-  'members' : ['thekitsch'],
-  'memberTeams' : ['Member_team_1', 'Member_team_2'],
-  'admins' : ['thekitsch'],
-  'adminTeams' : ['push_team_1'],
-  'importUrl' : 'https://github.com/ubccpsc-githubtest/import_respository_example',
+  'orgName':     'ubccpsc-githubtest',
+  'name':        'test_repo_name_instance_' + faker.random.number(9999),
+  'members':     ['thekitsch'],
+  'memberTeams': ['Member_team_1', 'Member_team_2'],
+  'admins':      ['thekitsch'],
+  'adminTeams':  ['push_team_1'],
+  'importUrl':   'https://github.com/ubccpsc-githubtest/import_respository_example',
 };
 const REAL_GITHUB_USER = 'thekitsch';
 
@@ -50,7 +50,7 @@ describe('/:courseId/admin/github/repos/:org', () => {
       reposToDelete.push(testReposList[key].name);
     }
 
-    let repoNamesReq = { 'repoNames': reposToDelete };
+    let repoNamesReq = {'repoNames': reposToDelete};
     return agent
       .del('/710/admin/github/repos/' + TEST_ORG)
       .set('set-cookie', studentCookie)
@@ -74,7 +74,7 @@ describe('/:courseId/admin/github/repos/:org', () => {
           done(err);
         } else {
           let repoResults = JSON.parse(res.text).response;
-          for ( let key in repoResults) {
+          for (let key in repoResults) {
             if (repoResults[key].name.startsWith(TEST_REPO_DELIN)) {
               console.log('found test repo' + repoResults[key].name);
               repoNames.push(repoResults[key].name);
@@ -116,7 +116,7 @@ describe('/:courseId/admin/github/repos/:org', () => {
           done(err);
         } else {
           let repoResults = JSON.parse(res.text).response;
-          for ( let key in repoResults) {
+          for (let key in repoResults) {
             if (repoResults[key].name.startsWith(TEST_REPO_DELIN)) {
               repoNames.push(repoResults[key].name);
             }

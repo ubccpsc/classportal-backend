@@ -1,31 +1,31 @@
 import * as supertest from 'supertest';
-import { expect } from 'chai';
-import { app } from '../../server';
-import { logger } from '../../utils/logger';
-import { User, IUserDocument } from '../../app/models/user.model';
-import { Team, ITeamDocument } from '../../app/models/team.model';
-import { Deliverable, IDeliverableDocument } from '../../app/models/deliverable.model';
+import {expect} from 'chai';
+import {app} from '../../server';
+import {logger} from '../../utils/logger';
+import {User, IUserDocument} from '../../app/models/user.model';
+import {Team, ITeamDocument} from '../../app/models/team.model';
+import {Deliverable, IDeliverableDocument} from '../../app/models/deliverable.model';
 import * as mockData from '../assets/mockDataObjects';
-import { studentCookie } from './../assets/auth.agents';
+import {studentCookie} from './../assets/auth.agents';
 
 let agent = supertest.agent(app);
 
-const SUCCESS_DELIVERABLE_POST = { response: 'Successfully updated/added Deliverable.' };
-const ERROR_DELIVERABLE_POST = { err: 'Error assigning deliverables to course #210.' };
+const SUCCESS_DELIVERABLE_POST = {response: 'Successfully updated/added Deliverable.'};
+const ERROR_DELIVERABLE_POST = {err: 'Error assigning deliverables to course #210.'};
 const VALID_DELIV_OBJECT = {
-  url: 'http://www.testURL.com',
-  open: '1999-01-18T02:21:07.200Z',
-  close: '2000-01-18T04:01:55.200Z',
+  url:            'http://www.testURL.com',
+  open:           '1999-01-18T02:21:07.200Z',
+  close:          '2000-01-18T04:01:55.200Z',
   gradesReleased: 1,
-  name: 'Theory Assignment',
+  name:           'Theory Assignment',
 };
 const INVALID_DELIV_OBJECT = {
-  url: 'http://www.testURL.com',
-  open: '1999-01-18T02:21:07.200Z',
-  close: '2000-01-18T04:01:55.200Z',
+  url:            'http://www.testURL.com',
+  open:           '1999-01-18T02:21:07.200Z',
+  close:          '2000-01-18T04:01:55.200Z',
   gradesReleased: 1,
 };
-const ERROR_VALIDATION_POST = { 'err': 'Deliverable validation failed' };
+const ERROR_VALIDATION_POST = {'err': 'Deliverable validation failed'};
 
 mockData.initializeData()
   .then(() => console.log('data initialized'))

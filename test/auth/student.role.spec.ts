@@ -1,13 +1,13 @@
 import * as supertest from 'supertest';
-import { expect } from 'chai';
-import { app } from '../../server';
-import { logger } from '../../utils/logger';
-import { User, IUserDocument } from '../../app/models/user.model';
-import { studentCookie } from './../assets/auth.agents';
+import {expect} from 'chai';
+import {app} from '../../server';
+import {logger} from '../../utils/logger';
+import {User, IUserDocument} from '../../app/models/user.model';
+import {studentCookie} from './../assets/auth.agents';
 import * as mockData from './../assets/mockDataObjects';
 
 
-const LOCAL_STUDENT_LOGIN = { username: 'thekitsch', snum: 5 };
+const LOCAL_STUDENT_LOGIN = {username: 'thekitsch', snum: 5};
 
 let agent = supertest.agent(app);
 
@@ -15,7 +15,7 @@ describe('Logging in agent for Team Routes Tests', () => {
   it('should have username in Response after logging in', (done) => {
     agent
       .get('/auth/login?username=' + mockData.LOCAL_STUDENT_LOGIN.username + '&snum=' +
-       mockData.LOCAL_STUDENT_LOGIN.snum)
+        mockData.LOCAL_STUDENT_LOGIN.snum)
       .end((err, res: any) => {
         // user should be authenticated with session state
         if (err) {

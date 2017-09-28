@@ -1,19 +1,19 @@
 import * as chai from 'chai';
 import * as supertest from 'supertest';
-import { app } from '../../server';
-import { logger } from '../../utils/logger';
-import { Grade, IGradeDocument } from '../../app/models/grade.model';
-import { Deliverable, IDeliverableModel } from '../../app/models/deliverable.model';
+import {app} from '../../server';
+import {logger} from '../../utils/logger';
+import {Grade, IGradeDocument} from '../../app/models/grade.model';
+import {Deliverable, IDeliverableModel} from '../../app/models/deliverable.model';
 const expect = chai.expect;
-import { studentCookie } from './../assets/auth.agents';
+import {studentCookie} from './../assets/auth.agents';
 import * as mockData from '../assets/mockDataObjects';
 
-let studentAgent = function() {
+let studentAgent = function () {
   let studentAgent = supertest.agent(app);
 
   studentAgent
     .get('/auth/login')
-    .query({ username: mockData.REAL_GITHUB_USERNAME, snum: 5 })
+    .query({username: mockData.REAL_GITHUB_USERNAME, snum: 5})
     .end((err, res) => {
       // user should be authenticated with session state
       if (err) {
@@ -25,26 +25,28 @@ let studentAgent = function() {
 };
 
 describe('initialize db data and remove Grades in DB', () => {
-  before( (done) => {
+  before((done) => {
     mockData.initializeData()
-    .then( () => {
-      Grade.remove({}).exec();
-    })
-    .then(() => { return done(); })
-    .catch(err => console.log('data initialization error: ' + err));
+      .then(() => {
+        Grade.remove({}).exec();
+      })
+      .then(() => {
+        return done();
+      })
+      .catch(err => console.log('data initialization error: ' + err));
   });
 });
 
 describe('POST /:courseId/admin/grades/:delivId', () => {
 
   const GRADES_CSV_FILE = String(__dirname).replace('/build/test/endpoints', '/test/assets/CSVs/mockGrades.csv');
-  const SUCCESS_RESPONSE_ADD_GRADES = { response: 'Successfully added CSV list of grades.' };
+  const SUCCESS_RESPONSE_ADD_GRADES = {response: 'Successfully added CSV list of grades.'};
 
   let DELIV_ID: string;
 
-  before( (done) => {
-    Deliverable.findOne({ name: 'Assignment 1' })
-      .then( d => {
+  before((done) => {
+    Deliverable.findOne({name: 'Assignment 1'})
+      .then(d => {
         DELIV_ID = d.name;
         return done();
       });
@@ -70,50 +72,50 @@ describe('POST /:courseId/admin/grades/:delivId', () => {
 
 describe('POST /:courseId/admin/grades', () => {
 
-  const SUCCESS_RESPONSE_ADD_GRADES = { response: 'Successfully updated grades.' };
+  const SUCCESS_RESPONSE_ADD_GRADES = {response: 'Successfully updated grades.'};
   const ERROR_RESPONSE_ADD_GRADES = {};
   const NEW_GRADES_POST = {
     courseId: 710,
-    grades: [
+    grades:   [
       {
-        snum: 333,
-        deliv: 'Assignment 2',
-        details: { finalGrade: '22' },
+        snum:    333,
+        deliv:   'Assignment 2',
+        details: {finalGrade: '22'},
       },
       {
-        snum: 444,
-        deliv: 'Assignment 1',
-        details: { finalGrade: '11' },
+        snum:    444,
+        deliv:   'Assignment 1',
+        details: {finalGrade: '11'},
       },
     ],
   };
   const UPDATED_GRADES_POST = {
     courseId: 710,
-    grades: [
+    grades:   [
       {
-        snum: 333,
-        deliv: 'Assignment 2',
-        details: { finalGrade: '12' },
+        snum:    333,
+        deliv:   'Assignment 2',
+        details: {finalGrade: '12'},
       },
       {
-        snum: 444,
-        deliv: 'Assignment 1',
-        details: { finalGrade: '21' },
+        snum:    444,
+        deliv:   'Assignment 1',
+        details: {finalGrade: '21'},
       },
     ],
   };
   const MORE_GRADES_POST = {
     courseId: 710,
-    grades: [
+    grades:   [
       {
-        snum: 333,
-        deliv: 'Assignment 1',
-        details: { finalGrade: '12' },
+        snum:    333,
+        deliv:   'Assignment 1',
+        details: {finalGrade: '12'},
       },
       {
-        snum: 444,
-        deliv: 'Assignment 2',
-        details: { finalGrade: '21' },
+        snum:    444,
+        deliv:   'Assignment 2',
+        details: {finalGrade: '21'},
       },
     ],
   };
@@ -170,9 +172,15 @@ describe('POST /:courseId/admin/grades', () => {
 
 describe('GET /:courseId/admin/grades', () => {
 
-  const SUCCESS_GET_GRADES_JSON = { 'response' : [{ 'snum' : '333' , 'deliv': 'Assignment 2',
-    'details': { 'finalGrade': '12' } }, { 'snum': '444', 'deliv': 'Assignment 1',
-      'details': { 'finalGrade': '21' } }] };
+  const SUCCESS_GET_GRADES_JSON = {
+    'response': [{
+      'snum':    '333', 'deliv': 'Assignment 2',
+      'details': {'finalGrade': '12'}
+    }, {
+      'snum':    '444', 'deliv': 'Assignment 1',
+      'details': {'finalGrade': '21'}
+    }]
+  };
   const SUCCESS_CSV_TEXT = 'snum,grade\n333,12\n444,21\n';
 
   it('should receive a list of snums and grades in a JSON array', (done) => {

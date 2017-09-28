@@ -147,7 +147,8 @@ export class TeamController {
    * @returns {ITeamDocument | null} the user's ITeamDocument for that course (if it exists) or null.
    */
   private queryUserTeam(courseId: string, userName: string): Promise<ITeamTuple> {
-    return Promise.resolve({userName: userName, team: null});
+    let ret: ITeamTuple = {userName, team: null}; // 'userName: userName' causes lint error
+    return Promise.resolve(ret);
   }
 
   /**

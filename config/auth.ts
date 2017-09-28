@@ -1,36 +1,36 @@
-import { app } from './restify';
-import { config } from '../config/env';
-import { User, IUserDocument } from '../app/models/user.model';
-import { logger } from '../utils/logger';
+import {app} from './restify';
+import {config} from '../config/env';
+import {User, IUserDocument} from '../app/models/user.model';
+import {logger} from '../utils/logger';
 
 let passport = require('passport-restify');
 let session = require('cookie-session');
 let CookieParser = require('restify-cookies');
 // must update links in 'passport-github' package to Github Enterprise
-let Strategy = require('passport-github').Strategy; 
+let Strategy = require('passport-github').Strategy;
 
 passport.use(new Strategy({
-  clientID: config.github_client_id,
-  clientSecret: config.github_client_secret,
-  callbackURL: config.github_callback_url,
-},
-  function(accessToken: any, refreshToken: any, profile: any, cb: any) {
+    clientID:     config.github_client_id,
+    clientSecret: config.github_client_secret,
+    callbackURL:  config.github_callback_url,
+  },
+  function (accessToken: any, refreshToken: any, profile: any, cb: any) {
 
     let username = String(profile.username).toLowerCase();
     console.log('debug username' + username);
 
     // Github username taken to look-up user in our DB.
     // Create SuperAdmin if it does not exist in DB
-    User.findOne({ username }, (err, user) => {
+    User.findOne({username}, (err, user) => {
       try {
         // If user is an admin but does not exist in DB yet
-        if (!user && config.super_admin == username ) {
+        if (!user && config.super_admin == username) {
           authenticateSuperAdmin(err, username, cb);
-        } 
+        }
         // If user is not an admin and there is no record of them in the DB
-        else if (!user && config.super_admin != username ) {
+        else if (!user && config.super_admin != username) {
           return cb(null, false);
-        } 
+        }
         // If user is a student/admin role and found in the DB
         else {
           console.log('debug in else statement');
@@ -41,38 +41,37 @@ passport.use(new Strategy({
         return Promise.reject(err);
       }
     })
-    .catch(err => {
-      logger.error(`config/auth.ts:: ERROR Authenticating user: ${err}`);
-    });
+      .catch(err => {
+        logger.error(`config/auth.ts:: ERROR Authenticating user: ${err}`);
+      });
 
 
   }),
 );
 
 // Passport Local strategy used in lieu of Github strategy for unit tests.
-if (config.env === 'test' ) {
+if (config.env === 'test') {
 
   Strategy = require('passport-local').Strategy;
   passport.use(new Strategy({
-    usernameField: 'username',
-    passwordField: 'snum',
-    passReqToCallback: true,
-    session: true,
-  },
-  function(req: any, username: any, password: any, done: any) {
-    let query = User.findOne({ 'username': username, 'snum' : password }).exec();
-    console.log('Local strategy enabled');
-    query.then( user => {
-      if (user) {
-        return done(null, user);
-      } else {
-        return done(null, false, { message: 'Unable to login' });
-      }
-    });
-  },
-));
+      usernameField:     'username',
+      passwordField:     'snum',
+      passReqToCallback: true,
+      session:           true,
+    },
+    function (req: any, username: any, password: any, done: any) {
+      let query = User.findOne({'username': username, 'snum': password}).exec();
+      console.log('Local strategy enabled');
+      query.then(user => {
+        if (user) {
+          return done(null, user);
+        } else {
+          return done(null, false, {message: 'Unable to login'});
+        }
+      });
+    },
+  ));
 }
-
 
 
 // Passport JS
@@ -86,7 +85,7 @@ if (config.env === 'test' ) {
 // from the database when deserializing.  However, due to the fact that this
 // example does not have a database, the complete Facebook profile is serialized
 // and deserialized.
-passport.serializeUser(function(user: IUserDocument, cb: any) {
+passport.serializeUser(function (user: IUserDocument, cb: any) {
   logger.info('Serializing User' + JSON.stringify(user, null, 2));
   try {
     logger.info(`config/auth.ts::passport.serializeUser Serializing ${user}`);
@@ -96,14 +95,18 @@ passport.serializeUser(function(user: IUserDocument, cb: any) {
   }
 });
 
-passport.deserializeUser(function(obj: any, cb: any) {
+passport.deserializeUser(function (obj: any, cb: any) {
   logger.info('Deserializing object : ' + JSON.stringify(obj, null, 2));
   try {
     console.log(obj);
     User.findById(obj)
       .exec()
-      .then((user) => { cb(null, user); })
-      .catch((err) => { logger.info(err); });
+      .then((user) => {
+        cb(null, user);
+      })
+      .catch((err) => {
+        logger.info(err);
+      });
   } catch (err) {
     logger.error(`config/auth.ts::passport.deserializeUser ERROR ${err}`);
   }
@@ -114,18 +117,18 @@ passport.deserializeUser(function(obj: any, cb: any) {
  * @param username username of the SuperAdmin
  * @param cb Passport callback for after SuperAdmin user object is created
  */
-let authenticateSuperAdmin = function(err: any, username: string, cb: any) {
+let authenticateSuperAdmin = function (err: any, username: string, cb: any) {
   let superAdmin = {
-    csid: 99999999,
-    snum: 99999999,
-    lname: 'DEFAULT ACCOUNT',
-    fname: 'SUPER ADMIN',
+    csid:     99999999,
+    snum:     99999999,
+    lname:    'DEFAULT ACCOUNT',
+    fname:    'SUPER ADMIN',
     username,
     userrole: 'superadmin',
   };
 
   User.create(superAdmin)
-    .then( (newAdmin: IUserDocument) => {
+    .then((newAdmin: IUserDocument) => {
       if (newAdmin) {
         logger.info(`config/auth.ts:: Authenticated user ${username} with Github OAuth`);
         return cb(err, newAdmin);
@@ -137,4 +140,4 @@ let authenticateSuperAdmin = function(err: any, username: string, cb: any) {
     });
 };
 
-export { passport, CookieParser, session }
+export {passport, CookieParser, session};

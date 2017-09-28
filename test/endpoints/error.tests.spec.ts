@@ -1,15 +1,15 @@
 import * as supertest from 'supertest';
-import { expect } from 'chai';
-import { app } from '../../server';
-import { logger } from '../../utils/logger';
+import {expect} from 'chai';
+import {app} from '../../server';
+import {logger} from '../../utils/logger';
 
 describe('GET /some-error-route', () => {
-  it('expect MethodNotAllowedError, GET is not allowed', function(done) {
+  it('expect MethodNotAllowedError, GET is not allowed', function (done) {
     supertest.agent(app)
       .get('/some-error-route')
       .expect('Content-type', /json/)
       .expect(405)
-      .end(function(err: any, res: any) {
+      .end(function (err: any, res: any) {
         if (!err) {
           console.log('Error in /some-error-route: ' + err);
         }

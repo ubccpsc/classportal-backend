@@ -1,14 +1,14 @@
 import * as supertest from 'supertest';
-import { expect } from 'chai';
-import { app } from '../../server';
-import { logger } from '../../utils/logger';
-import { User, IUserDocument } from '../../app/models/user.model';
+import {expect} from 'chai';
+import {app} from '../../server';
+import {logger} from '../../utils/logger';
+import {User, IUserDocument} from '../../app/models/user.model';
 import * as mockData from '../assets/mockDataObjects';
 
-const SNUM_GITHUB_LOGIN = { username: 'thekitsch', snum: 5 };
-const SUCCESS_MSG_PUT = { response : 'Successfully added a new team.' };
-const SUCCESS_MSG_POST = { response : 'Successfully updated team.' };
-const DUPLICATE_ERROR_MSG = { err : 'Cannot add duplicate team members to deliverable.' };
+const SNUM_GITHUB_LOGIN = {username: 'thekitsch', snum: 5};
+const SUCCESS_MSG_PUT = {response: 'Successfully added a new team.'};
+const SUCCESS_MSG_POST = {response: 'Successfully updated team.'};
+const DUPLICATE_ERROR_MSG = {err: 'Cannot add duplicate team members to deliverable.'};
 const INVALID_TEAM_ID = 'asdc1f23123f12d3qedsf';
 
 let agent = supertest.agent(app);
@@ -19,7 +19,7 @@ let bearerToken: any;
 
 agent
   .get('/auth/login?username=' + mockData.LOCAL_STUDENT_LOGIN.username +
-  '&snum=' + mockData.LOCAL_STUDENT_LOGIN.snum)
+    '&snum=' + mockData.LOCAL_STUDENT_LOGIN.snum)
   .end((err, res: any) => {
     // user should be authenticated with session state
     if (err) {
@@ -30,7 +30,7 @@ agent
 
 agent
   .get('/auth/login?username=' + mockData.LOCAL_STUDENT_LOGIN.username +
-  '&snum=' + mockData.LOCAL_STUDENT_LOGIN.snum)
+    '&snum=' + mockData.LOCAL_STUDENT_LOGIN.snum)
   .end((err, res: any) => {
     // user should be authenticated with session state
     if (err) {
@@ -40,5 +40,4 @@ agent
   });
 
 
-
-export { studentCookie, adminCookie, superAdminCookie };
+export {studentCookie, adminCookie, superAdminCookie};

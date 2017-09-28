@@ -1,17 +1,17 @@
 import * as fs from 'fs';
 import * as restify from 'restify';
-import { config } from './env';
-import { routes } from '../app/routes';
-import { logger } from '../utils/logger';
-import { session, CookieParser, passport } from './auth';
+import {config} from './env';
+import {routes} from '../app/routes';
+import {logger} from '../utils/logger';
+import {session, CookieParser, passport} from './auth';
 
 
 // create https server
 const app = restify.createServer({
-  name: config.app_name,
-  key: fs.readFileSync(config.ssl_key_path),
+  name:        config.app_name,
+  key:         fs.readFileSync(config.ssl_key_path),
   certificate: fs.readFileSync(config.ssl_cert_path),
-  ca: fs.readFileSync(config.ssl_int_cert_path).toString(),
+  ca:          fs.readFileSync(config.ssl_int_cert_path).toString(),
 });
 
 restify.CORS.ALLOW_HEADERS.push('Accept-Encoding');
@@ -34,18 +34,18 @@ app.opts(/.*/, (req: restify.Request, res: restify.Response, next: restify.Next)
 });
 
 // parse the http query string into req.query, but not into req.params
-app.use(restify.queryParser({ mapParams: false }));
+app.use(restify.queryParser({mapParams: false}));
 
 // parse the body of the request into req.params
 app.use(restify.bodyParser({
-  maxBodySize: 0,
-  mapParams: true,
-  mapFiles: false,
+  maxBodySize:    0,
+  mapParams:      true,
+  mapFiles:       false,
   overrideParams: false,
   keepExtensions: true,
-  uploadDir: './build/uploads/',
-  multiples: true,
-  hash: 'sha1',
+  uploadDir:      './build/uploads/',
+  multiples:      true,
+  hash:           'sha1',
 }));
 
 // custom middleware to log the request method, url, and params
@@ -56,8 +56,8 @@ app.use((req: restify.Request, res: restify.Response, next: restify.Next) => {
 
 app.use(CookieParser.parse);
 app.use(session({
-  keys: ['key1', 'key2'],
-  maxAge: 48 * 3600 /*hours*/ * 1000,  /*in milliseconds*/
+  keys:   ['key1', 'key2'],
+  maxAge: 48 * 3600 /*hours*/ * 1000, /*in milliseconds*/
   secure: false, // if you do SSL outside of node
 }));
 app.use(passport.initialize());
@@ -66,4 +66,4 @@ app.use(passport.session());
 // add routes and their handlers
 routes(app);
 
-export { app };
+export {app};

@@ -1,11 +1,11 @@
 import * as supertest from 'supertest';
-import { expect } from 'chai';
-import { app } from '../../server';
-import { logger } from '../../utils/logger';
-import { User, IUserDocument } from '../../app/models/user.model';
-import { Team, ITeamDocument } from '../../app/models/team.model';
+import {expect} from 'chai';
+import {app} from '../../server';
+import {logger} from '../../utils/logger';
+import {User, IUserDocument} from '../../app/models/user.model';
+import {Team, ITeamDocument} from '../../app/models/team.model';
 import * as mockData from '../assets/mockDataObjects';
-import { studentCookie } from './../assets/auth.agents';
+import {studentCookie} from './../assets/auth.agents';
 
 const TEST_ORG = 'ubccpsc-githubtest';
 const REAL_GITHUB_USER = 'thekitsch';
@@ -17,12 +17,12 @@ let faker = require('faker');
 describe('PUT /:courseId/team', () => {
 
   const TEAM_WITH_MEMBER = {
-    orgName: TEST_ORG,
+    orgName:  TEST_ORG,
     teamName: 'Test_team_' + faker.random.number(9999),
-    members: [REAL_GITHUB_USER],
+    members:  [REAL_GITHUB_USER],
   };
-  const SUCCESS_RESPONSE = { response: 'Successfully created team with members.' };
-  before('initialize database data', function(done) {
+  const SUCCESS_RESPONSE = {response: 'Successfully created team with members.'};
+  before('initialize database data', function (done) {
     mockData.initializeData()
       .then(() => console.log('data initialized'))
       .catch(err => console.log('data initialization error: ' + err));

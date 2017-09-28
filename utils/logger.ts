@@ -1,6 +1,6 @@
 import * as bunyan from 'bunyan';
 import * as stream from 'stream';
-import { config } from '../config/env';
+import {config} from '../config/env';
 
 interface LoggerSettings {
   name: string;
@@ -15,18 +15,18 @@ infoStream.write = (info: any): boolean => {
 };
 
 let settings: LoggerSettings = {
-  name: config.env,
+  name:    config.env,
   streams: [
-    { level: 'error', path: `error.log` },
-    { level: 'debug', path: 'debug.log' },
+    {level: 'error', path: `error.log`},
+    {level: 'debug', path: 'debug.log'},
   ],
 };
 
 if (config.debug) {
-  settings.streams.push({ level: 'info', stream: infoStream });
+  settings.streams.push({level: 'info', stream: infoStream});
 }
 
 const logger = bunyan.createLogger(settings);
 console.log(`Logger setting: ${settings.name}`);
 
-export { logger };
+export {logger};

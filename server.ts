@@ -1,7 +1,7 @@
 import mongoose = require('mongoose');
-import { config } from './config/env';
-import { app } from './config/restify';
-import { logger } from './utils/logger';
+import {config} from './config/env';
+import {app} from './config/restify';
+import {logger} from './utils/logger';
 
 // use native ES6 promises instead of mongoose promise library
 mongoose.Promise = global.Promise;
@@ -42,4 +42,4 @@ let onConnect = Promise.resolve(connection.once('open', () => {
 
 // Enable to seed data in new app and database.
 
-export { app, onConnect };
+export {app, onConnect};

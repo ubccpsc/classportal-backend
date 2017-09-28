@@ -1,7 +1,7 @@
 import * as supertest from 'supertest';
-import { expect } from 'chai';
-import { app } from '../../server';
-import { logger } from '../../utils/logger';
+import {expect} from 'chai';
+import {app} from '../../server';
+import {logger} from '../../utils/logger';
 
 describe('ping API', () => {
   describe('GET /ping', () => {
