@@ -42,7 +42,7 @@ export class TeamController {
       if (team !== null) {
         return Promise.resolve(team);
       } else {
-        return Promise.reject({status: 'error', message: `You are not on any teams under ${courseId}.`});
+        throw new Error(`You are not on any teams under ${courseId}.`);
       }
     }).catch(function (err: Error) {
       logger.error('TeamController::getUserTeam() - ERROR: ' + err.message);
@@ -99,10 +99,7 @@ export class TeamController {
 
       // even admins can't put someone on a team who is already teamed up
       if (alreadyOnTeam.length > 0) {
-        return Promise.reject({
-          status:  'error',
-          message: 'Some user(s) are already on teams: ' + JSON.stringify(alreadyOnTeam)
-        });
+        throw new Error('Some user(s) are already on teams: ' + JSON.stringify(alreadyOnTeam));
       }
 
       if (isAdmin === true) {
@@ -112,11 +109,11 @@ export class TeamController {
         const MAX_MEMBERS = 1; // should come from somewhere
 
         if (users.length < MIN_MEMBERS) {
-          return Promise.reject({status: 'error', message: 'Insufficient members specified'});
+          throw new Error('Insufficient members specified');
         }
 
         if (users.length > MAX_MEMBERS) {
-          return Promise.reject({status: 'error', message: 'Too many members specified'});
+          throw new Error('Too many members specified');
         }
       }
 
@@ -126,15 +123,12 @@ export class TeamController {
         } else {
           logger.error('TeamController::createTeam() - team formation failed');
           // not a very useful message; does this ever happen?
-          return Promise.reject({status: 'error', message: 'Team formation failed.'});
+          throw new Error('Team formation failed.');
         }
-      }).catch(function (err: Error) {
-        logger.error('TeamController::createTeam() - ERROR: ' + err.message);
-        return Promise.reject({status: 'error', message: err.message});
       });
 
     }).catch(function (err: Error) {
-      logger.error('TeamController::createTeam() - promise.all ERROR: ' + err.message);
+      logger.error('TeamController::createTeam() - ERROR: ' + err.message);
       return Promise.reject({status: 'error', message: err.message});
     });
   }
@@ -381,8 +375,10 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<ITeamDocument[]> 
   return courseQuery.then((course: ICourseDocument) => {
     let teamQueryObject: any = new Object();
     if (course) {
-      return Team.find({courseId: course._id, 
-        $where: 'this.deliverableIds.length > 0 && this.disbanded !== true' })
+      return Team.find({
+        courseId: course._id,
+        $where:   'this.deliverableIds.length > 0 && this.disbanded !== true'
+      })
         .populate({path: 'members', select: 'fname lname username'})
         .populate({path: 'deliverableIds'})
         .exec()
