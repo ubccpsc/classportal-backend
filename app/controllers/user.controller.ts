@@ -82,7 +82,8 @@ function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object
       catch (err) {
         console.log(err);
       }
-
+      return {username: payload.username, inSameLab: isInLab};
+      
     });
 }
 
