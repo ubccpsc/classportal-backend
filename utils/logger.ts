@@ -22,7 +22,8 @@ let settings: LoggerSettings = {
   ],
 };
 
-if (config.debug) {
+if (true || config.debug) { // RELEASE: don't leave this in
+// if (config.debug) {
   settings.streams.push({level: 'info', stream: infoStream});
 }
 
