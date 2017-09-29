@@ -76,7 +76,7 @@ function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object
         console.log('there');
         isInLab = true;
       }
-      console.log(isInLab);
+      console.log('true', isInLab);
       return {username: payload.username, inSameLab: isInLab};
     });
 }
