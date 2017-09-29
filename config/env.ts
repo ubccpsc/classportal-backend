@@ -1,8 +1,9 @@
+// require('dotenv').config({path: '/Users/rtholmes/dev/autotest/classportal-backend/.env'}); // RELEASE: comment out
 require('dotenv').config();
 
 // defaults to dev config
 // note that NODE_ENV and DEBUG are set in npm scripts; all other env variables should be set in .env
-const config = {
+let config: any = {
   env:                  process.env.NODE_ENV || 'development',
   debug:                process.env.DEBUG || false,
   app_name:             process.env.APP_NAME,
@@ -27,6 +28,7 @@ const config = {
 
 // specific to test config
 if (config.env === 'test') {
+  console.log('env.ts - env === test');
   config.host = process.env.TEST_HOST;
   config.port = process.env.TEST_PORT;
   config.db = process.env.TEST_DB;
@@ -38,6 +40,7 @@ if (config.env === 'test') {
 
 // specific to production config
 if (config.env === 'production') {
+  console.log('env.ts - env === production');
   config.host = process.env.PROD_HOST;
   config.port = process.env.PROD_PORT;
   config.app_path = process.env.PROD_APP_PATH;

@@ -16,6 +16,7 @@ import {User, IUserDocument} from '../models/user.model';
 import {Project, IProjectDocument} from '../models/project.model';
 import {Deliverable, IDeliverableDocument} from '../models/deliverable.model';
 import {Team, ITeamDocument} from '../models/team.model';
+import {Dashboard} from "../controllers/dashboard.controller";
 
 
 const pong = (req: restify.Request, res: restify.Response) => res.send('pong');
@@ -332,7 +333,8 @@ const getCourseTeamsWithBatchMarking = (req: any, res: restify.Response, next: r
 };
 
 const getDashForDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return dashCtrl.getDashboard(req, req.params, next)
+  const dash = new Dashboard();
+  return dash.getDashboard(req, req.params, next)
     .then((rows: any) => res.json(200, {response: rows}))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
