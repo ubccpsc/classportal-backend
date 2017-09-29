@@ -49,6 +49,7 @@ const TeamSchema = new mongoose.Schema({
   },
   disbanded:            {
     type: Boolean,
+    default: false,
   },
   courseId:             {
     type:     mongoose.Schema.Types.ObjectId, ref: 'Course',

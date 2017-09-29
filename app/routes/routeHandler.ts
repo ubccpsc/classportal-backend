@@ -339,6 +339,12 @@ const getDashForDeliverable = (req: restify.Request, res: restify.Response, next
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
+const disbandTeamById = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.disbandTeamById(req.params)
+    .then((isSuccessful: any) => res.json(200, {response: isSuccessful}))
+    .catch((err: any) => res.json(500, {err: err.message}));
+};
+
 export {
   pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
   getCurrentUserInfo, validateRegistration, addGithubUsername, updateDeliverable, getDeliverables,
@@ -348,5 +354,6 @@ export {
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects,
   getUsersNotOnTeam, getCourse, getMyTeams, generateProjects, repairIndividualProvisions, repairGithubReposForTeams,
-  createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking, getDashForDeliverable
+  createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking, getDashForDeliverable,
+  disbandTeamById
 };
