@@ -58,7 +58,7 @@ function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object
       let labSections: any = course.labSections;
       let loggedInUserLabId: string;
       let labIndexNum: number;
-
+      try {
       // FIRST: Get logged in user labId
       for (let i = 0; i < labSections.length; i++) {
         let labId: string = String(labSections[i].users.indexOf(loggedInUser._id));
@@ -78,6 +78,11 @@ function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object
       }
       console.log('true', isInLab);
       return {username: payload.username, inSameLab: isInLab};
+      }
+      catch (err) {
+        console.log(err);
+      }
+
     });
 }
 
