@@ -72,6 +72,7 @@ function isStudentInSameLab(payload: any, _loggedInUser: string): Promise<object
 
       // SECOND: Check if comparisonUser is in same LabId
       console.log('here');
+      console.log('labIndexNum', labIndexNum);
       if (labSections[labIndexNum].users.indexOf(comparisonUser._id) > -1) {
         console.log('there');
         isInLab = true;
