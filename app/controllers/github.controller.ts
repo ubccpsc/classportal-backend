@@ -322,7 +322,8 @@ function createGithubReposForTeams(payload: any): Promise<any> {
   }
 
   function getTeamsToBuildByBatch(course: ICourseDocument) {
-    return Team.find({courseId: course._id, $where: 'this.deliverableIds.length > 0', 'githubState.repo.url': ''})
+    return Team.find({courseId: course._id, $where: 'this.deliverableIds.length > 0 && this.disbanded !== true',
+      'githubState.repo.url': ''})
       .populate({path: 'members'})
       .exec()
       .then((_teams: any) => {
@@ -340,7 +341,8 @@ function createGithubReposForTeams(payload: any): Promise<any> {
   }
 
   function getTeamsToBuildForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
-    return Team.find({courseId: course._id, deliverableId: deliv._id, 'githubState.repo.url': ''})
+    return Team.find({courseId: course._id, deliverableId: deliv._id, 
+      $where: 'this.deliverableId.length > 0 && this.disbanded !== true', 'githubState.repo.url': ''})
       .populate({path: 'members deliverableId'})
       .exec()
       .then((_teams: ITeamDocument[]) => {
