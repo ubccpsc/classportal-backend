@@ -243,9 +243,12 @@ function getGradesFromResults(payload: any) {
   console.log(payload);
 
   let course: ICourseDocument;
+  let deliverables: IDeliverableDocument[];
   let deliverable: IDeliverableDocument;
   let deliverableNames: string[];
   let timestamp: number;
+  let singleDelivResults: any[];
+  let allDelivResults: any[];
 
   return Course.findOne({courseId: payload.courseId})
     .then((_course) => {
@@ -288,26 +291,58 @@ function getGradesFromResults(payload: any) {
         timestamp: {'$lte' : timestamp}
       })
       .then((result: any[]) => {
+        singleDelivResults = result;
         return result;
       });
     })
-    .then((singleDelivResults: any[]) => {
-      let resultQueries = [];
+    .then(() => {
+      if (payload.allDeliverables) {
+        return Deliverable.find({courseId: course._id})
+          .then((_deliverables: IDeliverableDocument[]) => {
+            if (_deliverables) {
+              deliverables = _deliverables;
+              return deliverable;
+            } 
+            throw `Could not find Deliverables for ${course._id}`;
+          })
+          .catch((err: any) => {
+            logger.error(`GradeController:: getGradesfromResults() ERROR ${err}`);
+          });
+      }
+      return null;
+    })
+    .then(() => {
+      // returns single deliverable results object to API if payload.allDeliverables is not selected.
+
+      let allDelivQueries = [];
       if (payload.allDeliverables) {
 
         for (let i = 0; i < deliverableNames.length; i++) {
-          let resultRecordsForDeliv = db.getLatestResultRecords('results', timestamp, {
-            orgName: course.githubOrg,
-            deliverable: deliverableNames[i],
-            timestamp: {'$lte' : timestamp}
-          })
-          .then((result: any[]) => {
-            return result;
-          });
-          resultQueries.push(resultRecordsForDeliv);
-        }
-        return Promise.all(resultQueries);
 
+          // get new timestamp for each deliverable due date for query
+          let index: number; 
+          
+          for (let j = 0; j < deliverables.length; j++) {
+            let deliverableName1 = String(deliverables[j].name);
+            let deliverableName2 = String(deliverableNames[i]);
+
+            if (deliverableName1 === deliverableName2) {
+              index = j;
+              timestamp = new Date(deliverables[index].close.toString()).getTime();        
+              
+              let resultRecordsForDeliv = db.getLatestResultRecords('results', timestamp, {
+                orgName: course.githubOrg,
+                deliverable: deliverableNames[i],
+                timestamp: {'$lte' : timestamp}
+              })
+              .then((result: any[]) => {
+                return result;
+              });
+              allDelivQueries.push(resultRecordsForDeliv);
+            }
+          }
+        }
+        return Promise.all(allDelivQueries);
       } else {
         return singleDelivResults;
       }
