@@ -414,7 +414,9 @@ function getGradesFromResults(payload: any) {
             console.log(r);
             csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.submitted, r.grade.finalGrade,
             r.grade.deliverableWeight, stats.passPercent, stats.passCount, stats.failCount, stats.skipCount,
-            stats.passNames, stats.failNames, stats.skipNames]);
+            stats.passNames.length === 0 ? '' : stats.passNames.split(';'), 
+            stats.failNames.length === 0 ? '' : stats.failNames.split(';'), 
+            stats.skipNames.length === 0 ? '' : stats.skipNames.split(';')]);
           }
         }
         // generate and return csv
