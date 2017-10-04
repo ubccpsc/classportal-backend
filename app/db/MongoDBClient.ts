@@ -121,22 +121,33 @@ export class MongoDB {
   /**
    * Gets latest record for each match
    */
-  public async getLatestResultRecords(_collectionName: string, _timestamp: number, _query: object): Promise<any[]> {
+  public async getLatestResultRecords(_collectionName: string, _timestamp: number, _query: any): Promise<any[]> {
     return new Promise<any[]>((fulfill, reject) => {
+      // fix for 210, as customLogic property slightly off in grade result parser
+      let groupQuery310 = {
+        _id: "$user",
+        username: {"$last": "$user"},
+        studentInfo: {"$last": "$report.studentInfo"},
+        submitted: {'$last': "$timestamp"},
+        grade: {'$last': "$report.tests.grade"},
+        customLogic: {'$last': "$report.custom"}
+      };
+      let groupQuery210 = {
+        _id: "$user",
+        username: {"$last": "$user"},
+        studentInfo: {"$last": "$report.studentInfo"},
+        submitted: {'$last': "$timestamp"},
+        grade: {'$last': "$report.tests.grade"},
+        customLogic: {'$last': "$report.tests.custom"}
+      };
+
       try {
         this.conn.then((db: mongodb.Db) => {
           return db.collection(_collectionName)
             .aggregate([
               {$match: _query},
               {$sort: {timestamp: 1}},
-              {$group: {
-                _id: "$user",
-                username: {"$last": "$user"},
-                studentInfo: {"$last": "$report.studentInfo"},
-                submitted: {'$last': "$timestamp"},
-                grade: {'$last': "$report.tests.grade"},
-                customLogic: {'$last': "$report.custom"} || {'$last': "$report.tests.custom"}
-              }}
+              {$group: "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? groupQuery210 : groupQuery310}
             ]).toArray((err: Error, results: any[]) => {
               if (err) {
                 throw err;

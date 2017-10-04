@@ -380,7 +380,7 @@ function getGradesFromResults(payload: any) {
       }
       return results;
     })
-    .then(() => {
+    .then((results: any) => {
       const CSV_COLUMNS_210 = ['csid', 'snum', 'lname', 'fname', 'username', 'submitted',
       'finalGrade', 'deliverableWeight', 'customLogic'];
       const CSV_COLUMNS_310 = ['csid', 'snum', 'lname', 'fname', 'username', 'submitted',
@@ -394,7 +394,7 @@ function getGradesFromResults(payload: any) {
         }
       
       // finally, convert to CSV based on class number and map to Interface type
-
+        return results;
     });
 }
 
