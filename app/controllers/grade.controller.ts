@@ -374,7 +374,7 @@ function getGradesFromResults(payload: any) {
             results[j].fname = classListItem.fname;
 
             // convert timestamp to actual date
-            results[j].submitted = new Date(results[j].submitted - UNIX_TIMESTAMP_DIFFERENCE).toLocaleDateString();
+            results[j].submitted = new Date(results[j].submitted - UNIX_TIMESTAMP_DIFFERENCE).toUTCString();
           }
         }
       }
