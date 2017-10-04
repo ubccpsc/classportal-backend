@@ -366,12 +366,11 @@ function getGradesFromResults(payload: any) {
         let classListItem: IUserDocument = course.classList[i] as IUserDocument;
         let classListUsername = String(classListItem.username);
         for (let j = 0; j < results.length; j++) {
-          let resultsUsername = String(results[j]);
+          let resultsUsername = String(results[j].username);
           if (resultsUsername === classListUsername) {
-            classListItem.csid = classListItem.csid;
-            classListItem.snum = classListItem.snum;
+            results[j].csid = classListItem.csid;
+            results[j].snum = classListItem.snum;
           }
-          results[j] = classListItem;
         }
       }
       return results;
