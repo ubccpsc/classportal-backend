@@ -148,7 +148,7 @@ export class MongoDB {
           return db.collection(_collectionName)
             .aggregate([
               {$match: _query},
-              {$sort: {timestamp: 1, lname: 1}},
+              {$sort: {timestamp: 1}},
               {$group: "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? groupQuery210 : groupQuery310}
             ]).toArray((err: Error, results: any[]) => {
               if (err) {

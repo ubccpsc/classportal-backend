@@ -328,7 +328,7 @@ function getGradesFromResults(payload: any) {
 
             if (deliverableName1 === deliverableName2) {
               index = j;
-              timestamp = new Date(deliverables[index].close.toString()).getTime();        
+              timestamp = new Date(deliverables[index].close.toString()).getTime();
               
               let resultRecordsForDeliv = db.getLatestResultRecords('results', timestamp, {
                 orgName: course.githubOrg,
@@ -418,8 +418,27 @@ function getGradesFromResults(payload: any) {
           }
         }
         // generate and return csv
-        return csvGenerate(csvArray);
         // return results;
+        // return csvGenerate(csvArray);
+        return csvArray;
+    })
+    .then((csvArray: any[]) => {
+      csvArray.sort((a: any, b: any) => {
+        let first = a.name.toUpperCase();
+        let second = b.name.toUpperCase();
+        if (first < second) {
+          return -1;
+        }
+        if (first > second) {
+          return 1;
+        }
+
+        return 0;
+      })
+      return csvArray;
+    })
+    .then((csvArray: any[]) => {
+      return csvGenerate(csvArray);
     });
 }
 
