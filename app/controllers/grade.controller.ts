@@ -245,6 +245,7 @@ function getGradesFromResults(payload: any) {
   let course: ICourseDocument;
   let deliverable: IDeliverableDocument;
   let deliverableNames: string[];
+  let timestamp: number;
 
   return Course.findOne({courseId: payload.courseId})
     .then((_course) => {
@@ -279,7 +280,7 @@ function getGradesFromResults(payload: any) {
         });
     })
     .then(() => {
-      let timestamp: number = new Date(deliverable.close.toString()).getTime();        
+      timestamp = new Date(deliverable.close.toString()).getTime();        
       console.log(timestamp);
       return db.getLatestResultRecords('results', timestamp, {
         orgName: course.githubOrg,
@@ -289,6 +290,27 @@ function getGradesFromResults(payload: any) {
       .then((result: any[]) => {
         return result;
       });
+    })
+    .then((singleDelivResults: any[]) => {
+      let resultQueries = [];
+      if (payload.allDeliverables) {
+
+        for (let i = 0; i < deliverableNames.length; i++) {
+          let resultRecordsForDeliv = db.getLatestResultRecords('results', timestamp, {
+            orgName: course.githubOrg,
+            deliverable: deliverableNames[i],
+            timestamp: {'$lte' : timestamp}
+          })
+          .then((result: any[]) => {
+            return result;
+          });
+          resultQueries.push(resultRecordsForDeliv);
+        }
+        return Promise.all(resultQueries);
+
+      } else {
+        return singleDelivResults;
+      }
     });
 }
 
