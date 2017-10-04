@@ -424,8 +424,8 @@ function getGradesFromResults(payload: any) {
     })
     .then((csvArray: any[]) => {
       csvArray.sort((a: any, b: any) => {
-        let first = a.name.toUpperCase();
-        let second = b.name.toUpperCase();
+        let first = String(a.lname).toUpperCase();
+        let second = String(b.lname).toUpperCase();
         if (first < second) {
           return -1;
         }
