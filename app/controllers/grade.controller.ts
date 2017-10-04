@@ -253,7 +253,7 @@ function getGradesFromResults(payload: any) {
       let timestamp: number = new Date(deliverable.close.toString()).getTime();        
       console.log(timestamp);
       return db.getLatestResultRecords('results', timestamp, {
-        orgName: 'CPSC210-2017W-T1',
+        orgName: course.githubOrg,
         deliverable: payload.deliverableName,
         timestamp: {'$lte' : timestamp}
       })
