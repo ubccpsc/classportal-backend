@@ -4,7 +4,14 @@ import {Course, ICourseDocument} from '../models/course.model';
 import {Deliverable, IDeliverableDocument} from '../models/deliverable.model';
 import {User, IUserDocument} from '../models/user.model';
 import {Grade, IGradeDocument} from '../models/grade.model';
+import {config} from '../../config/env';
+import db, {Database} from '../db/MongoDbClient';
 import * as parse from 'csv-parse';
+import mongodb = require('mongodb');
+
+let context: Database = db;
+
+let MongoClient = mongodb.MongoClient;
 
 let fs = require('fs');
 let stringify = require('csv-stringify');
@@ -194,4 +201,66 @@ function getReleasedGradesByCourse(req: any) {
   });
 }
 
-export {getAllGradesByCourse, getReleasedGradesByCourse, create, addGradesCSV};
+/**
+ * 
+ * @param courseId courseId number of courseId ie. 310
+ * @param deliverableName string name of deliverable ie. 'd2'
+ */
+function getGradesFromResults(payload: any) {
+
+  // 7 hour time difference in production
+  const UNIX_TIMESTAMP_DIFFERENCE = 25200000;
+
+  console.log(payload);
+
+  let course: ICourseDocument;
+  let deliverable: IDeliverableDocument;
+  let deliverableNames: string[];
+
+  return Course.findOne({courseId: payload.courseId})
+    .then((_course) => {
+      if (_course) {
+        course = _course;
+        return _course;
+      }
+      throw `Could not find Course ${payload.courseId}`;
+    })
+    .then(() => {
+      return Deliverable.findOne({name: payload.deliverableName, courseId: course._id})
+        .then((_deliv: IDeliverableDocument) => {
+          if (_deliv) {
+            deliverable = _deliv;
+            return _deliv;
+          }
+          throw `Could not find deliverable under ${payload.deliverableName} and ${course.courseId}`;
+        });
+    })
+    .then(() => {
+      return db.getUniqueStringsInRow('results', {orgName: 'CPSC210-2017W-T1'}, 'deliverable')
+        .then((_deliverableNames: string[]) => {
+          console.log(_deliverableNames);
+          if (_deliverableNames) {
+            deliverableNames = _deliverableNames;
+            return _deliverableNames;
+          }
+          throw `No deliverable names found in ${payload.orgName}`;
+        })
+        .catch(err => {
+          logger.error(`GradeController::getGradesFromResults() getUniqueStringsInRow ERROR ${err}`);
+        });
+    })
+    .then(() => {
+      let timestamp: number = new Date(deliverable.close.toString()).getTime();        
+      console.log(timestamp);
+      return db.getLatestResultRecords('results', timestamp, {
+        orgName: 'CPSC210-2017W-T1',
+        deliverable: payload.deliverableName,
+        timestamp: {'$lte' : timestamp}
+      })
+      .then((result: any[]) => {
+        return result;
+      });
+    });
+}
+
+export {getAllGradesByCourse, getReleasedGradesByCourse, create, addGradesCSV, getGradesFromResults};
