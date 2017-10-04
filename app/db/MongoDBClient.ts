@@ -133,7 +133,7 @@ export class MongoDB {
                 _id: "$user",
                 username: {"$last": "$user"},
                 studentInfo: {"$last": "$report.studentInfo"},
-                timestamp: {'$last': "$timestamp"},
+                submitted: {'$last': "$timestamp"},
                 grade: {'$last': "$report.tests.grade"},
                 customLogic: {'$last': "$report.custom"}
               }}
