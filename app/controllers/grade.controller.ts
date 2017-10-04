@@ -434,7 +434,7 @@ function getGradesFromResults(payload: any) {
         }
 
         return 0;
-      })
+      });
       return csvArray;
     })
     .then((csvArray: any[]) => {
