@@ -135,7 +135,7 @@ export class MongoDB {
                 studentInfo: {"$last": "$report.studentInfo"},
                 submitted: {'$last': "$timestamp"},
                 grade: {'$last': "$report.tests.grade"},
-                customLogic: {'$last': "$report.custom"}
+                customLogic: {'$last': "$report.custom"} || {'$last': "$report.tests.custom"}
               }}
             ]).toArray((err: Error, results: any[]) => {
               if (err) {

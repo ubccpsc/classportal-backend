@@ -379,6 +379,22 @@ function getGradesFromResults(payload: any) {
         }
       }
       return results;
+    })
+    .then(() => {
+      const CSV_COLUMNS_210 = ['csid', 'snum', 'lname', 'fname', 'username', 'submitted',
+      'finalGrade', 'deliverableWeight', 'customLogic'];
+      const CSV_COLUMNS_310 = ['csid', 'snum', 'lname', 'fname', 'username', 'submitted',
+        'finalGrade', 'deliverableWeight', 'passPercent', 'passCount', 'failCount', 'skipCount',
+        'passNames', 'failNames', 'skipNames'];
+      let csvArray: any = [];
+        if (payload.courseId === '310') {
+          csvArray.push(CSV_COLUMNS_310);
+        } else {
+          csvArray.push(CSV_COLUMNS_210);
+        }
+      
+      // finally, convert to CSV based on class number and map to Interface type
+
     });
 }
 
