@@ -14,7 +14,6 @@
     "@types/csv-stringify": "^1.0.2",
     "@types/mocha": "^2.2.36",
     "@types/mongodb": "^2.2.11",
-    "mongodb": "^2.2.30",
     "@types/mongoose": "^4.7.5",
     "@types/node-fetch": "^1.6.7",
     "@types/passport": "^0.3.3",
@@ -29,6 +28,7 @@
     "dotenv": "^4.0.0",
     "faker": "^4.1.0",
     "forever": "^0.15.3",
+    "mongodb": "^2.2.30",
     "mongoose": "^4.8.2",
     "mongoose-findorcreate": "^1.0.1",
     "node-fetch": "^1.6.3",
@@ -40,7 +40,8 @@
     "restify": "^4.1.1",
     "restify-cookies": "^0.2.2",
     "restify-errors": "^4.3.0",
-    "tmp-promise": "^1.0.3"
+    "tmp-promise": "^1.0.3",
+    "ts-node": "^3.3.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",

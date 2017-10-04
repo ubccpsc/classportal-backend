@@ -6,6 +6,11 @@ import {logger} from './utils/logger';
 // use native ES6 promises instead of mongoose promise library
 mongoose.Promise = global.Promise;
 
+// capture unhandledRejection errors
+process.on('unhandledRejection', error => {
+  console.error('<ERROR> server.ts::unhandledRejection:\n', error);
+});
+
 // connect to database
 const connection = mongoose.connect(config.db, {
   server: {

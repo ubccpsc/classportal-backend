@@ -160,3 +160,35 @@ PROD_DB=mongodb://localhost:27017/production
 PROD_ADMINS=admin1 admin2 admin3
 PROD_SUPER_ADMIN=superadmin1
 ```
+
+# Restarting in production
+
+* on portal.cs.ubc.ca
+
+`cd /var/www/autotest`
+
+# stop the processes:
+
+```
+./node_modules/.bin/forever list 
+sudo ./node_modules/.bin/forever list 
+```
+
+* check containers: 
+
+`docker stats`
+
+* start containers
+
+```
+sudo systemctl start docker
+./node_modules/.bin/forever stop 0 // (just the one corresponding to App.js)
+yarn run startf
+```
+
+* start backend & frontend
+
+```
+cd /var/www/classportal-backend
+yarn run start:prod
+```
