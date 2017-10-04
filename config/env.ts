@@ -3,7 +3,7 @@ require('dotenv').config();
 
 // defaults to dev config
 // note that NODE_ENV and DEBUG are set in npm scripts; all other env variables should be set in .env
-let config: any = {
+const config: any = {
   env:                  process.env.NODE_ENV || 'development',
   debug:                process.env.DEBUG || false,
   app_name:             process.env.APP_NAME,
@@ -50,5 +50,7 @@ if (config.env === 'production') {
   config.admins = process.env.PROD_ADMINS.split(' ');
   config.auth_strategy = 'github';
 }
+
+console.log("env.ts -- exporting configuration");
 
 export {config};
