@@ -381,20 +381,35 @@ function getGradesFromResults(payload: any) {
       return results;
     })
     .then((results: any) => {
+      // finally, convert to CSV based on class number and map to Interface type
+
       const CSV_COLUMNS_210 = ['csid', 'snum', 'lname', 'fname', 'username', 'submitted',
-      'finalGrade', 'deliverableWeight', 'customLogic'];
+      'finalGrade', 'deliverableWeight', 'coverageGrade', 'testingGrade', 'coverageWeight',
+      'testingWeight', 'coverageMethodWeight', 'coverageLineWeight', 'coverageBranchWeight'];
       const CSV_COLUMNS_310 = ['csid', 'snum', 'lname', 'fname', 'username', 'submitted',
         'finalGrade', 'deliverableWeight', 'passPercent', 'passCount', 'failCount', 'skipCount',
         'passNames', 'failNames', 'skipNames'];
       let csvArray: any = [];
         if (payload.courseId === '310') {
           csvArray.push(CSV_COLUMNS_310);
+          
+          for (let i = 0; i < results.length; i++) {
+            let r = results[i];
+            csvArray.push([r.csid, r.snum, r.name, r.fname, r.username, r.submitted, r.finalGrade,
+            r.deliveableWeight, r.coverageGrade, r.testingGrade, r.coverageWeight, r.testingWeight,
+            r.coverageMethodWeight, r.coverageLineWeight, r.coverageBranchWeight]);
+          }
         } else {
           csvArray.push(CSV_COLUMNS_210);
+          for (let i = 0; i < results.length; i++) {
+            let r = results[i];
+            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.submitted, r.finalGrade,
+            r.deliverableWeight, r.passPercent, r.passCount, r.failCount, r.skipCount, r.passNames.split(';'),
+            r.failNames.split(';'), r.skipNames.split(';')]);
+          }
         }
-      
-      // finally, convert to CSV based on class number and map to Interface type
-        return results;
+        // generate and return csv
+        return csvGenerate(csvArray);
     });
 }
 
