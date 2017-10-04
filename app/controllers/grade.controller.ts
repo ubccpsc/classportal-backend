@@ -6,6 +6,7 @@ import {User, IUserDocument} from '../models/user.model';
 import {Grade, IGradeDocument} from '../models/grade.model';
 import {config} from '../../config/env';
 import db, {Database} from '../db/MongoDBClient';
+import * as Moment from 'moment';
 import * as parse from 'csv-parse';
 import mongodb = require('mongodb');
 
@@ -196,7 +197,6 @@ function getAllGradesByCourse(req: any) {
         let grade = g.details.finalGrade;
         arrayOfGradesResponse.push([snum, grade]);
       }
-
       return csvGenerate(arrayOfGradesResponse);
     });
   }
@@ -374,8 +374,9 @@ function getGradesFromResults(payload: any) {
             results[j].fname = classListItem.fname;
 
             // convert timestamp to actual date
-            results[j].submitted = new Date(results[j].submitted - UNIX_TIMESTAMP_DIFFERENCE)
-              .toLocaleDateString('en-US');
+            results[j].submitted = Moment.unix(results[j].submitted - UNIX_TIMESTAMP_DIFFERENCE)
+              .format("YYYY-MM-DD HH:mm");
+              
           }
         }
       }
@@ -391,26 +392,29 @@ function getGradesFromResults(payload: any) {
         'finalGrade', 'deliverableWeight', 'passPercent', 'passCount', 'failCount', 'skipCount',
         'passNames', 'failNames', 'skipNames'];
       let csvArray: any = [];
-        if (payload.courseId === '310') {
-          csvArray.push(CSV_COLUMNS_310);
-          
-          for (let i = 0; i < results.length; i++) {
-            let r = results[i];
-            csvArray.push([r.csid, r.snum, r.name, r.fname, r.username, r.submitted, r.finalGrade,
-            r.deliveableWeight, r.coverageGrade, r.testingGrade, r.coverageWeight, r.testingWeight,
-            r.coverageMethodWeight, r.coverageLineWeight, r.coverageBranchWeight]);
-          }
-        } else {
+        if (payload.courseId === '210') {
           csvArray.push(CSV_COLUMNS_210);
           for (let i = 0; i < results.length; i++) {
             let r = results[i];
-            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.submitted, r.finalGrade,
-            r.deliverableWeight, r.passPercent, r.passCount, r.failCount, r.skipCount, r.passNames.split(';'),
-            r.failNames.split(';'), r.skipNames.split(';')]);
+            let custom = r.customLogic;
+            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.submitted, r.grade.finalGrade,
+            r.grade.deliveableWeight, custom.coverageGrade, custom.testingGrade, custom.coverageWeight, 
+            custom.testingWeight, custom.coverageMethodWeight, custom.coverageLineWeight, 
+            custom.coverageBranchWeight]);
+          }
+        } else {
+          csvArray.push(CSV_COLUMNS_310);
+          for (let i = 0; i < results.length; i++) {
+            let r = results[i];
+            let stats = r.customLogic.testStats;            
+            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.submitted, r.grade.finalGrade,
+            r.grade.deliverableWeight, stats.passPercent, stats.passCount, stats.failCount, stats.skipCount,
+            stats.passNames.split(';'), stats.failNames.split(';'), stats.skipNames.split(';')]);
           }
         }
         // generate and return csv
-        return csvGenerate(csvArray);
+        // return csvGenerate(csvArray);
+        return results;
     });
 }
 
