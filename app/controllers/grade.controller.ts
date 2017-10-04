@@ -238,7 +238,8 @@ function getReleasedGradesByCourse(req: any) {
 function getGradesFromResults(payload: any) {
 
   // 7 hour time difference in production
-  const UNIX_TIMESTAMP_DIFFERENCE = 25200000;
+  const REPORT_FAILED_FLAG: string = 'REPORT_FAILED';
+  const UNIX_TIMESTAMP_DIFFERENCE: number = 25200000;
 
   console.log(payload);
 
@@ -288,6 +289,7 @@ function getGradesFromResults(payload: any) {
       console.log(timestamp);
       return db.getLatestResultRecords('results', timestamp, {
         orgName: course.githubOrg,
+        report: {'$ne': REPORT_FAILED_FLAG},
         deliverable: payload.deliverableName,
         timestamp: {'$lte' : timestamp}
       })
@@ -333,6 +335,7 @@ function getGradesFromResults(payload: any) {
               
               let resultRecordsForDeliv = db.getLatestResultRecords('results', timestamp, {
                 orgName: course.githubOrg,
+                report: {'$ne': REPORT_FAILED_FLAG},
                 deliverable: deliverableNames[i],
                 timestamp: {'$lte' : timestamp}
               })
