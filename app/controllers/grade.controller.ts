@@ -6,7 +6,6 @@ import {User, IUserDocument} from '../models/user.model';
 import {Grade, IGradeDocument} from '../models/grade.model';
 import {config} from '../../config/env';
 import db, {Database} from '../db/MongoDBClient';
-import * as Moment from 'moment';
 import * as parse from 'csv-parse';
 import mongodb = require('mongodb');
 
@@ -377,8 +376,7 @@ function getGradesFromResults(payload: any) {
             results[j].fname = classListItem.fname;
 
             // convert timestamp to actual date
-            results[j].submitted = Moment.unix(results[j].submitted - UNIX_TIMESTAMP_DIFFERENCE)
-              .format("YYYY-MM-DD HH:mm");
+            results[j].submitted = new Date(results[j].submitted - UNIX_TIMESTAMP_DIFFERENCE).toString();
               
           }
         }
@@ -388,12 +386,12 @@ function getGradesFromResults(payload: any) {
     .then((results: any) => {
       // finally, convert to CSV based on class number and map to Interface type
 
-      const CSV_COLUMNS_210 = ['csid', 'snum', 'lname', 'fname', 'username', 'submitted',
+      const CSV_COLUMNS_210 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
       'finalGrade', 'deliverableWeight', 'coverageGrade', 'testingGrade', 'coverageWeight',
-      'testingWeight', 'coverageMethodWeight', 'coverageLineWeight', 'coverageBranchWeight'];
-      const CSV_COLUMNS_310 = ['csid', 'snum', 'lname', 'fname', 'username', 'submitted',
+      'testingWeight', 'coverageMethodWeight', 'coverageLineWeight', 'coverageBranchWeight', 'githubUrl'];
+      const CSV_COLUMNS_310 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
         'finalGrade', 'deliverableWeight', 'passPercent', 'passCount', 'failCount', 'skipCount',
-        'passNames', 'failNames', 'skipNames'];
+        'passNames', 'failNames', 'skipNames', 'githubUrl'];
       let csvArray: any = [];
         if (payload.courseId === '210') {
           csvArray.push(CSV_COLUMNS_210);
@@ -401,10 +399,10 @@ function getGradesFromResults(payload: any) {
             let r = results[i];
             let custom = r.customLogic;
             console.log(r);
-            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.submitted, r.grade.finalGrade,
-            r.grade.deliveableWeight, custom.coverageGrade, custom.testingGrade, custom.coverageWeight, 
-            custom.testingWeight, custom.coverageMethodWeight, custom.coverageLineWeight, 
-            custom.coverageBranchWeight]);
+            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted, 
+              r.grade.finalGrade, r.grade.deliveableWeight, custom.coverageGrade, custom.testingGrade, 
+              custom.coverageWeight, custom.testingWeight, custom.coverageMethodWeight, 
+              custom.coverageLineWeight, custom.coverageBranchWeight, r.studentInfo.projectUrl]);
           }
         } else {
           csvArray.push(CSV_COLUMNS_310);
@@ -413,11 +411,13 @@ function getGradesFromResults(payload: any) {
             let stats = r.customLogic.testStats;
             console.log(r);
             console.log(r.customLogic.testStats);
-            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.submitted, r.grade.finalGrade,
-            r.grade.deliverableWeight, stats.passPercent, stats.passCount, stats.failCount, stats.skipCount,
-            stats.passNames.length === 0 ? '' : stats.passNames.join(';'), 
-            stats.failNames.length === 0 ? '' : stats.failNames.join(';'), 
-            stats.skipNames.length === 0 ? '' : stats.skipNames.join(';')]);
+            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted, 
+              r.grade.finalGrade, r.grade.deliverableWeight, stats.passPercent, stats.passCount, 
+              stats.failCount, stats.skipCount,
+              stats.passNames.length === 0 ? '' : stats.passNames.join(';'), 
+              stats.failNames.length === 0 ? '' : stats.failNames.join(';'), 
+              stats.skipNames.length === 0 ? '' : stats.skipNames.join(';'),
+              r.studentInfo.projectUrl]);
           }
         }
         // generate and return csv
