@@ -412,11 +412,12 @@ function getGradesFromResults(payload: any) {
             let r = results[i];
             let stats = r.customLogic.testStats;
             console.log(r);
+            console.log(r.customLogic.testStats);
             csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.submitted, r.grade.finalGrade,
             r.grade.deliverableWeight, stats.passPercent, stats.passCount, stats.failCount, stats.skipCount,
-            stats.passNames.length === 0 ? '' : stats.passNames.split(';'), 
-            stats.failNames.length === 0 ? '' : stats.failNames.split(';'), 
-            stats.skipNames.length === 0 ? '' : stats.skipNames.split(';')]);
+            stats.passNames.length === 0 ? '' : stats.passNames.join(';'), 
+            stats.failNames.length === 0 ? '' : stats.failNames.join(';'), 
+            stats.skipNames.length === 0 ? '' : stats.skipNames.join(';')]);
           }
         }
         // generate and return csv

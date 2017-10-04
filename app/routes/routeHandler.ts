@@ -347,7 +347,13 @@ const disbandTeamById = (req: restify.Request, res: restify.Response, next: rest
 
 const getGradesFromResults = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return gradeCtrl.getGradesFromResults(req.params)
-    .then((isSuccessful: any) => res.json(200, {response: isSuccessful}))
+    .then((grades) => {
+      res.writeHead(200, {
+        'Content-Type':        'text/csv',
+        'Content-Disposition': 'attachment; filename=Course' + req.params.courseId + 'Grades.csv',
+      });
+      res.end(grades);
+    })
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
