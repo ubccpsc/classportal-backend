@@ -397,20 +397,21 @@ function getGradesFromResults(payload: any) {
           for (let i = 0; i < results.length; i++) {
             let r = results[i];
             let custom = r.customLogic;
-            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.submitted, r.grade.finalGrade || null,
-            r.grade.deliveableWeight || null, custom.coverageGrade || null, custom.testingGrade || null, 
-            custom.coverageWeight || null, custom.testingWeight || null, custom.coverageMethodWeight || null, 
-            custom.coverageLineWeight || null, custom.coverageBranchWeight || null]);
+            console.log(r);
+            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.submitted, r.grade.finalGrade,
+            r.grade.deliveableWeight, custom.coverageGrade, custom.testingGrade, custom.coverageWeight, 
+            custom.testingWeight, custom.coverageMethodWeight, custom.coverageLineWeight, 
+            custom.coverageBranchWeight]);
           }
         } else {
           csvArray.push(CSV_COLUMNS_310);
           for (let i = 0; i < results.length; i++) {
             let r = results[i];
-            let stats = r.customLogic.testStats;            
-            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.submitted, r.grade.finalGrade || null,
-            r.grade.deliverableWeight || null, stats.passPercent || null, stats.passCount || null, 
-            stats.failCount || null, stats.skipCount || null, stats.passNames || null, stats.failNames || null, 
-            stats.skipNames || null]);
+            let stats = r.customLogic.testStats;
+            console.log(r);
+            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.submitted, r.grade.finalGrade,
+            r.grade.deliverableWeight, stats.passPercent, stats.passCount, stats.failCount, stats.skipCount,
+            stats.passNames, stats.failNames, stats.skipNames]);
           }
         }
         // generate and return csv
