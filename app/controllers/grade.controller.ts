@@ -251,6 +251,7 @@ function getGradesFromResults(payload: any) {
   let allDelivResults: any[];
 
   return Course.findOne({courseId: payload.courseId})
+    .populate('classList')
     .then((_course) => {
       if (_course) {
         course = _course;
@@ -348,24 +349,32 @@ function getGradesFromResults(payload: any) {
       }
     })
     .then((results) => {
-      // if multiple arrays, combine them
+      // if multiple arrays from allDelivQueries, combine them
       if (results.length > 0) {
-        console.log('length', results.length);
         let concatedArray: any = [];
         results.map((item) => {
-          console.log(concatedArray.length);
           concatedArray = concatedArray.concat(item);
-          console.log(item);
-          console.log(concatedArray.length);
-          console.log('4');
         });
-        console.log('concated', concatedArray.length);
         return concatedArray;
       } else {
-        console.log('length', results.length);
         return results;
       }
-
+    })
+    .then((results) => {
+      // add CSID and SNUM info
+      for (let i = 0; i < course.classList.length; i++) {
+        let classListItem: IUserDocument = course.classList[i] as IUserDocument;
+        let classListUsername = String(classListItem.username);
+        for (let j = 0; j < results.length; j++) {
+          let resultsUsername = String(results[j]);
+          if (resultsUsername === classListUsername) {
+            classListItem.csid = classListItem.csid;
+            classListItem.snum = classListItem.snum;
+          }
+          results[j] = classListItem;
+        }
+      }
+      return results;
     });
 }
 
