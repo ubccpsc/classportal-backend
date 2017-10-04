@@ -10,11 +10,39 @@ import * as parse from 'csv-parse';
 import mongodb = require('mongodb');
 
 let context: Database = db;
-
 let MongoClient = mongodb.MongoClient;
-
 let fs = require('fs');
 let stringify = require('csv-stringify');
+
+export interface FinalGrade {
+  finalGrade: number;
+  deliverableWeight: string;
+}
+
+export interface StudentInfo {
+  projectUrl: string;
+  projectCommit: string;
+}
+
+export interface CustomGrade210 {
+  coverageGrade: number;
+  testingGrade: number;
+  coverageWeight: number;
+  testingWeight: number;
+  coverageMethodWeight: number;
+  coverageLineWeight: number;
+  coverageBranchWeight: number;
+}
+
+export interface CustomGrade310 {
+  passPercent: number;
+  passCount: number;
+  failCount: number;
+  skipCount: number;
+  passNames: string[];
+  failNames: string[];
+  skipNames: string[];
+}
 
 // Promisify csv-stringify
 let csvGenerate = function (input: any) {
@@ -202,9 +230,10 @@ function getReleasedGradesByCourse(req: any) {
 }
 
 /**
- * 
+ * If no deliverableName given, then all deliverable marks returned
  * @param courseId courseId number of courseId ie. 310
  * @param deliverableName string name of deliverable ie. 'd2'
+ * @return string CSV formatted report
  */
 function getGradesFromResults(payload: any) {
 
@@ -236,7 +265,7 @@ function getGradesFromResults(payload: any) {
         });
     })
     .then(() => {
-      return db.getUniqueStringsInRow('results', {orgName: 'CPSC210-2017W-T1'}, 'deliverable')
+      return db.getUniqueStringsInRow('results', {orgName: course.githubOrg}, 'deliverable')
         .then((_deliverableNames: string[]) => {
           console.log(_deliverableNames);
           if (_deliverableNames) {

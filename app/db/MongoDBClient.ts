@@ -132,9 +132,10 @@ export class MongoDB {
               {$group: {
                 _id: "$user",
                 username: {"$last": "$user"},
+                studentInfo: {"$last": "$report.studentInfo"},
                 timestamp: {'$last': "$timestamp"},
-                commit: {'$last': "$commit"},
-                finalGrade: {'$last': "$report.tests.grade.finalGrade"},
+                grade: {'$last': "$report.tests.grade"},
+                customLogic: {'$last': "$report.custom"}
               }}
             ]).toArray((err: Error, results: any[]) => {
               if (err) {
