@@ -370,6 +370,8 @@ function getGradesFromResults(payload: any) {
           if (resultsUsername === classListUsername) {
             results[j].csid = classListItem.csid;
             results[j].snum = classListItem.snum;
+            results[j].lname = classListItem.lname;
+            results[j].fname = classListItem.fname;
           }
         }
       }
