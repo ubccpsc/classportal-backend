@@ -76,7 +76,7 @@ const routes = (server: restify.Server) => {
   server.get('/logout', isAuthenticated, routeHandler.logout);
 
   // commented out for safety
-  // server.get('/:courseId/admin/dashboard/:orgName/:delivId', adminAuthenticated, routeHandler.getDashForDeliverable);
+  server.get('/:courseId/admin/dashboard/:orgName/:delivId', adminAuthenticated, routeHandler.getDashForDeliverable);
 };
 
 export {routes};

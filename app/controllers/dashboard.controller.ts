@@ -20,21 +20,38 @@ export class Dashboard {
 
     let orgName = req.params.orgName;
     let delivId = req.params.delivId;
-    logger.info('dashboard.controller::getDashboard() - org:' + orgName + '; delivId: ' + delivId);
+    let teamId = req.params.teamId;
+    logger.info('dashboard.controller::getDashboard() - org:' + orgName + '; delivId: ' + delivId + '; teamId: ' + teamId);
 
     const resultRows: any[] = [];
     // return Promise.resolve(res.json(200, resultRows))
     // return Promise.resolve(resultRows)
-    return this.getRows(orgName, delivId).then(function (rows: any) {
-      logger.info('getDashboard::then - rows: ' + rows);
-      return Promise.resolve(rows);
-    }).catch((err: Error) => {
-      logger.info('Error loading dasboard: ' + err);
-      return Promise.reject(err);
+    if (typeof teamId === 'undefined') {
+      return this.getDeliverableRows(orgName, delivId).then(function (rows: any) {
+        logger.info('getDashboard::then - rows: ' + rows);
+        return Promise.resolve(rows);
+      }).catch((err: Error) => {
+        logger.info('Error loading dasboard: ' + err);
+        return Promise.reject(err);
+      });
+    } else {
+      return this.getTeamRows(orgName, delivId, teamId).then(function (rows: any) {
+        logger.info('getDashboard::then - rows: ' + rows);
+        return Promise.resolve(rows);
+      }).catch((err: Error) => {
+        logger.info('Error loading dasboard: ' + err);
+        return Promise.reject(err);
+      });
+    }
+
+  }
+
+  private getTeamRows(orgName: string, delivId: string, teamId: string): any { // HACK: should be a promise
+    return new Promise(function (resolve, reject) {
     });
   }
 
-  public getRows(orgName: string, delivId: string): any { // HACK: should be a promise
+  private getDeliverableRows(orgName: string, delivId: string): any { // HACK: should be a promise
     logger.info('dashboard.controller::getRows(...) - start; orgName: ' + orgName + '; delivId: ' + delivId);
 
     const url = config.db;
@@ -47,11 +64,26 @@ export class Dashboard {
         const ORG = orgName; // 'CPSC210-2017W-T1'; //'CPSC310-2017W-T1'; // 'CPSC310-2017W-T2'
         const DELIV = delivId; // 'd0';
 
+        const start = new Date().getTime();
         let resultsArr: any[] = [];
         let results = db.collection('results').find({
-          orgName:     ORG,
-          deliverable: DELIV
-        }).sort({
+            orgName:     ORG,
+            deliverable: DELIV
+          },
+          {
+
+            _id:       true, // would like to replace this with a more github-specific id
+            idStamp:   true,
+            team:      true,
+            report:    true,
+            project:   true,
+            user:      true,
+            url:       true,
+            commit:    true,
+            timestamp: true
+
+            // attachments: false
+          }).sort({
           timestamp: -1
         }).toArray().then(function (res) {
           console.log('processing rows: ' + res.length);
@@ -69,8 +101,9 @@ export class Dashboard {
               latestResultPerProjectArr.push(p);
             }
           }
+          const took = (new Date().getTime() - start);
+          console.log('# teams: ' + latestResultPerProjectArr.length + "; took: " + took + ' ms');
 
-          console.log('# teams: ' + latestResultPerProjectArr.length);
           let returnRows = [];
           for (let rec of latestResultPerProjectArr) {
             let row: any = {};
@@ -108,22 +141,30 @@ export class Dashboard {
               row.scoreCover = -1;
             } else {
               // print(rec.report);
-              console.log(rec.report);
+              // console.log(rec.report);
               let scoreOverall = -1;
               let scoreTest = -1;
               let scoreCover = -1;
 
               scoreOverall = rec.report.tests.grade.finalGrade;
+
+              // 210
               if (typeof rec.report.tests.custom !== 'undefined') {
                 if (typeof rec.report.tests.custom.testingGrade !== 'undefined') {
                   scoreTest = rec.report.tests.custom.testingGrade;
                 }
-                if (typeof rec.report.tests.custom.testingGrade !== 'undefined') {
-                  scoreTest = rec.report.tests.custom.testingGrade;
-                }
                 if (typeof rec.report.tests.custom.coverageGrade !== 'undefined') {
-                  scoreTest = rec.report.tests.custom.coverageGrade;
+                  scoreCover = rec.report.tests.custom.coverageGrade;
                 }
+              }
+
+              // 310
+              if (typeof rec.report.custom.testStats !== 'undefined') {
+                scoreTest = rec.report.custom.testStats.passPercent;
+              }
+              // 310
+              if (typeof rec.report.coverage !== 'undefined' && typeof rec.report.coverage.lines !== 'undefined') {
+                scoreCover = rec.report.coverage.lines.percentage;
               }
 
               row.scoreOverall = scoreOverall;
@@ -174,10 +215,14 @@ export class Dashboard {
   }
 }
 
+
 /*
 console.log('bottom of dashboard controller');
 let dash = new Dashboard();
-dash.getDashboard({params: {orgName: 'CPSC310-2017W-T1', delivId: 'd1'}}, null, null).then(function (results: any) {
+// const org = 'CPSC210-2017W-T1';
+const org = 'CPSC310-2017W-T1';
+const deliv = 'd1';
+dash.getDashboard({params: {orgName: org, delivId: deliv}}, null, null).then(function (results: any) {
   console.log('then: ' + results);
 }).catch(function (err: Error) {
   console.log('catch: ' + err);
