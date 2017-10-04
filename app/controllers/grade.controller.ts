@@ -418,8 +418,8 @@ function getGradesFromResults(payload: any) {
           }
         }
         // generate and return csv
-        // return csvGenerate(csvArray);
-        return results;
+        return csvGenerate(csvArray);
+        // return results;
     });
 }
 
