@@ -232,6 +232,7 @@ function getReleasedGradesByCourse(req: any) {
  * If no deliverableName given, then all deliverable marks returned
  * @param courseId courseId number of courseId ie. 310
  * @param deliverableName string name of deliverable ie. 'd2'
+ * @param allDeliverables boolean if the report should include all deliverables
  * @return string CSV formatted report
  */
 function getGradesFromResults(payload: any) {
@@ -239,8 +240,6 @@ function getGradesFromResults(payload: any) {
   // 7 hour time difference in production
   const REPORT_FAILED_FLAG: string = 'REPORT_FAILED';
   const UNIX_TIMESTAMP_DIFFERENCE: number = 25200000;
-
-  console.log(payload);
 
   let course: ICourseDocument;
   let deliverables: IDeliverableDocument[];
@@ -284,8 +283,7 @@ function getGradesFromResults(payload: any) {
         });
     })
     .then(() => {
-      timestamp = new Date(deliverable.close.toString()).getTime();        
-      console.log(timestamp);
+      timestamp = new Date(deliverable.close.toString()).getTime();
       return db.getLatestResultRecords('results', timestamp, {
         orgName: course.githubOrg,
         report: {'$ne': REPORT_FAILED_FLAG},
