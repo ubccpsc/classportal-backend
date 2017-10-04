@@ -366,18 +366,17 @@ function getGradesFromResults(payload: any) {
       // add CSID and SNUM info
       for (let i = 0; i < course.classList.length; i++) {
         let classListItem: IUserDocument = course.classList[i] as IUserDocument;
-        let classListUsername = String(classListItem.username);
+        let classListUsername = String(classListItem.username.toLowerCase());
         for (let j = 0; j < results.length; j++) {
-          let resultsUsername = String(results[j].username);
+          let resultsUsername = String(results[j].username).toLowerCase();
           if (resultsUsername === classListUsername) {
             results[j].csid = classListItem.csid;
             results[j].snum = classListItem.snum;
             results[j].lname = classListItem.lname;
             results[j].fname = classListItem.fname;
 
-            // convert timestamp to actual date
+            // convert timestamp to legible date
             results[j].submitted = new Date(results[j].submitted - UNIX_TIMESTAMP_DIFFERENCE).toString();
-              
           }
         }
       }
