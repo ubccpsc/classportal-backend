@@ -5,7 +5,7 @@ import {Deliverable, IDeliverableDocument} from '../models/deliverable.model';
 import {User, IUserDocument} from '../models/user.model';
 import {Grade, IGradeDocument} from '../models/grade.model';
 import {config} from '../../config/env';
-import db, {Database} from '../db/MongoDbClient';
+import db, {Database} from '../db/MongoDBClient';
 import * as parse from 'csv-parse';
 import mongodb = require('mongodb');
 
@@ -245,7 +245,7 @@ function getGradesFromResults(payload: any) {
           }
           throw `No deliverable names found in ${payload.orgName}`;
         })
-        .catch(err => {
+        .catch((err: any) => {
           logger.error(`GradeController::getGradesFromResults() getUniqueStringsInRow ERROR ${err}`);
         });
     })
