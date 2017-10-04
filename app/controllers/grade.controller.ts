@@ -346,6 +346,23 @@ function getGradesFromResults(payload: any) {
       } else {
         return singleDelivResults;
       }
+    })
+    .then((results) => {
+      // if multiple arrays, combine them
+      if (results.length > 0) {
+        let concatedArray: any = [];
+        console.log('length', results.length);
+        for (let i = 0; i < results.length; i++) {
+          Object.keys(results[i]).forEach(function(key: any) {
+            concatedArray.push(results[i][key]);
+          });
+        }
+        console.log('concated', concatedArray.length);
+        return concatedArray;
+      } else {
+        console.log('length', results.length);
+        return results;
+      }
     });
 }
 
