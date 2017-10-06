@@ -390,8 +390,8 @@ function getGradesFromResults(payload: any) {
         'finalGrade', 'deliverableWeight', 'passPercent', 'passCount', 'failCount', 'skipCount',
         'passNames', 'failNames', 'skipNames', 'githubUrl'];
       let csvArray: any = [];
+
         if (payload.courseId === '210') {
-          csvArray.push(CSV_COLUMNS_210);
           for (let i = 0; i < results.length; i++) {
             let r = results[i];
             let custom = r.customLogic;
@@ -401,8 +401,8 @@ function getGradesFromResults(payload: any) {
               custom.coverageWeight, custom.testingWeight, custom.coverageMethodWeight, 
               custom.coverageLineWeight, custom.coverageBranchWeight, r.studentInfo.projectUrl]);
           }
+          csvArray.unshift(CSV_COLUMNS_210);          
         } else {
-          csvArray.push(CSV_COLUMNS_310);
           for (let i = 0; i < results.length; i++) {
             let r = results[i];
             let stats = r.customLogic.testStats;
@@ -416,6 +416,8 @@ function getGradesFromResults(payload: any) {
               stats.skipNames.length === 0 ? '' : stats.skipNames.join(';'),
               r.studentInfo.projectUrl]);
           }
+          csvArray = sortArrayByLastName(csvArray);          
+          csvArray.unshift(CSV_COLUMNS_310);          
         }
         // generate and return csv
         // return results;
@@ -423,23 +425,25 @@ function getGradesFromResults(payload: any) {
         return csvArray;
     })
     .then((csvArray: any[]) => {
-      csvArray.sort((a: any, b: any) => {
-        let first = String(a.lname).toUpperCase();
-        let second = String(b.lname).toUpperCase();
-        if (first < second) {
-          return -1;
-        }
-        if (first > second) {
-          return 1;
-        }
-
-        return 0;
-      });
-      return csvArray;
-    })
-    .then((csvArray: any[]) => {
       return csvGenerate(csvArray);
     });
+    
+}
+
+function sortArrayByLastName(csvArray: any[]) {
+  // sort alphabetically by last name
+  csvArray.sort((a: any, b: any) => {
+    let first = String(a.lname).toUpperCase();
+    let second = String(b.lname).toUpperCase();
+    if (first < second) {
+      return -1;
+    }
+    if (first > second) {
+      return 1;
+    }
+    return 0;
+  });
+  return csvArray;
 }
 
 export {getAllGradesByCourse, getReleasedGradesByCourse, create, addGradesCSV, getGradesFromResults};
