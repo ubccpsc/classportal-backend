@@ -431,10 +431,11 @@ function getGradesFromResults(payload: any) {
 }
 
 function sortArrayByLastName(csvArray: any[]) {
+  const LAST_NAME_INDEX = 3;
   // sort alphabetically by last name
   csvArray.sort((a: any, b: any) => {
-    let first = String(a.lname).toUpperCase();
-    let second = String(b.lname).toUpperCase();
+    let first = String(a[LAST_NAME_INDEX]).toUpperCase();
+    let second = String(b[LAST_NAME_INDEX]).toUpperCase();
     if (first < second) {
       return -1;
     }
