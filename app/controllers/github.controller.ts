@@ -538,8 +538,8 @@ function createGithubReposForProjects(payload: any): Promise<any> {
 
   function getProjectsToBuildForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
     return Project.find({
-       course:               course._id,
-       deliverable:          deliv._id,
+      courseId:               course._id,
+      deliverableId:          deliv._id,
       'githubState.repo.url': '',
     })
       .populate({path: 'student deliverableId courseId'})
