@@ -427,15 +427,14 @@ function getGradesFromResults(payload: any) {
     .then((csvArray: any[]) => {
       return csvGenerate(csvArray);
     });
-    
 }
 
 function sortArrayByLastName(csvArray: any[]) {
-  const LAST_NAME_INDEX = 3;
+  const LAST_NAME_COLUMN = 2;
   // sort alphabetically by last name
   csvArray.sort((a: any, b: any) => {
-    let first = String(a[LAST_NAME_INDEX]).toUpperCase();
-    let second = String(b[LAST_NAME_INDEX]).toUpperCase();
+    let first = String(a[LAST_NAME_COLUMN]).toUpperCase();
+    let second = String(b[LAST_NAME_COLUMN]).toUpperCase();
     if (first < second) {
       return -1;
     }
