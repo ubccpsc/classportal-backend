@@ -58,9 +58,9 @@ function generateProjects(payload: any) {
         let student: any = course.classList[i];
         let newProject: object = {
           student:     student._id,
-          deliverable: deliv._id,
-          course:      course._id,
-          courseId:    payload.courseId,
+          deliverableId: deliv._id,
+          courseId:      course._id,
+          courseNum:    payload.courseId,
           name:        '',
           githubState: defaultGithubState,
         };
