@@ -44,7 +44,7 @@ if (config.env === 'production') {
   config.host = process.env.PROD_HOST;
   config.port = process.env.PROD_PORT;
   config.app_path = process.env.PROD_APP_PATH;
-  config.debug = process.env.DEBUG || false;
+  config.debug = false;
   config.db = process.env.PROD_DB;
   config.super_admin = process.env.PROD_SUPER_ADMIN;
   config.admins = process.env.PROD_ADMINS.split(' ');
