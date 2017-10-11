@@ -8,9 +8,12 @@
     "noImplicitReturns": true,
     "noImplicitAny": true,
     "preserveConstEnums": true,
+    "forceConsistentCasingInFileNames": true,
     "outDir": "./build"
   },
-  "filesGlob": [
+  "include": [
+    "./app/**/*",
+    "./test/**/*"
   ],
   "exclude": [
     "node_modules"

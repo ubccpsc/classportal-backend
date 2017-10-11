@@ -6,7 +6,6 @@ import * as delivCtrl from '../controllers/deliverable.controller';
 import * as gradeCtrl from '../controllers/grade.controller';
 import * as teamCtrl from '../controllers/team.controller';
 import * as testCtrl from '../controllers/test.controller';
-import * as dashCtrl from '../controllers/dashboard.controller';
 import * as projectCtrl from '../controllers/project.controller';
 import * as githubCtrl from '../controllers/github.controller';
 import {logger} from '../../utils/logger';
@@ -96,7 +95,10 @@ const logout = (req: restify.Request, res: restify.Response, next: restify.Next)
 
 const getCurrentUserInfo = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return testCtrl.getCurrentUserInfo(req, res, next)
-    .catch((err: any) => res.json(500, {err: err.errmsg}));
+    .catch((err: any) => {
+      console.log('in getCurrentUser onCatch: ' + err);
+      res.json(500, {err: err.errmsg});
+    });
 };
 
 const oauthCallback = (req: restify.Request, res: restify.Response, next: restify.Next) => {
@@ -333,6 +335,7 @@ const getCourseTeamsWithBatchMarking = (req: any, res: restify.Response, next: r
 };
 
 const getDashForDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  console.log('routeHandler::getDashForDeliverable() - start');
   const dash = new Dashboard();
   return dash.getDashboard(req, req.params, next)
     .then((rows: any) => res.json(200, {response: rows}))
