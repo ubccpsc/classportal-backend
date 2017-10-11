@@ -32,7 +32,7 @@ export class Dashboard {
         logger.info('getDashboard::then - rows: ' + rows);
         return Promise.resolve(rows);
       }).catch((err: Error) => {
-        logger.info('Error loading dasboard: ' + err);
+        logger.info('Error loading dashboard: ' + err);
         return Promise.reject(err);
       });
     } else {
@@ -44,7 +44,6 @@ export class Dashboard {
         return Promise.reject(err);
       });
     }
-
   }
 
   private getTeamRows(orgName: string, delivId: string, teamId: string): any { // HACK: should be a promise
@@ -150,9 +149,10 @@ export class Dashboard {
               let missingUserDetails = typeof rec.report === 'undefined' ||
                 typeof rec.report.studentInfo === 'undefined' ||
                 typeof rec.report.studentInfo.projectUrl === 'undefined';
-
               row.project = rec.team;
+              console.log('REC', rec);
               row.user = rec.user;
+              row.commit = rec.commit;
 
               if (missingUserDetails === true) {
                 row.url = row.idStamp; // HACK it would be better if there was a rec.url
@@ -232,8 +232,9 @@ export class Dashboard {
               row.passNames = passNames;
               row.failNames = failNames;
               row.skipNames = skipNames;
-
-              row.stdioURL = 'http://TODO_NEED_TO_IMPLEMENT';
+              console.log(row);
+              row.stdioURL = `${config.app_path}/admin/files/${DELIV}/${row.user}/${row.commit}/stdio.txt`;
+              console.log('ROW STDIOURL', row.stdioURL);
               returnRows.push(row);
             }
 

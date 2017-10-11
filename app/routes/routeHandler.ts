@@ -6,6 +6,7 @@ import * as delivCtrl from '../controllers/deliverable.controller';
 import * as gradeCtrl from '../controllers/grade.controller';
 import * as teamCtrl from '../controllers/team.controller';
 import * as testCtrl from '../controllers/test.controller';
+import * as fileCtrl from '../controllers/file.controller';
 import * as projectCtrl from '../controllers/project.controller';
 import * as githubCtrl from '../controllers/github.controller';
 import {logger} from '../../utils/logger';
@@ -360,6 +361,13 @@ const getGradesFromResults = (req: restify.Request, res: restify.Response, next:
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
+const getFileFromResultRecord = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return fileCtrl.getFileFromResultRecord(req.params)
+    .then((isSuccessful: any) => res.json(200, {response: isSuccessful}))
+    .catch((err: any) => res.json(500, {err: err.message}));
+};
+
+
 export {
   pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
   getCurrentUserInfo, validateRegistration, addGithubUsername, updateDeliverable, getDeliverables,
@@ -370,5 +378,5 @@ export {
   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects,
   getUsersNotOnTeam, getCourse, getMyTeams, generateProjects, repairIndividualProvisions, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking, getDashForDeliverable,
-  disbandTeamById, getGradesFromResults
+  disbandTeamById, getGradesFromResults, getFileFromResultRecord
 };
