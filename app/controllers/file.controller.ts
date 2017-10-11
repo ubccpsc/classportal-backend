@@ -16,6 +16,7 @@ let MongoClient = mongodb.MongoClient;
  * Gets filename, if exists, from Result Record
  * @param string commit 7 char hash tag from github
  * @param string username of the result record
+ * @param string filename that you would like to get with mime-type ie. 'stdio.txt'
  * @returns string format of file or null if file not found.
  */
 function getFileFromResultRecord(payload: any): Promise<object[]> {
@@ -38,6 +39,9 @@ function getFileFromResultRecord(payload: any): Promise<object[]> {
     .then((result: any) => {
       if (result.attachments) {
         for (let file of result.attachments) {
+          if (typeof file.name === 'undefined') {
+            throw `Cannot find filename ${FILENAME}`;
+          }
           let filename: string = String(file.name);
           if (filename === FILENAME) {
             return file.data;
