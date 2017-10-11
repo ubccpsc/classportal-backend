@@ -150,7 +150,6 @@ export class Dashboard {
                 typeof rec.report.studentInfo === 'undefined' ||
                 typeof rec.report.studentInfo.projectUrl === 'undefined';
               row.project = rec.team;
-              console.log('REC', rec);
               row.user = rec.user;
               row.commit = rec.commit;
 
@@ -232,9 +231,7 @@ export class Dashboard {
               row.passNames = passNames;
               row.failNames = failNames;
               row.skipNames = skipNames;
-              console.log(row);
               row.stdioURL = `${config.app_path}:${config.port}/admin/files/${DELIV}/${row.user}/${row.commit}/stdio.txt`;
-              console.log('ROW STDIOURL', row.stdioURL);
               returnRows.push(row);
             }
 
