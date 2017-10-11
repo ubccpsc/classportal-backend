@@ -29,7 +29,7 @@ export class Dashboard {
     // return Promise.resolve(resultRows)
     if (typeof teamId === 'undefined') {
       return this.getDeliverableRows(orgName, delivId).then(function (rows: any) {
-        logger.info('getDashboard::then - rows: ' + rows);
+        // logger.info('getDashboard::then - rows: ' + rows);
         return Promise.resolve(rows);
       }).catch((err: Error) => {
         logger.info('Error loading dashboard: ' + err);
@@ -37,7 +37,7 @@ export class Dashboard {
       });
     } else {
       return this.getTeamRows(orgName, delivId, teamId).then(function (rows: any) {
-        logger.info('getDashboard::then - rows: ' + rows);
+        // logger.info('getDashboard::then - rows: ' + rows);
         return Promise.resolve(rows);
       }).catch((err: Error) => {
         logger.info('Error loading dasboard: ' + err);
