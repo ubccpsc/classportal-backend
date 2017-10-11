@@ -18,6 +18,8 @@ import {Deliverable, IDeliverableDocument} from '../models/deliverable.model';
 import {Team, ITeamDocument} from '../models/team.model';
 import {Dashboard} from "../controllers/dashboard.controller";
 
+let mime = require('mime-types');
+
 
 const pong = (req: restify.Request, res: restify.Response) => res.send('pong');
 
@@ -362,8 +364,15 @@ const getGradesFromResults = (req: restify.Request, res: restify.Response, next:
 };
 
 const getFileFromResultRecord = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  const FILENAME = req.params.filename;
   return fileCtrl.getFileFromResultRecord(req.params)
-    .then((isSuccessful: any) => res.json(200, {response: isSuccessful}))
+    .then((response: any) => {
+      res.writeHead(200, {
+        'Content-Type': mime.lookup(FILENAME),
+        'Content-Disposition': 'inline; filename=' + FILENAME,
+      });
+      res.end(response);
+    })
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
