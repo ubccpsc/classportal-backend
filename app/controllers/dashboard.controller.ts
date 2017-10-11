@@ -251,7 +251,7 @@ export class Dashboard {
   }
 }
 
-
+/*
 console.log('bottom of dashboard controller');
 let dash = new Dashboard();
 // const org = 'CPSC210-2017W-T1';
@@ -262,4 +262,4 @@ dash.getDashboard({params: {orgName: org, delivId: deliv}}, null, null).then(fun
 }).catch(function (err: Error) {
   console.log('catch: ' + err);
 });
-
+*/
