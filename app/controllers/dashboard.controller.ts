@@ -308,9 +308,12 @@ export class Dashboard {
         }
 
         // 310
-        if (typeof rec.report.custom.testStats !== 'undefined') {
-          scoreTest = rec.report.custom.testStats.passPercent;
+        if (typeof rec.report.custom !== 'undefined') {
+          if (typeof rec.report.custom.testStats !== 'undefined') {
+            scoreTest = rec.report.custom.testStats.passPercent;
+          }
         }
+
         // 310
         if (typeof rec.report.coverage !== 'undefined' && typeof rec.report.coverage.lines !== 'undefined') {
           scoreCover = rec.report.coverage.lines.percentage;

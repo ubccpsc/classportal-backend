@@ -125,7 +125,7 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
  */
 function getDeliverablesByCourse(payload: any) {
   console.log(payload);
-  logger.info('DeliverableController::getDeliverablesByCourse() in Deliverable Controller');
+  logger.info('DeliverableController::getDeliverablesByCourse()');
 
   return Course.findOne({courseId: payload.courseId})
     .then((course: ICourseDocument) => {
@@ -138,6 +138,7 @@ function getDeliverablesByCourse(payload: any) {
       return Deliverable.find({courseId: course._id})
         .then((delivs: IDeliverableDocument[]) => {
           if (delivs) {
+            logger.info('DeliverableController::getDeliverablesByCourse() - returning length: ' + delivs.length);
             return delivs;
           }
           throw new Error(`No deliverables found for course ${payload.courseId}`);
