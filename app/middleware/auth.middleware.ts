@@ -3,6 +3,7 @@ import {User} from '../models/user.model';
 import * as restify from 'restify';
 import {config} from '../../config/env';
 import {logger} from '../../utils/logger';
+
 let errors = require('restify-errors');
 
 const ADMIN_ROLE: string = 'admin';
@@ -15,7 +16,7 @@ const SUPERADMIN_ROLE: string = 'superadmin';
 
 const isAuthenticated = (req: any, res: any, next: restify.Next) => {
   if (req.isAuthenticated()) {
-    console.log('authenticated' + req.user.username);
+    console.log('auth.middleware::isAuthenticated() - authenticated: ' + req.user.username);
     return next();
   } else {
     res.redirect('/login', next);
@@ -23,13 +24,13 @@ const isAuthenticated = (req: any, res: any, next: restify.Next) => {
 };
 
 const adminAuthenticated = (req: any, res: restify.Response, next: restify.Next) => {
-  console.log('admin authenticated', req.user.username);
+  console.log('auth.middleware::isAuthenticated() - admin authenticated: ' + req.user.username);
   let userrole: string = String(req.user.userrole);
   if (req.isAuthenticated() === true && userrole === ADMIN_ROLE || userrole === SUPERADMIN_ROLE) {
     return next();
     // let loggedInUser = req.user.username;
     // let adminOrSuperAdmin = function() {
-    // return config.admins.indexOf(loggedInUser) >= 0 || 
+    // return config.admins.indexOf(loggedInUser) >= 0 ||
     //   config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
     // };
     // if (adminOrSuperAdmin()) {
@@ -93,7 +94,7 @@ const isAdminOrProf = (req: any, res: restify.Response, next: restify.Next) => {
       return Promise.resolve(authenticated);
     });
   }
-  console.log('authenticated boolean' + authenticated);
+  console.log('auth.middleware::isAdminOrProf() - authenticated: ' + authenticated);
   if (authenticated) {
     return next();
   }

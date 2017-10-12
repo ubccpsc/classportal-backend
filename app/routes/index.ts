@@ -47,7 +47,7 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/admin/admins', adminAuthenticated, routeHandler.getAllAdmins);
   server.get('/:courseId/admin/teams', adminAuthenticated, routeHandler.getTeams);
   server.post('/teams/disband/:teamId', adminAuthenticated, routeHandler.disbandTeamById);
-  server.get('/admin/files/:deliverable/:username/:commit/:filename', adminAuthenticated, 
+  server.get('/admin/files/:deliverable/:username/:commit/:filename', adminAuthenticated,
     routeHandler.getFileFromResultRecord);
   server.get('/:courseId/admin/teams/byBatch', adminAuthenticated, routeHandler.getCourseTeamsWithBatchMarking);
   server.get('/:courseId/admin/courseSettings', routeHandler.getCourseSettings);
@@ -78,7 +78,7 @@ const routes = (server: restify.Server) => {
   server.get('/settings', isAuthenticated, isAuthenticated, routeHandler.getCurrentUserInfo);
   server.get('/logout', isAuthenticated, routeHandler.logout);
 
-  // commented out for safety
+  // dashboard
   server.get('/:courseId/admin/dashboard/:orgName/:delivId', adminAuthenticated, routeHandler.getDashForDeliverable);
 };
 

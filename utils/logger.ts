@@ -22,9 +22,9 @@ let settings: LoggerSettings = {
   ],
 };
 
-if (config.debug) {
-  settings.streams.push({level: 'info', stream: infoStream});
-}
+//if (config.debug) {
+settings.streams.push({level: 'info', stream: infoStream});
+//}
 
 const logger = bunyan.createLogger(settings);
 console.log(`Logger setting: ${settings.name}`);
