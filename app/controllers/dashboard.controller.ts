@@ -336,13 +336,15 @@ export class Dashboard {
         for (let t of rec.report.tests.detailedResults) {
           if (t.state === 'pass' || t.state === 'passed') {
             passNames.push(t.testName);
-          } else if (t.state === 'fail' || t.state === 'failed') {
+          } else if (t.state === 'fail' || t.state === 'failed' || t.state === 'failure') {
             failNames.push(t.testName);
           } else if (t.state === 'skip' || t.state === 'skipped') {
             skipNames.push(t.testName);
+          } else if (t.state === 'error' || t.state === 'errored') {
+            failNames.push(t.testName);
           } else {
             // too verbose
-            // console.log('unknown test state: ' + t.state);
+            console.log('unknown test state: ' + t.state);
           }
         }
       }
