@@ -117,8 +117,9 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
       });
   }
 }
+
 /**
- * 
+ *
  * @param courseId course number, ie. 310
  * @return IDeliverableDocument[] list of deliverables for a course
  */
@@ -131,7 +132,7 @@ function getDeliverablesByCourse(payload: any) {
       if (course) {
         return course;
       }
-      throw `Course ${payload.courseId} not found`;
+      throw new Error(`Course ${payload.courseId} not found`);
     })
     .then((course: ICourseDocument) => {
       return Deliverable.find({courseId: course._id})
@@ -139,11 +140,11 @@ function getDeliverablesByCourse(payload: any) {
           if (delivs) {
             return delivs;
           }
-          throw `No deliverables found for course ${payload.courseId}`;
+          throw new Error(`No deliverables found for course ${payload.courseId}`);
         });
     })
     .catch(err => {
-      logger.error('DeliverableController::getDeliverablesByCourse ERROR ' + err);
+      logger.error('DeliverableController::getDeliverablesByCourse ERROR: ' + err.message);
     });
 }
 
