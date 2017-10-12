@@ -8,7 +8,7 @@ import {logger} from '../../utils/logger';
 
 // Retrieves and updates Deliverable object.
 function queryAndUpdateDeliverable(course: ICourseDocument, deliverable: any): Promise<IDeliverableDocument> {
-  logger.info('updateDeliverables() in Deliverable Controller');
+  logger.info('DeliverablesController::updateDeliverables() in Deliverable Controller');
   let deliverableList = new Array;
 
   if (deliverable !== null && course !== null) {
@@ -43,14 +43,14 @@ function queryAndUpdateDeliverable(course: ICourseDocument, deliverable: any): P
         }
       });
   }
-  logger.info(Error('updateDeliverables(): Insufficient deliverable payload or CourseId' +
+  logger.info(new Error('updateDeliverables(): Insufficient deliverable payload or CourseId' +
     ' does not match'));
-  return Promise.reject(Error('Insufficient deliverable payload or CourseId does not match'));
+  return Promise.reject(new Error('Insufficient deliverable payload or CourseId does not match'));
 }
 
 // Method only adds Deliverable to course if it is not already added.
 function addDeliverablesToCourse(course: any, deliverable: IDeliverableDocument) {
-  logger.info('addDeliverablesToCourse() in Deliverable Controller');
+  logger.info('DeliverablesController::addDeliverablesToCourse(..)');
   let isntAssigned = (course.deliverables.indexOf(deliverable._id) === -1);
   if (isntAssigned) {
     course.deliverables.push(deliverable._id);
@@ -59,14 +59,14 @@ function addDeliverablesToCourse(course: any, deliverable: IDeliverableDocument)
 }
 
 function updateDeliverable(payload: any) {
-  logger.info('updateDeliverable() in Deliverable Controller');
+  logger.info('DeliverablesController::updateDeliverable() in Deliverable Controller');
   return Course.findOne({'courseId': payload.courseId})
     .exec()
     .then(c => {
       if (c) {
         return queryAndUpdateDeliverable(c, payload);
       } else {
-        return Promise.reject(Error('Error assigning deliverables to course #' + payload.courseId + '.'));
+        return Promise.reject(new Error('Error assigning deliverables to course #' + payload.courseId + '.'));
       }
     });
 }
@@ -74,7 +74,7 @@ function updateDeliverable(payload: any) {
 // Adds a deliverable. Rejects if Deliverable exists with same Course Name and Course._id
 // Adds Deliverable reference to Course object
 function addDeliverable(payload: any): Promise<IDeliverableDocument> {
-  logger.info('DeliverableController::addDeliverable() in Deliverable Controller');
+  logger.info('DeliverableController::addDeliverable(..)');
   console.log(payload.params);
   let newDeliverable = payload.params.deliverable;
   let courseQuery = {courseId: newDeliverable.courseId};
@@ -108,7 +108,7 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
     return Deliverable.findOne(delivQuery)
       .then((deliv: IDeliverableDocument) => {
         if (deliv) {
-          throw `Deliverable with same Name and CourseId already exist.`;
+          throw new Error(`Deliverable with same Name and CourseId already exist.`);
         }
         return deliv;
       })
@@ -119,8 +119,8 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
 }
 
 function getDeliverablesByCourse(payload: any) {
-  console.log(payload);
-  logger.info('DeliverableController::getDeliverablesByCourse() in Deliverable Controller');
+  logger.info('DeliverableController::getDeliverablesByCourse(..)');
+  logger.info(payload);
   let searchParams = {courseId: payload.courseId};
   let populateParams = {
     path:    'deliverables',
@@ -135,7 +135,7 @@ function getDeliverablesByCourse(payload: any) {
       if (c) {
         return Promise.resolve(c.deliverables);
       } else {
-        return Promise.reject(Error('Deliverable does not exist on courseID: #' + payload.courseId));
+        return Promise.reject(new Error('Deliverable does not exist on courseID: #' + payload.courseId));
       }
     })
     .catch((err) => logger.info('Error retrieving deliverable: ' + err));
