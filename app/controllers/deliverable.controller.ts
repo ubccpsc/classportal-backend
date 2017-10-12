@@ -118,27 +118,34 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
   }
 }
 
+/**
+ * 
+ * @param courseId course number, ie. 310
+ * @return IDeliverableDocument[] list of deliverables for a course
+ */
 function getDeliverablesByCourse(payload: any) {
   console.log(payload);
   logger.info('DeliverableController::getDeliverablesByCourse() in Deliverable Controller');
-  let searchParams = {courseId: payload.courseId};
-  let populateParams = {
-    path:    'deliverables',
-    select:  'id name url open close isReleased gradesReleased reposCreated buildingRepos',
-    options: {sort: {name: 1}}
-  };
 
-  return Course.findOne(searchParams)
-    .populate(populateParams)
-    .exec()
-    .then(c => {
-      if (c) {
-        return Promise.resolve(c.deliverables);
-      } else {
-        return Promise.reject(Error('Deliverable does not exist on courseID: #' + payload.courseId));
+  return Course.findOne({ courseId: payload.courseId })
+    .then((course:ICourseDocument) => {
+      if (course) {
+        return course;
       }
+      throw `Course ${payload.courseId} not found`;
     })
-    .catch((err) => logger.info('Error retrieving deliverable: ' + err));
+    .then((course: ICourseDocument) => {
+      return Deliverable.find({ courseId: course._id })
+        .then((delivs: IDeliverableDocument[]) => {
+          if (delivs) {
+            return delivs;
+          }
+          throw `No deliverables found for course ${payload.courseId}`;
+        });
+    })
+    .catch(err => {
+      logger.error('DeliverableController::getDeliverablesByCourse ERROR ' + err);
+    });
 }
 
 export {updateDeliverable, getDeliverablesByCourse, addDeliverable};

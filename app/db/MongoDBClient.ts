@@ -183,7 +183,7 @@ export class MongoDB {
       let groupQuery210 = {
         _id: "$user",
         username: {"$last": "$user"},
-        deliverable: {"$last": "$deliverable"},        
+        deliverable: {"$last": "$deliverable"},
         studentInfo: {"$last": "$report.studentInfo"},
         submitted: {'$last': "$timestamp"},
         grade: {'$last': "$report.tests.grade"},
