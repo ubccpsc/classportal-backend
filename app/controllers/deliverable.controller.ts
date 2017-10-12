@@ -127,15 +127,15 @@ function getDeliverablesByCourse(payload: any) {
   console.log(payload);
   logger.info('DeliverableController::getDeliverablesByCourse() in Deliverable Controller');
 
-  return Course.findOne({ courseId: payload.courseId })
-    .then((course:ICourseDocument) => {
+  return Course.findOne({courseId: payload.courseId})
+    .then((course: ICourseDocument) => {
       if (course) {
         return course;
       }
       throw `Course ${payload.courseId} not found`;
     })
     .then((course: ICourseDocument) => {
-      return Deliverable.find({ courseId: course._id })
+      return Deliverable.find({courseId: course._id})
         .then((delivs: IDeliverableDocument[]) => {
           if (delivs) {
             return delivs;
