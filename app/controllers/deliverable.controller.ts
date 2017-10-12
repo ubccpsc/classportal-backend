@@ -6,6 +6,12 @@ import {Course, ICourseDocument} from '../models/course.model';
 import {User, IUserDocument} from '../models/user.model';
 import {logger} from '../../utils/logger';
 
+export interface DeliverablePayload {
+  id: string;
+  open: number; // timestamp
+  close: number; // timestamp
+}
+
 // Retrieves and updates Deliverable object.
 function queryAndUpdateDeliverable(course: ICourseDocument, deliverable: any): Promise<IDeliverableDocument> {
   logger.info('DeliverablesController::updateDeliverables() in Deliverable Controller');
@@ -139,7 +145,16 @@ function getDeliverablesByCourse(payload: any) {
         .then((delivs: IDeliverableDocument[]) => {
           if (delivs) {
             logger.info('DeliverableController::getDeliverablesByCourse() - returning length: ' + delivs.length);
-            return delivs;
+
+            // change the database records into the format expected by clients
+            let retDelivs: DeliverablePayload[] = [];
+            for (let d of delivs) {
+              const open = new Date(d.open).getTime();
+              const close = new Date(d.close).getTime();
+              retDelivs.push({id: d.name, open: open, close: close});
+            }
+
+            return retDelivs;
           }
           throw new Error(`No deliverables found for course ${payload.courseId}`);
         });
