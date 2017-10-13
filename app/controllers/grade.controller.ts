@@ -196,9 +196,11 @@ function getAllGradesByCourse(req: any) {
         let grade = g.details.finalGrade;
         arrayOfGradesResponse.push([snum, grade]);
       }
+      logger.info('getAllGradesByCourse() - returning csv');
       return csvGenerate(arrayOfGradesResponse);
     });
   }
+  logger.info('getAllGradesByCourse() - returning json');
   return courseQuery;
 }
 
@@ -285,15 +287,15 @@ function getGradesFromResults(payload: any) {
     .then(() => {
       timestamp = new Date(deliverable.close.toString()).getTime();
       return db.getLatestResultRecords('results', timestamp, {
-        orgName: course.githubOrg,
-        report: {'$ne': REPORT_FAILED_FLAG},
+        orgName:     course.githubOrg,
+        report:      {'$ne': REPORT_FAILED_FLAG},
         deliverable: payload.deliverableName,
-        timestamp: {'$lte' : timestamp}
+        timestamp:   {'$lte': timestamp}
       })
-      .then((result: any[]) => {
-        singleDelivResults = result;
-        return result;
-      });
+        .then((result: any[]) => {
+          singleDelivResults = result;
+          return result;
+        });
     })
     .then(() => {
       if (payload.allDeliverables) {
@@ -302,7 +304,7 @@ function getGradesFromResults(payload: any) {
             if (_deliverables) {
               deliverables = _deliverables;
               return deliverable;
-            } 
+            }
             throw `Could not find Deliverables for ${course._id}`;
           })
           .catch((err: any) => {
@@ -320,8 +322,8 @@ function getGradesFromResults(payload: any) {
         for (let i = 0; i < deliverableNames.length; i++) {
 
           // get new timestamp for each deliverable due date for query
-          let index: number; 
-          
+          let index: number;
+
           for (let j = 0; j < deliverables.length; j++) {
             let deliverableName1 = String(deliverables[j].name);
             let deliverableName2 = String(deliverableNames[i]);
@@ -329,16 +331,16 @@ function getGradesFromResults(payload: any) {
             if (deliverableName1 === deliverableName2) {
               index = j;
               timestamp = new Date(deliverables[index].close.toString()).getTime();
-              
+
               let resultRecordsForDeliv = db.getLatestResultRecords('results', timestamp, {
-                orgName: course.githubOrg,
-                report: {'$ne': REPORT_FAILED_FLAG},
+                orgName:     course.githubOrg,
+                report:      {'$ne': REPORT_FAILED_FLAG},
                 deliverable: deliverableNames[i],
-                timestamp: {'$lte' : timestamp}
+                timestamp:   {'$lte': timestamp}
               })
-              .then((result: any[]) => {
-                return result;
-              });
+                .then((result: any[]) => {
+                  return result;
+                });
               allDelivQueries.push(resultRecordsForDeliv);
             }
           }
@@ -384,45 +386,45 @@ function getGradesFromResults(payload: any) {
       // finally, convert to CSV based on class number and map to Interface type
 
       const CSV_COLUMNS_210 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
-      'finalGrade', 'deliverableWeight', 'coverageGrade', 'testingGrade', 'coverageWeight',
-      'testingWeight', 'coverageMethodWeight', 'coverageLineWeight', 'coverageBranchWeight', 'githubUrl'];
+        'finalGrade', 'deliverableWeight', 'coverageGrade', 'testingGrade', 'coverageWeight',
+        'testingWeight', 'coverageMethodWeight', 'coverageLineWeight', 'coverageBranchWeight', 'githubUrl'];
       const CSV_COLUMNS_310 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
         'finalGrade', 'deliverableWeight', 'passPercent', 'passCount', 'failCount', 'skipCount',
         'passNames', 'failNames', 'skipNames', 'githubUrl'];
       let csvArray: any = [];
 
-        if (payload.courseId === '210') {
-          for (let i = 0; i < results.length; i++) {
-            let r = results[i];
-            let custom = r.customLogic;
-            console.log(r);
-            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted, 
-              r.grade.finalGrade, r.grade.deliveableWeight, custom.coverageGrade, custom.testingGrade, 
-              custom.coverageWeight, custom.testingWeight, custom.coverageMethodWeight, 
-              custom.coverageLineWeight, custom.coverageBranchWeight, r.studentInfo.projectUrl]);
-          }
-          csvArray.unshift(CSV_COLUMNS_210);          
-        } else {
-          for (let i = 0; i < results.length; i++) {
-            let r = results[i];
-            let stats = r.customLogic.testStats;
-            console.log(r);
-            console.log(r.customLogic.testStats);
-            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted, 
-              r.grade.finalGrade, r.grade.deliverableWeight, stats.passPercent, stats.passCount, 
-              stats.failCount, stats.skipCount,
-              stats.passNames.length === 0 ? '' : stats.passNames.join(';'), 
-              stats.failNames.length === 0 ? '' : stats.failNames.join(';'), 
-              stats.skipNames.length === 0 ? '' : stats.skipNames.join(';'),
-              r.studentInfo.projectUrl]);
-          }
-          csvArray = sortArrayByLastName(csvArray);          
-          csvArray.unshift(CSV_COLUMNS_310);          
+      if (payload.courseId === '210') {
+        for (let i = 0; i < results.length; i++) {
+          let r = results[i];
+          let custom = r.customLogic;
+          console.log(r);
+          csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted,
+            r.grade.finalGrade, r.grade.deliveableWeight, custom.coverageGrade, custom.testingGrade,
+            custom.coverageWeight, custom.testingWeight, custom.coverageMethodWeight,
+            custom.coverageLineWeight, custom.coverageBranchWeight, r.studentInfo.projectUrl]);
         }
-        // generate and return csv
-        // return results;
-        // return csvGenerate(csvArray);
-        return csvArray;
+        csvArray.unshift(CSV_COLUMNS_210);
+      } else {
+        for (let i = 0; i < results.length; i++) {
+          let r = results[i];
+          let stats = r.customLogic.testStats;
+          console.log(r);
+          console.log(r.customLogic.testStats);
+          csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted,
+            r.grade.finalGrade, r.grade.deliverableWeight, stats.passPercent, stats.passCount,
+            stats.failCount, stats.skipCount,
+            stats.passNames.length === 0 ? '' : stats.passNames.join(';'),
+            stats.failNames.length === 0 ? '' : stats.failNames.join(';'),
+            stats.skipNames.length === 0 ? '' : stats.skipNames.join(';'),
+            r.studentInfo.projectUrl]);
+        }
+        csvArray = sortArrayByLastName(csvArray);
+        csvArray.unshift(CSV_COLUMNS_310);
+      }
+      // generate and return csv
+      // return results;
+      // return csvGenerate(csvArray);
+      return csvArray;
     })
     .then((csvArray: any[]) => {
       return csvGenerate(csvArray);
