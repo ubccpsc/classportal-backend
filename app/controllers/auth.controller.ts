@@ -16,8 +16,9 @@ import {passport} from '../../config/auth';
  * @returns {void}
  **/
 function logout(req: any, res: any, next: any) {
+  logger.info('auth.controller::logout(..) - start');
   return Promise.resolve(req.logout())
-    .catch((err) => logger.info('Error logging out: ' + err));
+    .catch((err) => logger.info('auth.controller::logout(..) - Error logging out: ' + err));
 }
 
 /**
@@ -28,13 +29,13 @@ function logout(req: any, res: any, next: any) {
  * @returns {void}
  **/
 function oauthCallback(req: any, res: any, next: restify.Next) {
-
+  logger.info('auth.controller::oauthCallback(..) - start');
   let authenticate = function () {
     return Promise.resolve(passport.authenticate('github', {failureRedirect: '/failed'}));
   };
   return authenticate()
     .then(res.redirect('/', next))
-    .catch((err) => logger.info('Error authenticating user: ' + err));
+    .catch((err) => logger.info('auth.controller::oauthCallback(..)::authenticate() - Error authenticating user: ' + err));
 }
 
 /**
@@ -45,11 +46,11 @@ function oauthCallback(req: any, res: any, next: restify.Next) {
  * @returns {string} that holds username in string
  */
 function addTokenToDB(req: any, res: any): Promise<string> {
-  console.log('addTokenToDB:: - ' + req.user);
-  console.log('is authenticated? : ' + req.isAuthenticated());
+  console.log('auth.controller::addTokenToDB(..) - start; user: ' + req.user);
+  console.log('auth.controller::addTokenToDB(..) - isAuthenticated? : ' + req.isAuthenticated());
   return Promise.resolve(res.json(200, {user: req.user.role}))
     .catch((err) => {
-      logger.info('Error loading user info: ' + err);
+      logger.info('auth.controller::addTokenToDB(..) - Error loading user info: ' + err);
     });
 }
 
@@ -63,7 +64,7 @@ function addTokenToDB(req: any, res: any): Promise<string> {
 function getCurrentUser(req: any, res: any, next: any): Promise<object> {
   return Promise.resolve(res.json(200, {user: req.user}))
     .catch((err) => {
-      logger.info('Error loading user info: ' + err);
+      logger.info('auth.controller::getCurrentUser(..) - Error loading user info: ' + err);
     });
 }
 
