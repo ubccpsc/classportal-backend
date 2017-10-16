@@ -233,6 +233,7 @@ function getReleasedGradesByCourse(req: any) {
  * @param courseId courseId number of courseId ie. 310
  * @param deliverableName string name of deliverable ie. 'd2'
  * @param allDeliverables boolean if the report should include all deliverables
+ * @param gradeOnly boolean if the report should be limited to only grade, snum, csid, and deliverable info.
  * @return string CSV formatted report
  */
 function getGradesFromResults(payload: any) {
@@ -240,6 +241,7 @@ function getGradesFromResults(payload: any) {
   // 7 hour time difference in production
   const REPORT_FAILED_FLAG: string = 'REPORT_FAILED';
   const UNIX_TIMESTAMP_DIFFERENCE: number = 25200000;
+  const CSV_FORMAT_FLAG = 'csv';
 
   let course: ICourseDocument;
   let deliverables: IDeliverableDocument[];
@@ -382,6 +384,7 @@ function getGradesFromResults(payload: any) {
     })
     .then((results: any) => {
       // finally, convert to CSV based on class number and map to Interface type
+      // skim report to bare essentials if payload.gradeOnly is 'true'
 
       const CSV_COLUMNS_210 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
       'finalGrade', 'deliverableWeight', 'coverageGrade', 'testingGrade', 'coverageWeight',
@@ -389,9 +392,10 @@ function getGradesFromResults(payload: any) {
       const CSV_COLUMNS_310 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
         'finalGrade', 'deliverableWeight', 'passPercent', 'passCount', 'failCount', 'skipCount',
         'passNames', 'failNames', 'skipNames', 'githubUrl'];
+      const CSV_COLUMNS_GRADE_ONLY = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'finalGrade'];
       let csvArray: any = [];
 
-        if (payload.courseId === '210') {
+        if (payload.courseId === '210' && payload.gradeOnly === false) {
           for (let i = 0; i < results.length; i++) {
             let r = results[i];
             let custom = r.customLogic;
@@ -402,12 +406,10 @@ function getGradesFromResults(payload: any) {
               custom.coverageLineWeight, custom.coverageBranchWeight, r.studentInfo.projectUrl]);
           }
           csvArray.unshift(CSV_COLUMNS_210);          
-        } else {
+        } else if (payload.courseId === '310' && payload.gradeOnly === false) {
           for (let i = 0; i < results.length; i++) {
             let r = results[i];
             let stats = r.customLogic.testStats;
-            console.log(r);
-            console.log(r.customLogic.testStats);
             csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted, 
               r.grade.finalGrade, r.grade.deliverableWeight, stats.passPercent, stats.passCount, 
               stats.failCount, stats.skipCount,
@@ -418,6 +420,15 @@ function getGradesFromResults(payload: any) {
           }
           csvArray = sortArrayByLastName(csvArray);          
           csvArray.unshift(CSV_COLUMNS_310);          
+        } else {
+          for (let i = 0; i < results.length; i++) {
+            let r = results[i];
+            let stats = r.customLogic.testStats;
+            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, 
+              r.grade.finalGrade]);
+          }
+          csvArray = sortArrayByLastName(csvArray);
+          csvArray.unshift(CSV_COLUMNS_GRADE_ONLY);
         }
         // generate and return csv
         // return results;
@@ -425,7 +436,10 @@ function getGradesFromResults(payload: any) {
         return csvArray;
     })
     .then((csvArray: any[]) => {
-      return csvGenerate(csvArray);
+      if (payload.format === CSV_FORMAT_FLAG) {
+        return csvGenerate(csvArray);        
+      }
+      return csvArray;
     });
 }
 

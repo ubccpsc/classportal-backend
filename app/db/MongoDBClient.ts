@@ -35,7 +35,7 @@ export class MongoDB {
           if (err) {
             throw err;
           }
-          logger.info(`MongoDB::getDB() Returning DB Connection: ${config.db}`);
+          logger.debug(`MongoDB::getDB() Returning DB Connection: ${config.db}`);
           fulfill(db);
         });
       }

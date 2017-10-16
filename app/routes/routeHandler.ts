@@ -138,14 +138,14 @@ const getGradesAdmin = (req: restify.Request, res: restify.Response, next: resti
   return gradeCtrl.getAllGradesByCourse(req)
     .then((grades: any) => {
       const CSV_HEAD = 'snum,grade';
-      if (grades.startsWith != undefined && grades.startsWith(CSV_HEAD)) {
+      if (grades.startsWith != undefined && grades.startsWith(CSV_HEAD) && req.params.csv) {
         res.writeHead(200, {
           'Content-Type':        'text/csv',
           'Content-Disposition': 'attachment; filename=Course' + req.params.courseId + 'Grades.csv',
         });
         res.end(grades);
       } else {
-        res.json(200, {response: grades.grades});
+        res.json(200, {response: grades});
       }
     })
     .catch((err: any) => res.json(500, {err: err.message}));
@@ -354,11 +354,15 @@ const disbandTeamById = (req: restify.Request, res: restify.Response, next: rest
 const getGradesFromResults = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return gradeCtrl.getGradesFromResults(req.params)
     .then((grades) => {
-      res.writeHead(200, {
-        'Content-Type':        'text/csv',
-        'Content-Disposition': 'attachment; filename=Course' + req.params.courseId + 'Grades.csv',
-      });
-      res.end(grades);
+      const CSV_FORMAT_FLAG = 'csv';
+      if (req.params.format === CSV_FORMAT_FLAG) {
+        res.writeHead(200, {
+          'Content-Type':        'text/csv',
+          'Content-Disposition': 'attachment; filename=Course' + req.params.courseId + 'Grades.csv',
+        });
+        res.end(grades);
+      }
+      res.json(200, {response: grades});
     })
     .catch((err: any) => res.json(500, {err: err.message}));
 };

@@ -37,10 +37,11 @@ const routes = (server: restify.Server) => {
   server.get('/auth/login', passport.authenticate(config.auth_strategy), routeHandler.getCurrentUserInfo);
   server.get('/auth/login/return', passport.authenticate(config.auth_strategy, {failureRedirect: '/failed'}),
     (req: any, res: any, next: restify.Next) => {
+      console.log(config.app);
       res.redirect(`${config.app_path}`, next);
     });
 
-  // Authenticated routes
+  // Authenticated routes   
 
   // -- Prof or Admin Routes
   server.post('/:courseId/admin/admins', /* adminOrProfAuthenticated, */ routeHandler.addAdmins);
