@@ -14,6 +14,63 @@ let MongoClient = mongodb.MongoClient;
 let fs = require('fs');
 let stringify = require('csv-stringify');
 
+
+/**
+ *
+ *
+ * BEGIN New grade payload interfaces.
+ *
+ *
+ */
+export interface GradePayload {
+  grades: StudentGrade[];
+}
+
+export interface StudentGrade {
+  studentNumber: number;
+  cwl: string;
+  lab: string;
+  deliverables: DeliverableGrade[];
+}
+
+/**
+ * Note: there can be multiple entries in this array for the same delivId
+ * (e.g., if you want to emit all entries for a deliverable).
+ *
+ * For V1, only emit name: ( FINAL | MAX )
+ */
+export interface DeliverableGrade {
+  delivId: string;
+  name: string; // 'FINAL' (last grade before deadline), 'MAX' (max grade), 'RUN' (any intermediate run)
+  projectUrl: string;
+  timestamp: number; // new Date().getTime()
+  overall: number; // this is the final grade
+  components: GradeComponent[];
+}
+
+/**
+ * This seems overly flexible, but in subsequent terms the containers will be able to emit any
+ * set of key/value pairs they want here and have them rendered in the UI.
+ */
+export interface GradeComponent {
+  key: string; // e.g., 'cover', 'test'
+  value: number | string; // will usually be a number, but might be some kind of string-based feedback.
+}
+
+
+/**
+ *
+ *
+ * END new grade payload interfaces.
+ *
+ *
+ */
+
+
+/**
+ * Legacy grade payload interfaces
+ */
+
 export interface FinalGrade {
   finalGrade: number;
   deliverableWeight: string;
@@ -196,9 +253,11 @@ function getAllGradesByCourse(req: any) {
         let grade = g.details.finalGrade;
         arrayOfGradesResponse.push([snum, grade]);
       }
+      logger.info('getAllGradesByCourse() - returning csv');
       return csvGenerate(arrayOfGradesResponse);
     });
   }
+  logger.info('getAllGradesByCourse() - returning json');
   return courseQuery;
 }
 
@@ -287,15 +346,15 @@ function getGradesFromResults(payload: any) {
     .then(() => {
       timestamp = new Date(deliverable.close.toString()).getTime();
       return db.getLatestResultRecords('results', timestamp, {
-        orgName: course.githubOrg,
-        report: {'$ne': REPORT_FAILED_FLAG},
+        orgName:     course.githubOrg,
+        report:      {'$ne': REPORT_FAILED_FLAG},
         deliverable: payload.deliverableName,
-        timestamp: {'$lte' : timestamp}
+        timestamp:   {'$lte': timestamp}
       })
-      .then((result: any[]) => {
-        singleDelivResults = result;
-        return result;
-      });
+        .then((result: any[]) => {
+          singleDelivResults = result;
+          return result;
+        });
     })
     .then(() => {
       if (payload.allDeliverables) {
@@ -304,7 +363,7 @@ function getGradesFromResults(payload: any) {
             if (_deliverables) {
               deliverables = _deliverables;
               return deliverable;
-            } 
+            }
             throw `Could not find Deliverables for ${course._id}`;
           })
           .catch((err: any) => {
@@ -322,8 +381,8 @@ function getGradesFromResults(payload: any) {
         for (let i = 0; i < deliverableNames.length; i++) {
 
           // get new timestamp for each deliverable due date for query
-          let index: number; 
-          
+          let index: number;
+
           for (let j = 0; j < deliverables.length; j++) {
             let deliverableName1 = String(deliverables[j].name);
             let deliverableName2 = String(deliverableNames[i]);
@@ -331,16 +390,16 @@ function getGradesFromResults(payload: any) {
             if (deliverableName1 === deliverableName2) {
               index = j;
               timestamp = new Date(deliverables[index].close.toString()).getTime();
-              
+
               let resultRecordsForDeliv = db.getLatestResultRecords('results', timestamp, {
-                orgName: course.githubOrg,
-                report: {'$ne': REPORT_FAILED_FLAG},
+                orgName:     course.githubOrg,
+                report:      {'$ne': REPORT_FAILED_FLAG},
                 deliverable: deliverableNames[i],
-                timestamp: {'$lte' : timestamp}
+                timestamp:   {'$lte': timestamp}
               })
-              .then((result: any[]) => {
-                return result;
-              });
+                .then((result: any[]) => {
+                  return result;
+                });
               allDelivQueries.push(resultRecordsForDeliv);
             }
           }
@@ -387,8 +446,8 @@ function getGradesFromResults(payload: any) {
       // skim report to bare essentials if payload.gradeOnly is 'true'
 
       const CSV_COLUMNS_210 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
-      'finalGrade', 'deliverableWeight', 'coverageGrade', 'testingGrade', 'coverageWeight',
-      'testingWeight', 'coverageMethodWeight', 'coverageLineWeight', 'coverageBranchWeight', 'githubUrl'];
+        'finalGrade', 'deliverableWeight', 'coverageGrade', 'testingGrade', 'coverageWeight',
+        'testingWeight', 'coverageMethodWeight', 'coverageLineWeight', 'coverageBranchWeight', 'githubUrl'];
       const CSV_COLUMNS_310 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
         'finalGrade', 'deliverableWeight', 'passPercent', 'passCount', 'failCount', 'skipCount',
         'passNames', 'failNames', 'skipNames', 'githubUrl'];
@@ -399,7 +458,6 @@ function getGradesFromResults(payload: any) {
           for (let i = 0; i < results.length; i++) {
             let r = results[i];
             let custom = r.customLogic;
-            console.log(r);
             csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted, 
               r.grade.finalGrade, r.grade.deliveableWeight, custom.coverageGrade, custom.testingGrade, 
               custom.coverageWeight, custom.testingWeight, custom.coverageMethodWeight, 
@@ -430,10 +488,11 @@ function getGradesFromResults(payload: any) {
           csvArray = sortArrayByLastName(csvArray);
           csvArray.unshift(CSV_COLUMNS_GRADE_ONLY);
         }
-        // generate and return csv
-        // return results;
-        // return csvGenerate(csvArray);
-        return csvArray;
+      
+      // generate and return csv
+      // return results;
+      // return csvGenerate(csvArray);
+      return csvArray;
     })
     .then((csvArray: any[]) => {
       if (payload.format === CSV_FORMAT_FLAG) {
