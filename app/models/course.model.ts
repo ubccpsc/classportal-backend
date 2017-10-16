@@ -13,13 +13,18 @@ interface ICourseDocument extends mongoose.Document {
   batchDeliverables: Object[];
   deliverables: Object[];
   grades: [Object];
-  labSections: [Object];
+  labSections: [LabSection];
   admins: [Object];
   batchImportUrl: string;
   urlWebhook: string;
   githubOrg: string;
   teamMustBeInSameLab: Boolean;
   settings: CourseSettings;
+}
+
+interface LabSection {
+  labId: string;
+  users: [IUserDocument];
 }
 
 interface CourseSettings {

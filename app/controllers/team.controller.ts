@@ -398,7 +398,6 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<ITeamDocument[]> 
 
 
   let courseId = payload.courseId;
-
   let courseQuery = Course.findOne({courseId}).exec();
 
   return courseQuery.then((course: ICourseDocument) => {
@@ -409,12 +408,27 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<ITeamDocument[]> 
         $where:   'this.deliverableIds.length > 0 && this.disbanded !== true'
       })
         .populate({path: 'members', select: 'fname lname username'})
-        .populate({path: 'deliverableIds'})
         .exec()
+        .then((teams: ITeamDocument[]) => {
+          if (!teams) {
+            return Promise.reject(Error(`TeamController::getCourseTeamsPerUser No teams were found under` +
+            `Course Number ${courseId}`));
+          }
+          return Promise.resolve(teams);
+        })
         .then((teams: ITeamDocument[]) => {
           if (!teams) {
             return Promise.reject(Error(`TeamController::getCourseTeamsPerUser No teams were found under
             Course Number ${courseId}`));
+          }
+          for (let team of teams) {
+            let members = team.members;
+            for (let labSection of course.labSections) {
+              console.log('users', labSection.users);
+              if (typeof members[0] !== 'undefined' && labSection.users.indexOf(members[0]._id) > -1) {
+                team.labSection = labSection.labId;
+              }
+            }
           }
           return Promise.resolve(teams);
         });
