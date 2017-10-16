@@ -346,7 +346,7 @@ export class Dashboard {
             failNames.push(t.testName);
           } else {
             // too verbose
-            console.log('unknown test state: ' + t.state);
+            logger.debug('unknown test state: ' + t.state);
           }
         }
       }

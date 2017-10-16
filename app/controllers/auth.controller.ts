@@ -1,12 +1,7 @@
-import * as fs from 'fs';
 import * as restify from 'restify';
-import * as parse from 'csv-parse';
 import {IUserDocument, User} from '../models/user.model';
 import {logger} from '../../utils/logger';
-import {config} from '../../config/env';
-import * as request from '../helpers/request';
 import {passport} from '../../config/auth';
-
 
 /**
  * User logout
@@ -34,8 +29,10 @@ function oauthCallback(req: any, res: any, next: restify.Next) {
     return Promise.resolve(passport.authenticate('github', {failureRedirect: '/failed'}));
   };
   return authenticate()
-    .then(res.redirect('/', next))
-    .catch((err) => logger.info('auth.controller::oauthCallback(..)::authenticate() - Error authenticating user: ' + err));
+    .then(function () {
+      logger.info('auth.controller::oauthCallback(..) - then; redirecting to /');
+      res.redirect('/', next);
+    }).catch((err) => logger.info('auth.controller::oauthCallback(..)::authenticate() - Error authenticating user: ' + err));
 }
 
 /**
@@ -62,6 +59,7 @@ function addTokenToDB(req: any, res: any): Promise<string> {
  * @returns a User object
  */
 function getCurrentUser(req: any, res: any, next: any): Promise<object> {
+  console.log('auth.controller::getCurrentUser(..) - start; user: ' + req.user);
   return Promise.resolve(res.json(200, {user: req.user}))
     .catch((err) => {
       logger.info('auth.controller::getCurrentUser(..) - Error loading user info: ' + err);
@@ -76,6 +74,7 @@ function getCurrentUser(req: any, res: any, next: any): Promise<object> {
  * @returns {object} that holds username in string
  **/
 function getUser(req: any, res: any, next: any) {
+  console.log('auth.controller::getUser(..) - start; user: ' + req.user);
   return Promise.resolve(res.json(200, {user: req.user}))
     .catch((err) => {
       logger.info('Error loading user info: ' + err);
@@ -91,6 +90,7 @@ function getUser(req: any, res: any, next: any) {
  * @returns {boolean} true value if valid CSID/SNUM aka. real user in database
  **/
 function isAuthenticated(req: any, res: any, next: any): Promise<boolean> {
+  console.log('auth.controller::isAuthenticated(..) - start; user: ' + req.user);
   if (typeof req.user !== 'undefined') {
     return User.findOne({username: req.user.username})
       .then((user: IUserDocument) => {

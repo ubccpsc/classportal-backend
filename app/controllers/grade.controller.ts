@@ -14,6 +14,63 @@ let MongoClient = mongodb.MongoClient;
 let fs = require('fs');
 let stringify = require('csv-stringify');
 
+
+/**
+ *
+ *
+ * BEGIN New grade payload interfaces.
+ *
+ *
+ */
+export interface GradePayload {
+  grades: StudentGrade[];
+}
+
+export interface StudentGrade {
+  studentNumber: number;
+  cwl: string;
+  lab: string;
+  deliverables: DeliverableGrade[];
+}
+
+/**
+ * Note: there can be multiple entries in this array for the same delivId
+ * (e.g., if you want to emit all entries for a deliverable).
+ *
+ * For V1, only emit name: ( FINAL | MAX )
+ */
+export interface DeliverableGrade {
+  delivId: string;
+  name: string; // 'FINAL' (last grade before deadline), 'MAX' (max grade), 'RUN' (any intermediate run)
+  projectUrl: string;
+  timestamp: number; // new Date().getTime()
+  overall: number; // this is the final grade
+  components: GradeComponent[];
+}
+
+/**
+ * This seems overly flexible, but in subsequent terms the containers will be able to emit any
+ * set of key/value pairs they want here and have them rendered in the UI.
+ */
+export interface GradeComponent {
+  key: string; // e.g., 'cover', 'test'
+  value: number | string; // will usually be a number, but might be some kind of string-based feedback.
+}
+
+
+/**
+ *
+ *
+ * END new grade payload interfaces.
+ *
+ *
+ */
+
+
+/**
+ * Legacy grade payload interfaces
+ */
+
 export interface FinalGrade {
   finalGrade: number;
   deliverableWeight: string;
