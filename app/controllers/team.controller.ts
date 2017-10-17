@@ -414,6 +414,10 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<ITeamDocument[]> 
             return Promise.reject(Error(`TeamController::getCourseTeamsPerUser No teams were found under` +
             `Course Number ${courseId}`));
           }
+          for (let team of teams) {
+            let githubStateRepoUrl = String(team.githubState.repo.url);
+            team.teamUrl = githubStateRepoUrl === '' ? null : githubStateRepoUrl;
+          }
           return Promise.resolve(teams);
         })
         .then((teams: ITeamDocument[]) => {
@@ -422,9 +426,12 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<ITeamDocument[]> 
             Course Number ${courseId}`));
           }
           for (let team of teams) {
+
             let members = team.members;
+            for (let member of members) {
+              member.profileUrl = 'https://github.ubc.ca/' + member.username;
+            }
             for (let labSection of course.labSections) {
-              console.log('users', labSection.users);
               if (typeof members[0] !== 'undefined' && labSection.users.indexOf(members[0]._id) > -1) {
                 team.labSection = labSection.labId;
               }

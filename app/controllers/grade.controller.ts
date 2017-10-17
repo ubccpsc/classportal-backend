@@ -347,7 +347,11 @@ function getGradesFromResults(payload: any) {
         });
     })
     .then(() => {
+
+      // queries the highest grade and last grade, then merges both per user
       if (!payload.allDeliverables) {
+
+
         timestamp = new Date(deliverable.close.toString()).getTime();
         return db.getLatestResultRecords('results', timestamp, {
           orgName:     course.githubOrg,
