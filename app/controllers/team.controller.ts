@@ -407,7 +407,7 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<ITeamDocument[]> 
         courseId: course._id,
         $where:   'this.deliverableIds.length > 0 && this.disbanded !== true'
       })
-        .populate({path: 'members', select: 'fname lname username'})
+        .populate({path: 'members', select: 'fname lname username profileUrl'})
         .exec()
         .then((teams: ITeamDocument[]) => {
           if (!teams) {

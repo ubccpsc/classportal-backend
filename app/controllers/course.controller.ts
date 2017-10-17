@@ -224,6 +224,8 @@ function getCourseLabSectionList(req: any): Promise<object> {
  */
 
 function updateClassList(reqFiles: any, courseId: string) {
+  const GITHUB_ENTERPRISE_URL = 'https://github.ubc.ca/';
+
   console.log(reqFiles['classList']);
   const options = {
     columns:          true,
@@ -249,6 +251,7 @@ function updateClassList(reqFiles: any, courseId: string) {
         lname:    student.LAST,
         fname:    student.FIRST,
         username: student.USERNAME,
+        profileUrl: GITHUB_ENTERPRISE_URL + student.USERNAME,
       })
         .then(user => {
           newClassList.push(user._id);

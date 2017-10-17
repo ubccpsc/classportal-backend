@@ -322,11 +322,14 @@ function getGradesFromResults(payload: any) {
     .then(() => {
       return Deliverable.findOne({name: payload.deliverableName, courseId: course._id})
         .then((_deliv: IDeliverableDocument) => {
-          if (_deliv) {
+          if (_deliv && !payload.allDeliverables) {
             deliverable = _deliv;
             return _deliv;
           }
           throw `Could not find deliverable under ${payload.deliverableName} and ${course.courseId}`;
+        })
+        .catch(err => {
+          logger.error(`GradeController::getGradesFromResults() ERROR ${err}`);
         });
     })
     .then(() => {
@@ -344,17 +347,20 @@ function getGradesFromResults(payload: any) {
         });
     })
     .then(() => {
-      timestamp = new Date(deliverable.close.toString()).getTime();
-      return db.getLatestResultRecords('results', timestamp, {
-        orgName:     course.githubOrg,
-        report:      {'$ne': REPORT_FAILED_FLAG},
-        deliverable: payload.deliverableName,
-        timestamp:   {'$lte': timestamp}
-      })
-        .then((result: any[]) => {
-          singleDelivResults = result;
-          return result;
-        });
+      if (!payload.allDeliverables) {
+        timestamp = new Date(deliverable.close.toString()).getTime();
+        return db.getLatestResultRecords('results', timestamp, {
+          orgName:     course.githubOrg,
+          report:      {'$ne': REPORT_FAILED_FLAG},
+          deliverable: payload.deliverableName,
+          timestamp:   {'$lte': timestamp}
+        })
+          .then((result: any[]) => {
+            singleDelivResults = result;
+            return result;
+          });
+      }
+      return null;
     })
     .then(() => {
       if (payload.allDeliverables) {
@@ -410,6 +416,7 @@ function getGradesFromResults(payload: any) {
       }
     })
     .then((results) => {
+      console.log(results);
       // if multiple arrays from allDelivQueries, combine them
       if (results.length > 0) {
         let concatedArray: any = [];

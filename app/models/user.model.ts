@@ -19,6 +19,7 @@ interface IUserDocument extends mongoose.Document {
   userrole: string;
   fname: string;
   lname: string;
+  profileUrl: string;
   courses: CourseData[];
   createServerToken(): Promise<string>;
   deleteServerToken(): Promise<string>;
@@ -60,6 +61,10 @@ const UserSchema = new mongoose.Schema({
   userrole: {
     type:    String,
     default: 'student',
+  },
+  profileUrl: {
+    type: String,
+    default: '',
   },
   courses:  [{type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true}],
 });
