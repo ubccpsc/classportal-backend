@@ -22,12 +22,12 @@ interface ICourseDocument extends mongoose.Document {
   settings: CourseSettings;
 }
 
-interface LabSection {
+export interface LabSection {
   labId: string;
   users: [IUserDocument];
 }
 
-interface CourseSettings {
+export interface CourseSettings {
   bootstrapImage: string;
   testingDelay: boolean;
   delayTime: Date;

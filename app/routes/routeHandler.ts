@@ -9,6 +9,7 @@ import * as testCtrl from '../controllers/test.controller';
 import * as fileCtrl from '../controllers/file.controller';
 import * as projectCtrl from '../controllers/project.controller';
 import * as githubCtrl from '../controllers/github.controller';
+import {TeamPayloadContainer, TeamPayload, TeamRow, Student} from '../interfaces/ui/team.interface';
 import {logger} from '../../utils/logger';
 import {Course, ICourseDocument} from '../models/course.model';
 import {Grade, IGradeDocument} from '../models/grade.model';
@@ -333,7 +334,7 @@ const isStudentInSameLab = (req: any, res: restify.Response, next: restify.Next)
 
 const getCourseTeamsWithBatchMarking = (req: any, res: restify.Response, next: restify.Next) => {
   return teamCtrl.getCourseTeamsWithBatchMarking(req.params)
-    .then((enrollmentStatus: object) => res.json(200, {response: enrollmentStatus}))
+    .then((teamPayload: TeamPayload) => res.json(200, {response: teamPayload}))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 

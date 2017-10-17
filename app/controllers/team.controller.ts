@@ -1,15 +1,15 @@
 import * as restify from 'restify';
 import {logger} from '../../utils/logger';
 import {ITeamDocument, Team} from '../models/team.model';
-import {ICourseDocument, Course} from '../models/course.model';
+import {ICourseDocument, Course, LabSection} from '../models/course.model';
 import {IUserDocument, User} from '../models/user.model';
 import {IDeliverableDocument, Deliverable} from '../models/deliverable.model';
 import {GithubState, GithubRepo, defaultGithubState} from '../models/github.interfaces';
 import GitHubManager from '../github/githubManager';
+import {TeamPayloadContainer, TeamPayload, TeamRow, Student} from '../interfaces/ui/team.interface';
 import * as auth from '../middleware/auth.middleware';
 
 const TEAM_PREPENDAGE = 'team';
-
 
 // One problem with this just being functions like this instead of having them in a class
 // is that we can't distinguish between the public interface and the private interface.
@@ -394,20 +394,22 @@ function disbandTeamById(payload: any): Promise<string> {
     });
 }
 
-function getCourseTeamsWithBatchMarking(payload: any): Promise<ITeamDocument[]> {
-
+function getCourseTeamsWithBatchMarking(payload: any): Promise<TeamPayload> {
 
   let courseId = payload.courseId;
+  let course: ICourseDocument;
   let courseQuery = Course.findOne({courseId}).exec();
+  let teams: ITeamDocument[];
 
-  return courseQuery.then((course: ICourseDocument) => {
+  return courseQuery.then((_course: ICourseDocument) => {
     let teamQueryObject: any = new Object();
-    if (course) {
+    if (_course) {
+      course = _course;
       return Team.find({
-        courseId: course._id,
+        courseId: _course._id,
         $where:   'this.deliverableIds.length > 0 && this.disbanded !== true'
       })
-        .populate({path: 'members', select: 'fname lname username profileUrl'})
+        .populate({path: 'members classList', select: 'fname lname username profileUrl'})
         .exec()
         .then((teams: ITeamDocument[]) => {
           if (!teams) {
@@ -420,12 +422,12 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<ITeamDocument[]> 
           }
           return Promise.resolve(teams);
         })
-        .then((teams: ITeamDocument[]) => {
-          if (!teams) {
+        .then((_teams: ITeamDocument[]) => {
+          if (!_teams) {
             return Promise.reject(Error(`TeamController::getCourseTeamsPerUser No teams were found under
             Course Number ${courseId}`));
           }
-          for (let team of teams) {
+          for (let team of _teams) {
 
             let members = team.members;
             for (let member of members) {
@@ -437,14 +439,99 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<ITeamDocument[]> 
               }
             }
           }
-          return Promise.resolve(teams);
+          teams = _teams;
+          return Promise.resolve(_teams);
         });
     }
     else {
       return Promise.reject(Error(`TeamController::getCourseTeamsPerUser Course was not 
       found under Course Number ${courseId}`));
     }
+  })
+  .then((_teams: ITeamDocument[]) => {
+    // get students not on team
+    let noTeam: Student[] = [];
+    let teams: TeamRow[] = [];
+    let payload: TeamPayload = {
+      noTeam: [],
+      teams: [],
+    };
+    
+    return getStudentsWithoutTeam(course, _teams)
+      .then((studentsNotOnTeam: IUserDocument[]) => {
+
+        for (let _student of studentsNotOnTeam) {
+          console.log(studentsNotOnTeam);
+          let student: Student = {
+            fname: '',
+            lname: '',
+            profileUrl: '',
+            username: '',
+          };
+          student.fname = _student.fname;
+          student.lname = _student.lname;
+          student.profileUrl = _student.profileUrl;
+          student.username = _student.username;
+          noTeam.push(student);
+        }
+
+        for (let _team of _teams) {
+          let team: TeamRow = {
+            labSection: '',
+            members: [],
+            name: '',
+            teamUrl: '',
+          };
+          team.labSection = _team.labSection;
+          team.members = _team.members;
+          team.name = _team.name;
+          team.teamUrl = _team.teamUrl;
+          teams.push(team);
+        }
+
+
+        
+        payload.noTeam = noTeam;
+        payload.teams = teams;
+
+        return payload;
+      });
   });
+  
+}
+
+/**
+ * 
+ * @param _course <ICourseDocument> Requires course with classList that you want userbase checked against
+ * @param _teams <ITeamDocument[]> Requires a list of teams from a class to compile a list of students on teams
+ */
+function getStudentsWithoutTeam(_course: ICourseDocument, _teams: ITeamDocument[]): Promise<IUserDocument[]> {
+
+  let students: IUserDocument;
+  let studentsInClass: IUserDocument[];
+  let studentsNotOnTeam: string[] = [];
+  let studentsOnTeam: string[] = [];
+  let teamPayloadContainer: TeamPayloadContainer[];
+
+  for (let team of _teams) {
+    for (let member of team.members) {
+      studentsOnTeam.push(String(member._id));
+    }
+  }
+
+  for (let student of _course.classList) {
+    // if student of classList not on a team, then add to studentsNotOnTeam
+    let studentInClass: string = String(student);
+
+    if (studentsOnTeam.indexOf(studentInClass) < 0) {
+      studentsNotOnTeam.push(studentInClass);
+    }
+  }
+
+  return User.find({_id: {$in: studentsNotOnTeam}})
+    .then((_studentsNotOnTeam: IUserDocument[]) => {
+      return _studentsNotOnTeam;
+    });
 }
 
 function getCourseTeamsPerUser(req: any): Promise<ITeamDocument[]> {
