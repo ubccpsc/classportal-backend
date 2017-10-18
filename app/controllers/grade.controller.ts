@@ -462,27 +462,50 @@ function getGradesFromResults(payload: any) {
           results[key].projectUrl = String(results[key].projectUrl).replace('.git', '').replace('<token>@', '') 
             + appendage;
         }
+
+        // add in lname, fname, labId, snum
+        // adds in labId *only if* user._id matches id listed under lab for a course
+        if (results[key].hasOwnProperty('username')) {
+          let username = String(results[key].username).toLowerCase();
+          let userId: IUserDocument;
+          for (let i = 0; i < course.classList.length; i++) {
+            let classListItem: IUserDocument = course.classList[i] as IUserDocument;
+            let classListUsername = String(classListItem.username.toLowerCase());
+            if (username === classListUsername) {
+              userId = classListItem._id;
+              results[key].lname = classListItem.lname;
+              results[key].fname = classListItem.fname;
+              results[key].snum = classListItem.snum;
+              results[key].csid = classListItem.csid;              
+              for (let j = 0; j < course.labSections.length; j++) {
+                if (course.labSections[j].users.indexOf(userId) > 0) {
+                  results[key].labId = course.labSections[j].labId;
+                }
+              }
+            }
+          }
+        }
       });
       console.log(results);
       return results;
     });
     // .then((results) => {
     //   // add CSID and SNUM info
-    //   for (let i = 0; i < course.classList.length; i++) {
-    //     let classListItem: IUserDocument = course.classList[i] as IUserDocument;
-    //     let classListUsername = String(classListItem.username.toLowerCase());
-    //     for (let j = 0; j < results.length; j++) {
-    //       let resultsUsername = String(results[j].username).toLowerCase();
-    //       if (resultsUsername === classListUsername) {
-    //         results[j].csid = classListItem.csid;
-    //         results[j].snum = classListItem.snum;
-    //         results[j].lname = classListItem.lname;
-    //         results[j].fname = classListItem.fname;
+      // for (let i = 0; i < course.classList.length; i++) {
+      //   let classListItem: IUserDocument = course.classList[i] as IUserDocument;
+      //   let classListUsername = String(classListItem.username.toLowerCase());
+      //   for (let j = 0; j < results.length; j++) {
+      //     let resultsUsername = String(results[j].username).toLowerCase();
+      //     if (resultsUsername === classListUsername) {
+      //       results[j].csid = classListItem.csid;
+      //       results[j].snum = classListItem.snum;
+      //       results[j].lname = classListItem.lname;
+      //       results[j].fname = classListItem.fname;
 
-    //         // convert timestamp to legible date
-    //         results[j].submitted = new Date(results[j].submitted - UNIX_TIMESTAMP_DIFFERENCE).toString();
-    //       }
-    //     }
+      //       // convert timestamp to legible date
+      //       results[j].submitted = new Date(results[j].submitted - UNIX_TIMESTAMP_DIFFERENCE).toString();
+      //     }
+      //   }
     //   }
     //   return results;
     // })
