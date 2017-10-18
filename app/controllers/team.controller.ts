@@ -489,8 +489,6 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<TeamPayload> {
           teams.push(team);
         }
 
-
-        
         payload.noTeam = noTeam;
         payload.teams = teams;
 
@@ -501,9 +499,9 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<TeamPayload> {
 }
 
 /**
- * 
  * @param _course <ICourseDocument> Requires course with classList that you want userbase checked against
  * @param _teams <ITeamDocument[]> Requires a list of teams from a class to compile a list of students on teams
+ * @return result <Promise<IUserDocument>> list of users without team
  */
 function getStudentsWithoutTeam(_course: ICourseDocument, _teams: ITeamDocument[]): Promise<IUserDocument[]> {
 

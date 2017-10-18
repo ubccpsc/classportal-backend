@@ -127,21 +127,28 @@ export class MongoDB {
       let groupQuery310 = {
         _id: "$user",
         username: {"$last": "$user"},
+        projectUrl: {"$last": "$report.studentInfo.projectUrl"},        
         deliverable: {"$last": "$deliverable"},
-        studentInfo: {"$last": "$report.studentInfo"},
-        submitted: {'$last': "$timestamp"},
-        grade: {'$last': "$report.tests.grade"},
-        customLogic: {'$last': "$report.custom"}
+        commit: {"$last": "$commit"},
+        submitted: {'$last': "$timestamp"},        
+        // grade: {'$max': "$report.tests.grade"},
+        // studentInfo: {"$last": "$report.studentInfo"},
+        // customLogic: {'$last': "$report.custom"}
       };
       let groupQuery210 = {
         _id: "$user",
         username: {"$last": "$user"},
-        deliverable: {"$last": "$deliverable"},        
-        studentInfo: {"$last": "$report.studentInfo"},
+        projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
+        deliverable: {"$last": "$deliverable"},
+        commit: {"$last": "$commit"},
         submitted: {'$last': "$timestamp"},
-        grade: {'$last': "$report.tests.grade"},
-        customLogic: {'$last': "$report.tests.custom"}
+        // grade: {'$max': "$report.tests.grade"},
+        // studentInfo: {"$last": "$report.studentInfo"},
+        // customLogic: {'$last': "$report.tests.custom"}
       };
+
+      let groupQuery: any = "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? groupQuery210 : groupQuery310;
+      groupQuery[_query.deliverable + 'max'] = {'$last': "$report.tests.grade.finalGrade"};
 
       try {
         this.conn.then((db: mongodb.Db) => {
@@ -149,7 +156,7 @@ export class MongoDB {
             .aggregate([
               {$match: _query},
               {$sort: {timestamp: 1}},
-              {$group: "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? groupQuery210 : groupQuery310}
+              {$group: groupQuery}
             ]).toArray((err: Error, results: any[]) => {
               if (err) {
                 throw err;
@@ -164,6 +171,61 @@ export class MongoDB {
     });
   }
 
+  /**
+   * Gets latest record for each match
+   */
+  public async getHighestResultRecords(_collectionName: string, _timestamp: number, _query: any): Promise<any[]> {
+    return new Promise<any[]>((fulfill, reject) => {
+      // fix for 210, as customLogic property slightly off in grade result parser
+      let groupQuery310 = {
+        _id: "$user",
+        username: {$first: "$user"},
+        deliverable: {$first: "$deliverable"},
+        projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
+        commit: {"$last": "$commit"},
+        submitted: {$first: "$timestamp"},        
+        // grade: {$max: "$report.tests.grade"},
+        // studentInfo: {$first: "$report.studentInfo"},
+        // customLogic: {$first: "$report.tests"}
+      };
+
+      let groupQuery210 = {
+        _id: "$user",
+        username: {$first: "$user"},
+        deliverable: {$first: "$deliverable"},
+        projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
+        commit: {"$last": "$commit"},
+        submitted: {$first: "$timestamp"},        
+        // grade: {$max: "$report.tests.grade"},
+        // studentInfo: {$first: "$report.studentInfo"},
+        // customLogic: {$first: "$report.tests.custom"}
+      };
+
+      let groupQuery: any = "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? groupQuery210 : groupQuery310;
+      groupQuery[_query.deliverable + 'max'] = {$max: "$report.tests.grade.finalGrade"};
+
+      console.log('maxQuery', _query);
+
+      try {
+        this.conn.then((db: mongodb.Db) => {
+          return db.collection(_collectionName)
+            .aggregate([
+              {$sort: {timestamp: 1}},
+              {$match: _query},
+              {$group: groupQuery}
+            ]).toArray((err: Error, results: any[]) => {
+              if (err) {
+                throw err;
+              }
+              fulfill(results);
+            });
+        });
+      }
+      catch (err) {
+        logger.error(`MongoDBClient::getLatestRecords() ${err}`);
+      }
+    });
+  }
 
   /**
    * Gets latest record for each match
@@ -175,20 +237,27 @@ export class MongoDB {
         _id: "$user",
         username: {"$last": "$user"},
         deliverable: {"$last": "$deliverable"},
-        studentInfo: {"$last": "$report.studentInfo"},
-        submitted: {'$last': "$timestamp"},
-        grade: {'$last': "$report.tests.grade"},
-        customLogic: {'$last': "$report.custom"}
+        projectUrl: {"$last": "$report.studentInfo.projectUrl"},        
+        commit: {"$last": "$commit"},    
+        submitted: {'$last': "$timestamp"},        
+        // studentInfo: {"$last": "$report.studentInfo"},
+        // grade: {'$last': "$report.tests.grade"},
+        // customLogic: {'$last': "$report.custom"}
       };
       let groupQuery210 = {
         _id: "$user",
         username: {"$last": "$user"},
         deliverable: {"$last": "$deliverable"},
-        studentInfo: {"$last": "$report.studentInfo"},
-        submitted: {'$last': "$timestamp"},
-        grade: {'$last': "$report.tests.grade"},
-        customLogic: {'$last': "$report.tests.custom"}
+        projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
+        commit: {"$last": "$commit"},
+        submitted: {'$last': "$timestamp"},        
+        // studentInfo: {"$last": "$report.studentInfo"},
+        // grade: {'$last': "$report.tests.grade"},
+        // customLogic: {'$last': "$report.tests.custom"}
       };
+
+      let groupQuery: any = "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? groupQuery210 : groupQuery310;
+      groupQuery[_query.deliverable + 'last'] = {'$last': "$report.tests.grade.finalGrade"};
 
       try {
         this.conn.then((db: mongodb.Db) => {
@@ -196,7 +265,7 @@ export class MongoDB {
             .aggregate([
               {$match: _query},
               {$sort: {timestamp: 1}},
-              {$group: "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? groupQuery210 : groupQuery310}
+              {$group: groupQuery}
             ]).toArray((err: Error, results: any[]) => {
               if (err) {
                 throw err;

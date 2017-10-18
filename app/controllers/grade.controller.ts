@@ -351,7 +351,6 @@ function getGradesFromResults(payload: any) {
       // queries the highest grade and last grade, then merges both per user
       if (!payload.allDeliverables) {
 
-
         timestamp = new Date(deliverable.close.toString()).getTime();
         return db.getLatestResultRecords('results', timestamp, {
           orgName:     course.githubOrg,
@@ -401,7 +400,7 @@ function getGradesFromResults(payload: any) {
               index = j;
               timestamp = new Date(deliverables[index].close.toString()).getTime();
 
-              let resultRecordsForDeliv = db.getLatestResultRecords('results', timestamp, {
+              let latestResultRecordsForDeliv = db.getLatestResultRecords('results', timestamp, {
                 orgName:     course.githubOrg,
                 report:      {'$ne': REPORT_FAILED_FLAG},
                 deliverable: deliverableNames[i],
@@ -410,7 +409,18 @@ function getGradesFromResults(payload: any) {
                 .then((result: any[]) => {
                   return result;
                 });
-              allDelivQueries.push(resultRecordsForDeliv);
+
+              let highestResultRecordsForDeliv = db.getHighestResultRecords('results', timestamp, {
+                orgName:     course.githubOrg,
+                report:      {'$ne': REPORT_FAILED_FLAG},
+                deliverable: deliverableNames[i],
+                timestamp:   {'$lte': timestamp}
+              })
+                .then((result: any[]) => {
+                  return result;
+                });
+              allDelivQueries.push(highestResultRecordsForDeliv);
+              allDelivQueries.push(latestResultRecordsForDeliv);
             }
           }
         }
@@ -420,7 +430,6 @@ function getGradesFromResults(payload: any) {
       }
     })
     .then((results) => {
-      console.log(results);
       // if multiple arrays from allDelivQueries, combine them
       if (results.length > 0) {
         let concatedArray: any = [];
@@ -433,84 +442,109 @@ function getGradesFromResults(payload: any) {
       }
     })
     .then((results) => {
-      // add CSID and SNUM info
-      for (let i = 0; i < course.classList.length; i++) {
-        let classListItem: IUserDocument = course.classList[i] as IUserDocument;
-        let classListUsername = String(classListItem.username.toLowerCase());
-        for (let j = 0; j < results.length; j++) {
-          let resultsUsername = String(results[j].username).toLowerCase();
-          if (resultsUsername === classListUsername) {
-            results[j].csid = classListItem.csid;
-            results[j].snum = classListItem.snum;
-            results[j].lname = classListItem.lname;
-            results[j].fname = classListItem.fname;
-
-            // convert timestamp to legible date
-            results[j].submitted = new Date(results[j].submitted - UNIX_TIMESTAMP_DIFFERENCE).toString();
-          }
+      // render and clean data for front-end
+      Object.keys(results).forEach((key) => {
+        if (results[key].hasOwnProperty('submitted')) {
+          delete results[key]['submitted'];
         }
-      }
+        if (results[key].hasOwnProperty('_id')) {
+          delete results[key]['_id'];
+        }
+        if (results[key].hasOwnProperty('grade')) {
+          delete results[key]['grade'];
+        }
+        if (results[key].hasOwnProperty('deliverable')) {
+          delete results[key]['deliverable'];
+        }
+        if (results[key].hasOwnProperty('projectUrl') && results[key].hasOwnProperty('commit')) {
+          let appendage = '/commit/' + results[key].commit;
+          delete results[key]['commit'];          
+          results[key].projectUrl = String(results[key].projectUrl).replace('.git', '').replace('<token>@', '') 
+            + appendage;
+        }
+      });
+      console.log(results);
       return results;
-    })
-    .then((results: any) => {
-      // finally, convert to CSV based on class number and map to Interface type
-      // skim report to bare essentials if payload.gradeOnly is 'true'
-
-      const CSV_COLUMNS_210 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
-        'finalGrade', 'deliverableWeight', 'coverageGrade', 'testingGrade', 'coverageWeight',
-        'testingWeight', 'coverageMethodWeight', 'coverageLineWeight', 'coverageBranchWeight', 'githubUrl'];
-      const CSV_COLUMNS_310 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
-        'finalGrade', 'deliverableWeight', 'passPercent', 'passCount', 'failCount', 'skipCount',
-        'passNames', 'failNames', 'skipNames', 'githubUrl'];
-      const CSV_COLUMNS_GRADE_ONLY = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'finalGrade'];
-      let csvArray: any = [];
-
-        if (payload.courseId === '210' && payload.gradeOnly === false) {
-          for (let i = 0; i < results.length; i++) {
-            let r = results[i];
-            let custom = r.customLogic;
-            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted, 
-              r.grade.finalGrade, r.grade.deliveableWeight, custom.coverageGrade, custom.testingGrade, 
-              custom.coverageWeight, custom.testingWeight, custom.coverageMethodWeight, 
-              custom.coverageLineWeight, custom.coverageBranchWeight, r.studentInfo.projectUrl]);
-          }
-          csvArray.unshift(CSV_COLUMNS_210);          
-        } else if (payload.courseId === '310' && payload.gradeOnly === false) {
-          for (let i = 0; i < results.length; i++) {
-            let r = results[i];
-            let stats = r.customLogic.testStats;
-            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted, 
-              r.grade.finalGrade, r.grade.deliverableWeight, stats.passPercent, stats.passCount, 
-              stats.failCount, stats.skipCount,
-              stats.passNames.length === 0 ? '' : stats.passNames.join(';'), 
-              stats.failNames.length === 0 ? '' : stats.failNames.join(';'), 
-              stats.skipNames.length === 0 ? '' : stats.skipNames.join(';'),
-              r.studentInfo.projectUrl]);
-          }
-          csvArray = sortArrayByLastName(csvArray);          
-          csvArray.unshift(CSV_COLUMNS_310);          
-        } else {
-          for (let i = 0; i < results.length; i++) {
-            let r = results[i];
-            let stats = r.customLogic.testStats;
-            csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, 
-              r.grade.finalGrade]);
-          }
-          csvArray = sortArrayByLastName(csvArray);
-          csvArray.unshift(CSV_COLUMNS_GRADE_ONLY);
-        }
-      
-      // generate and return csv
-      // return results;
-      // return csvGenerate(csvArray);
-      return csvArray;
-    })
-    .then((csvArray: any[]) => {
-      if (payload.format === CSV_FORMAT_FLAG) {
-        return csvGenerate(csvArray);        
-      }
-      return csvArray;
     });
+    // .then((results) => {
+    //   // add CSID and SNUM info
+    //   for (let i = 0; i < course.classList.length; i++) {
+    //     let classListItem: IUserDocument = course.classList[i] as IUserDocument;
+    //     let classListUsername = String(classListItem.username.toLowerCase());
+    //     for (let j = 0; j < results.length; j++) {
+    //       let resultsUsername = String(results[j].username).toLowerCase();
+    //       if (resultsUsername === classListUsername) {
+    //         results[j].csid = classListItem.csid;
+    //         results[j].snum = classListItem.snum;
+    //         results[j].lname = classListItem.lname;
+    //         results[j].fname = classListItem.fname;
+
+    //         // convert timestamp to legible date
+    //         results[j].submitted = new Date(results[j].submitted - UNIX_TIMESTAMP_DIFFERENCE).toString();
+    //       }
+    //     }
+    //   }
+    //   return results;
+    // })
+    // .then((results: any) => {
+    //   // finally, convert to CSV based on class number and map to Interface type
+    //   // skim report to bare essentials if payload.gradeOnly is 'true'
+
+    //   const CSV_COLUMNS_210 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
+    //     'finalGrade', 'deliverableWeight', 'coverageGrade', 'testingGrade', 'coverageWeight',
+    //     'testingWeight', 'coverageMethodWeight', 'coverageLineWeight', 'coverageBranchWeight', 'githubUrl'];
+    //   const CSV_COLUMNS_310 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
+    //     'finalGrade', 'deliverableWeight', 'passPercent', 'passCount', 'failCount', 'skipCount',
+    //     'passNames', 'failNames', 'skipNames', 'githubUrl'];
+    //   const CSV_COLUMNS_GRADE_ONLY = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'finalGrade'];
+    //   let csvArray: any = [];
+
+    //     if (payload.courseId === '210' && payload.gradeOnly === false) {
+    //       for (let i = 0; i < results.length; i++) {
+    //         let r = results[i];
+    //         let custom = r.customLogic;
+    //         csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted, 
+    //           r.grade.finalGrade, r.grade.deliveableWeight, custom.coverageGrade, custom.testingGrade, 
+    //           custom.coverageWeight, custom.testingWeight, custom.coverageMethodWeight, 
+    //           custom.coverageLineWeight, custom.coverageBranchWeight, r.studentInfo.projectUrl]);
+    //       }
+    //       csvArray.unshift(CSV_COLUMNS_210);          
+    //     } else if (payload.courseId === '310' && payload.gradeOnly === false) {
+    //       for (let i = 0; i < results.length; i++) {
+    //         let r = results[i];
+    //         let stats = r.customLogic.testStats;
+    //         csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted, 
+    //           r.grade.finalGrade, r.grade.deliverableWeight, stats.passPercent, stats.passCount, 
+    //           stats.failCount, stats.skipCount,
+    //           stats.passNames.length === 0 ? '' : stats.passNames.join(';'), 
+    //           stats.failNames.length === 0 ? '' : stats.failNames.join(';'), 
+    //           stats.skipNames.length === 0 ? '' : stats.skipNames.join(';'),
+    //           r.studentInfo.projectUrl]);
+    //       }
+    //       csvArray = sortArrayByLastName(csvArray);          
+    //       csvArray.unshift(CSV_COLUMNS_310);          
+    //     } else {
+    //       for (let i = 0; i < results.length; i++) {
+    //         let r = results[i];
+    //         let stats = r.customLogic.testStats;
+    //         csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, 
+    //           r.grade.finalGrade]);
+    //       }
+    //       csvArray = sortArrayByLastName(csvArray);
+    //       csvArray.unshift(CSV_COLUMNS_GRADE_ONLY);
+    //     }
+      
+    //   // generate and return csv
+    //   // return results;
+    //   // return csvGenerate(csvArray);
+    //   return csvArray;
+    // })
+    // .then((csvArray: any[]) => {
+    //   if (payload.format === CSV_FORMAT_FLAG) {
+    //     return csvGenerate(csvArray);        
+    //   }
+    //   return csvArray;
+    // });
 }
 
 function sortArrayByLastName(csvArray: any[]) {
