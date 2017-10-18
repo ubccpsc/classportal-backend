@@ -118,69 +118,69 @@ export class MongoDB {
     });
   }
 
-  /**
-   * Gets latest record for each match
-   */
-  public async getResultRecordsHighestGrade(_collectionName: string, _timestamp: number, _query: any): Promise<any[]> {
-    return new Promise<any[]>((fulfill, reject) => {
-      // fix for 210, as customLogic property slightly off in grade result parser
-      let groupQuery310 = {
-        _id: "$user",
-        username: {"$last": "$user"},
-        projectUrl: {"$last": "$report.studentInfo.projectUrl"},        
-        delivId: {"$last": "$deliverable"},
-        gradeValue: {'$max': "$report.tests.grade.finalGrade"},
-        commit: {"$last": "$commit"},
-        submitted: {'$last': "$timestamp"},        
-        // grade: {'$max': "$report.tests.grade"},
-        // studentInfo: {"$last": "$report.studentInfo"},
-        // customLogic: {'$last': "$report.custom"}
-      };
-      let groupQuery210 = {
-        _id: "$user",
-        username: {"$last": "$user"},
-        projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
-        delivId: {"$last": "$deliverable"},
-        gradeValue: {'$max': "$report.tests.grade.finalGrade"},
-        commit: {"$last": "$commit"},
-        submitted: {'$last': "$timestamp"},
-        // grade: {'$max': "$report.tests.grade"},
-        // studentInfo: {"$last": "$report.studentInfo"},
-        // customLogic: {'$last': "$report.tests.custom"}
-      };
+  // /**
+  //  * Gets latest record for each match
+  //  */
+  // public async getResultRecordsHighestGrade(_collectionName: string, _timestamp: number, _query: any): Promise<any[]> {
+  //   return new Promise<any[]>((fulfill, reject) => {
+  //     // fix for 210, as customLogic property slightly off in grade result parser
+  //     let groupQuery310 = {
+  //       _id: "$user",
+  //       username: {"$last": "$user"},
+  //       projectUrl: {"$last": "$report.studentInfo.projectUrl"},        
+  //       delivId: {"$last": "$deliverable"},
+  //       gradeValue: {'$max': "$report.tests.grade.finalGrade"},
+  //       commit: {"$last": "$commit"},
+  //       submitted: {'$last': "$timestamp"},        
+  //       // grade: {'$max': "$report.tests.grade"},
+  //       // studentInfo: {"$last": "$report.studentInfo"},
+  //       // customLogic: {'$last': "$report.custom"}
+  //     };
+  //     let groupQuery210 = {
+  //       _id: "$user",
+  //       username: {"$last": "$user"},
+  //       projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
+  //       delivId: {"$last": "$deliverable"},
+  //       gradeValue: {'$max': "$report.tests.grade.finalGrade"},
+  //       commit: {"$last": "$commit"},
+  //       submitted: {'$last': "$timestamp"},
+  //       // grade: {'$max': "$report.tests.grade"},
+  //       // studentInfo: {"$last": "$report.studentInfo"},
+  //       // customLogic: {'$last': "$report.tests.custom"}
+  //     };
 
-      let groupQuery: any = "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? groupQuery210 : groupQuery310;
-      // groupQuery[_query.deliverable + 'Max'] = {'$last': "$report.tests.grade.finalGrade"};
+  //     let groupQuery: any = "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? groupQuery210 : groupQuery310;
+  //     // groupQuery[_query.deliverable + 'Max'] = {'$last': "$report.tests.grade.finalGrade"};
 
-      try {
-        this.conn.then((db: mongodb.Db) => {
-          return db.collection(_collectionName)
-            .aggregate([
-              {$match: _query},
-              {$sort: {timestamp: 1}},
-              {$group: groupQuery},
-              {$project: {
-                username: 1,
-                delivId: 1,
-                gradeKey: _query.deliverable + 'Max',
-                gradeValue: 1,
-                projectUrl: 1,
-                commit: 1,
-                submitted: 1,
-              }},
-            ]).toArray((err: Error, results: any[]) => {
-              if (err) {
-                throw err;
-              }
-              fulfill(results);
-            });
-        });
-      }
-      catch (err) {
-        logger.error(`MongoDBClient::getLatestRecords() ${err}`);
-      }
-    });
-  }
+  //     try {
+  //       this.conn.then((db: mongodb.Db) => {
+  //         return db.collection(_collectionName)
+  //           .aggregate([
+  //             {$match: _query},
+  //             {$sort: {timestamp: 1}},
+  //             {$group: groupQuery},
+  //             {$project: {
+  //               username: 1,
+  //               delivId: 1,
+  //               gradeKey: _query.deliverable + 'Max',
+  //               gradeValue: 1,
+  //               projectUrl: 1,
+  //               commit: 1,
+  //               submitted: 1,
+  //             }},
+  //           ]).toArray((err: Error, results: any[]) => {
+  //             if (err) {
+  //               throw err;
+  //             }
+  //             fulfill(results);
+  //           });
+  //       });
+  //     }
+  //     catch (err) {
+  //       logger.error(`MongoDBClient::getLatestRecords() ${err}`);
+  //     }
+  //   });
+  // }
 
   /**
    * Gets latest record for each match
@@ -190,12 +190,12 @@ export class MongoDB {
       // fix for 210, as customLogic property slightly off in grade result parser
       let groupQuery310 = {
         _id: "$user",
-        username: {$first: "$user"},
-        delivId: {$first: "$deliverable"},
+        username: {$last: "$user"},
+        delivId: {$last: "$deliverable"},
         gradeValue: {$max: "$report.tests.grade.finalGrade"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
         commit: {"$last": "$commit"},
-        submitted: {$first: "$timestamp"},        
+        submitted: {$last: "$timestamp"},        
         // grade: {$max: "$report.tests.grade"},
         // studentInfo: {$first: "$report.studentInfo"},
         // customLogic: {$first: "$report.tests"}
@@ -203,12 +203,12 @@ export class MongoDB {
 
       let groupQuery210 = {
         _id: "$user",
-        username: {$first: "$user"},
-        delivId: {$first: "$deliverable"},
+        username: {$last: "$user"},
+        delivId: {$last: "$deliverable"},
         gradeValue: {$max: "$report.tests.grade.finalGrade"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
         commit: {"$last": "$commit"},
-        submitted: {$first: "$timestamp"},        
+        submitted: {$last: "$timestamp"},        
         // grade: {$max: "$report.tests.grade"},
         // studentInfo: {$first: "$report.studentInfo"},
         // customLogic: {$first: "$report.tests.custom"}
@@ -237,6 +237,7 @@ export class MongoDB {
               if (err) {
                 throw err;
               }
+              console.log('special results');
               fulfill(results);
             });
         });
@@ -258,7 +259,7 @@ export class MongoDB {
         username: {"$last": "$user"},
         delivId: {"$last": "$deliverable"},
         gradeValue: {'$last': "$report.tests.grade.finalGrade"},
-        projectUrl: {"$last": "$report.studentInfo.projectUrl"},        
+        projectUrl: {"$last": "$report.studentInfo.projectUrl"},
         commit: {"$last": "$commit"},    
         submitted: {'$last': "$timestamp"},        
         // studentInfo: {"$last": "$report.studentInfo"},
