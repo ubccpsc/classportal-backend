@@ -128,7 +128,8 @@ export class MongoDB {
         _id: "$user",
         username: {"$last": "$user"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},        
-        deliverable: {"$last": "$deliverable"},
+        delivId: {"$last": "$deliverable"},
+        gradeValue: {'$max': "$report.tests.grade.finalGrade"},
         commit: {"$last": "$commit"},
         submitted: {'$last': "$timestamp"},        
         // grade: {'$max': "$report.tests.grade"},
@@ -139,7 +140,8 @@ export class MongoDB {
         _id: "$user",
         username: {"$last": "$user"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
-        deliverable: {"$last": "$deliverable"},
+        delivId: {"$last": "$deliverable"},
+        gradeValue: {'$max': "$report.tests.grade.finalGrade"},
         commit: {"$last": "$commit"},
         submitted: {'$last': "$timestamp"},
         // grade: {'$max': "$report.tests.grade"},
@@ -148,7 +150,7 @@ export class MongoDB {
       };
 
       let groupQuery: any = "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? groupQuery210 : groupQuery310;
-      groupQuery[_query.deliverable + 'max'] = {'$last': "$report.tests.grade.finalGrade"};
+      // groupQuery[_query.deliverable + 'Max'] = {'$last': "$report.tests.grade.finalGrade"};
 
       try {
         this.conn.then((db: mongodb.Db) => {
@@ -156,7 +158,16 @@ export class MongoDB {
             .aggregate([
               {$match: _query},
               {$sort: {timestamp: 1}},
-              {$group: groupQuery}
+              {$group: groupQuery},
+              {$project: {
+                username: 1,
+                delivId: 1,
+                gradeKey: _query.deliverable + 'Max',
+                gradeValue: 1,
+                projectUrl: 1,
+                commit: 1,
+                submitted: 1,
+              }},
             ]).toArray((err: Error, results: any[]) => {
               if (err) {
                 throw err;
@@ -180,7 +191,8 @@ export class MongoDB {
       let groupQuery310 = {
         _id: "$user",
         username: {$first: "$user"},
-        deliverable: {$first: "$deliverable"},
+        delivId: {$first: "$deliverable"},
+        gradeValue: {$max: "$report.tests.grade.finalGrade"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
         commit: {"$last": "$commit"},
         submitted: {$first: "$timestamp"},        
@@ -192,7 +204,8 @@ export class MongoDB {
       let groupQuery210 = {
         _id: "$user",
         username: {$first: "$user"},
-        deliverable: {$first: "$deliverable"},
+        delivId: {$first: "$deliverable"},
+        gradeValue: {$max: "$report.tests.grade.finalGrade"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
         commit: {"$last": "$commit"},
         submitted: {$first: "$timestamp"},        
@@ -202,9 +215,7 @@ export class MongoDB {
       };
 
       let groupQuery: any = "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? groupQuery210 : groupQuery310;
-      groupQuery[_query.deliverable + 'max'] = {$max: "$report.tests.grade.finalGrade"};
-
-      console.log('maxQuery', _query);
+      // groupQuery[_query.deliverable + 'Max'] = {$max: "$report.tests.grade.finalGrade"};
 
       try {
         this.conn.then((db: mongodb.Db) => {
@@ -212,7 +223,16 @@ export class MongoDB {
             .aggregate([
               {$sort: {timestamp: 1}},
               {$match: _query},
-              {$group: groupQuery}
+              {$group: groupQuery},
+              {$project: {
+                username: 1,
+                delivId: 1,
+                gradeKey: _query.deliverable + 'Max',
+                gradeValue: 1,
+                projectUrl: 1,
+                commit: 1,
+                submitted: 1,
+              }},
             ]).toArray((err: Error, results: any[]) => {
               if (err) {
                 throw err;
@@ -236,7 +256,8 @@ export class MongoDB {
       let groupQuery310 = {
         _id: "$user",
         username: {"$last": "$user"},
-        deliverable: {"$last": "$deliverable"},
+        delivId: {"$last": "$deliverable"},
+        gradeValue: {'$last': "$report.tests.grade.finalGrade"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},        
         commit: {"$last": "$commit"},    
         submitted: {'$last': "$timestamp"},        
@@ -247,17 +268,18 @@ export class MongoDB {
       let groupQuery210 = {
         _id: "$user",
         username: {"$last": "$user"},
-        deliverable: {"$last": "$deliverable"},
+        delivId: {"$last": "$deliverable"},
+        gradeValue: {'$last': "$report.tests.grade.finalGrade"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
         commit: {"$last": "$commit"},
-        submitted: {'$last': "$timestamp"},        
+        submitted: {'$last': "$timestamp"},
         // studentInfo: {"$last": "$report.studentInfo"},
         // grade: {'$last': "$report.tests.grade"},
         // customLogic: {'$last': "$report.tests.custom"}
       };
 
       let groupQuery: any = "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? groupQuery210 : groupQuery310;
-      groupQuery[_query.deliverable + 'last'] = {'$last': "$report.tests.grade.finalGrade"};
+      // groupQuery[_query.deliverable + 'Last'] = {'$last': "$report.tests.grade.finalGrade"};
 
       try {
         this.conn.then((db: mongodb.Db) => {
@@ -265,7 +287,16 @@ export class MongoDB {
             .aggregate([
               {$match: _query},
               {$sort: {timestamp: 1}},
-              {$group: groupQuery}
+              {$group: groupQuery},
+              {$project: {
+                username: 1,
+                delivId: 1,
+                gradeKey: _query.deliverable + 'Last',
+                gradeValue: 1,
+                projectUrl: 1,
+                commit: 1,
+                submitted: 1,
+              }},
             ]).toArray((err: Error, results: any[]) => {
               if (err) {
                 throw err;
