@@ -483,8 +483,9 @@ function getGradesFromResults(payload: any) {
             let mappedObj: GradeRow = {
               userName: results[key].username,
               commitUrl: results[key].commitUrl,
-              delivKey: results[key].gradeKey,
-              delivValue: results[key].gradeValue,
+              gradeKey: results[key].gradeKey,
+              gradeValue: results[key].gradeValue,              
+              delivId: results[key].delivId,
               projectUrl:  results[key].projectUrl,
               projectName:  results[key].projectName,
               sNum: results[key].snum,
@@ -645,7 +646,6 @@ function mapGradesToUsersForTeams(_course: ICourseDocument, _results: any) {
         // for every result record entry, check for matching delivIds and store latest / highest item.
         Object.keys(results).forEach(key => {
 
-          let result: any = results[key];
           let delivId = String(results[key].delivId);
           let gradeKey = String(results[key].gradeKey);
 

@@ -5,8 +5,9 @@ export interface GradePayloadContainer {
 export interface GradeRow {
   userName: string; // cwl
   commitUrl: string; // full URL to commit corresponding to the row
-  delivKey: string; // deliverable name (e.g., d0)
-  delivValue: string; // score for deliverable key (use string rep for flexibility)
+  gradeKey: string; // deliverable name (e.g., d0)
+  gradeValue: string; // score for deliverable key (use string rep for flexibility)
+  delivId: string;
   projectUrl: string; // full URL to project
   projectName: string; // string name for project (e.g., cpsc310_team22)
   sNum: string; // may be removed in future
