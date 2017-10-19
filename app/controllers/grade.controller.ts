@@ -6,6 +6,7 @@ import {Deliverable, IDeliverableDocument} from '../models/deliverable.model';
 import {User, IUserDocument} from '../models/user.model';
 import {Grade, IGradeDocument} from '../models/grade.model';
 import {config} from '../../config/env';
+import {GradePayloadContainer, GradeRow, GradeDetail} from '../interfaces/ui/grade.interface';
 import db, {Database} from '../db/MongoDBClient';
 import * as parse from 'csv-parse';
 import mongodb = require('mongodb');
@@ -298,9 +299,7 @@ function getReleasedGradesByCourse(req: any) {
  */
 function getGradesFromResults(payload: any) {
 
-  // 7 hour time difference in production
   const REPORT_FAILED_FLAG: string = 'REPORT_FAILED';
-  const UNIX_TIMESTAMP_DIFFERENCE: number = 25200000;
   const CSV_FORMAT_FLAG = 'csv';
 
   let teams: ITeamDocument;
@@ -446,20 +445,10 @@ function getGradesFromResults(payload: any) {
     .then((results) => {
       // render and clean data for front-end
       Object.keys(results).forEach((key) => {
-        if (results[key].hasOwnProperty('_id')) {
-          delete results[key]['_id'];
-        }
-        if (results[key].hasOwnProperty('grade')) {
-          delete results[key]['grade'];
-        }
-        if (results[key].hasOwnProperty('deliverable')) {
-          delete results[key]['deliverable'];
-        }
         if (results[key].hasOwnProperty('projectUrl') && results[key].hasOwnProperty('commit')) {
           let appendage = '/commit/' + results[key].commit;
-          delete results[key]['commit'];          
-          results[key].projectUrl = String(results[key].projectUrl).replace('.git', '').replace('<token>@', '') 
-            + appendage;
+          results[key].projectUrl = String(results[key].projectUrl).replace('.git', '').replace('<token>@', '');
+          results[key].commitUrl = results[key].projectUrl + appendage;
         }
 
         // add in lname, fname, labId, snum
@@ -485,14 +474,31 @@ function getGradesFromResults(payload: any) {
           }
         }
       });
-      return mapGradesToUsersForTeamsMarkByBatch(course, results)
+      return mapGradesToUsersForTeams(course, results)
         .then((results) => {
+          let mappedResults: object[] = [];
+          // Map to UI Interface
           Object.keys(results).forEach((key) => {
-            if (results[key].hasOwnProperty('submitted')) {
-              delete results[key]['submitted'];
-            }
+
+            let mappedObj: GradeRow = {
+              userName: results[key].username,
+              commitUrl: results[key].commitUrl,
+              delivKey: results[key].gradeKey,
+              delivValue: results[key].gradeValue,
+              projectUrl:  results[key].projectUrl,
+              projectName:  results[key].projectName,
+              sNum: results[key].snum,
+              fName: results[key].fname,
+              lName: results[key].lname,
+              timeStamp: results[key].submitted,
+              labId: results[key].labId,
+              delivDetails: [], // UNIMPLEMENTED
+            };
+
+            mappedResults.push(mappedObj);
           });
-          return results;
+
+          return mappedResults;
         });
       // return results;
     });
@@ -577,15 +583,23 @@ function getGradesFromResults(payload: any) {
     // });
 }
 
-function mapGradesToUsersForTeamsMarkByBatch(_course: ICourseDocument, _results: any) {
+/**
+ * 
+ * @param _course The Course that you are getting the Grades for
+ * @param _results The results rendered from getGradesFromResults() so we can append marks based on Team
+ * @return Promise<any[]> Array of results, but with team marks merged
+ */
+function mapGradesToUsersForTeams(_course: ICourseDocument, _results: any) {
   let deliverables: IDeliverableDocument[];
   let delivIds: string[] = [];
   let teams: ITeamDocument[];
   let course: ICourseDocument = _course;
   let results: any = _results;
+  const MAX_GRADE_FLAG = 'Max';
+  const LAST_GRADE_FLAG = 'Last';
   const UNDEFINED_GRADE = 99999999999;
   
-  return Deliverable.find({markInBatch: true, courseId: _course._id})
+  return Deliverable.find({courseId: _course._id})
     .then((_delivs: IDeliverableDocument[]) => {
       if (_delivs) {
         deliverables = _delivs;
@@ -612,9 +626,8 @@ function mapGradesToUsersForTeamsMarkByBatch(_course: ICourseDocument, _results:
 
       // find highestGrade and lastGrade per team and then overwrite 
       // results that have delivMax and delivLast value matches
-      // must do this for each DELIV_ID from delivIds (contains all markByBatch delivs)
-      // ** ONLY TRIES TO UPDATE GRADE RESULTS THAT ACTUALLY EXIST**
-      // If a later deliverable is not released, it cannot update anything
+      // must do this for each DELIV_ID from delivIds 
+
       for (let DELIV_ID of delivIds) {
 
         for (let i = 0; i < teams.length; i++) {
@@ -637,11 +650,9 @@ function mapGradesToUsersForTeamsMarkByBatch(_course: ICourseDocument, _results:
           let gradeKey = String(results[key].gradeKey);
 
           if (delivId === DELIV_ID && teamMembers.indexOf(results[key].username) > -1) {
-            console.log('teamMembers indexOf', teamMembers.indexOf(results[key].username));
-            // push usernames to update afterwards to keysToUpdate
 
             // get the highest grade per team and deliverable
-            if (gradeKey.indexOf('Max') > -1) {
+            if (gradeKey.indexOf(MAX_GRADE_FLAG) > -1) {
               if (highestGrade < results[key].gradeValue) {
                 highestGrade = results[key].gradeValue;
               }
@@ -649,20 +660,18 @@ function mapGradesToUsersForTeamsMarkByBatch(_course: ICourseDocument, _results:
               keysToUpdateForMax.push(key);              
             }
 
-            if (gradeKey.indexOf('Last') > -1) {
+            if (gradeKey.indexOf(LAST_GRADE_FLAG) > -1) {
               if (lastSubmitted < results[key].submitted) {
                 lastGrade = results[key].gradeValue;
                 lastSubmitted = results[key].submitted;
               }
+              // push keys to update afterwards to for last grade Results
               keysToUpdateForLast.push(key);
             }
           }
         });
           
         // update grade with highest grade for each student on team
-        console.log('keys to update starting');
-        console.log('confirming keysToUpdate length', keysToUpdateForMax.length);
-
         for (let k = 0; k < keysToUpdateForMax.length; k++) {
           console.log('updating username with ' + results[keysToUpdateForMax[k]].username + ' ' + highestGrade);
           results[keysToUpdateForMax[k]].gradeValue = highestGrade;
@@ -672,7 +681,6 @@ function mapGradesToUsersForTeamsMarkByBatch(_course: ICourseDocument, _results:
           results[keysToUpdateForLast[k]].gradeValue = lastGrade;
         }
 
-        console.log('a single team', teamMembers);
         // clear teamMembers and keysToUpdate to prep for next Team iteration;
         keysToUpdateForMax = [];
         keysToUpdateForLast = [];
@@ -680,16 +688,10 @@ function mapGradesToUsersForTeamsMarkByBatch(_course: ICourseDocument, _results:
         highestGrade = 0;
         lastSubmitted = 0;
         lastGrade = UNDEFINED_GRADE;
-        console.log('highest grade cleared', highestGrade);
-        console.log('keys to update for Max cleaned', keysToUpdateForMax);
-        console.log('keys to update for Last cleaned', keysToUpdateForMax);        
-        console.log('team members cleared', teamMembers);
       }
-
-      }
-
+    }
       return results;
-    });
+  });
 }
 
 function sortArrayByLastName(csvArray: any[]) {

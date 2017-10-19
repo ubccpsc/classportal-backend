@@ -192,6 +192,7 @@ export class MongoDB {
         _id: "$user",
         username: {$last: "$user"},
         delivId: {$last: "$deliverable"},
+        projectName: {$last: "$team"},
         gradeValue: {$max: "$report.tests.grade.finalGrade"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
         commit: {"$last": "$commit"},
@@ -203,8 +204,9 @@ export class MongoDB {
 
       let groupQuery210 = {
         _id: "$user",
-        username: {$last: "$user"},
+        username: {$last: "$user"}, 
         delivId: {$last: "$deliverable"},
+        projectName: {$last: "$team"},
         gradeValue: {$max: "$report.tests.grade.finalGrade"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
         commit: {"$last": "$commit"},
@@ -221,12 +223,13 @@ export class MongoDB {
         this.conn.then((db: mongodb.Db) => {
           return db.collection(_collectionName)
             .aggregate([
-              {$sort: {timestamp: 1}},
-              {$match: _query},
+              {$match: _query},              
+              {$sort: {'report.tests.grade.finalGrade': 1}},
               {$group: groupQuery},
               {$project: {
                 username: 1,
                 delivId: 1,
+                projectName: 1,
                 gradeKey: _query.deliverable + 'Max',
                 gradeValue: 1,
                 projectUrl: 1,
@@ -258,9 +261,10 @@ export class MongoDB {
         _id: "$user",
         username: {"$last": "$user"},
         delivId: {"$last": "$deliverable"},
+        projectName: {$last: "$team"},
         gradeValue: {'$last': "$report.tests.grade.finalGrade"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},
-        commit: {"$last": "$commit"},    
+        commit: {"$last": "$commit"},
         submitted: {'$last': "$timestamp"},        
         // studentInfo: {"$last": "$report.studentInfo"},
         // grade: {'$last': "$report.tests.grade"},
@@ -270,6 +274,7 @@ export class MongoDB {
         _id: "$user",
         username: {"$last": "$user"},
         delivId: {"$last": "$deliverable"},
+        projectName: {$last: "$team"},
         gradeValue: {'$last': "$report.tests.grade.finalGrade"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
         commit: {"$last": "$commit"},
@@ -292,6 +297,7 @@ export class MongoDB {
               {$project: {
                 username: 1,
                 delivId: 1,
+                projectName: 1,
                 gradeKey: _query.deliverable + 'Last',
                 gradeValue: 1,
                 projectUrl: 1,
