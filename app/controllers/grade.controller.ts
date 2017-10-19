@@ -446,9 +446,6 @@ function getGradesFromResults(payload: any) {
     .then((results) => {
       // render and clean data for front-end
       Object.keys(results).forEach((key) => {
-        if (results[key].hasOwnProperty('submitted')) {
-          delete results[key]['submitted'];
-        }
         if (results[key].hasOwnProperty('_id')) {
           delete results[key]['_id'];
         }
@@ -490,6 +487,11 @@ function getGradesFromResults(payload: any) {
       });
       return mapGradesToUsersForTeamsMarkByBatch(course, results)
         .then((results) => {
+          Object.keys(results).forEach((key) => {
+            if (results[key].hasOwnProperty('submitted')) {
+              delete results[key]['submitted'];
+            }
+          });
           return results;
         });
       // return results;
@@ -581,13 +583,14 @@ function mapGradesToUsersForTeamsMarkByBatch(_course: ICourseDocument, _results:
   let teams: ITeamDocument[];
   let course: ICourseDocument = _course;
   let results: any = _results;
+  const UNDEFINED_GRADE = 99999999999;
   
   return Deliverable.find({markInBatch: true, courseId: _course._id})
     .then((_delivs: IDeliverableDocument[]) => {
       if (_delivs) {
         deliverables = _delivs;
         for (let i = 0; i < deliverables.length; i++) {
-          delivIds.push(deliverables[i].name);
+          delivIds.push(String(deliverables[i].name));
         }
         return _delivs;
       }
@@ -606,61 +609,85 @@ function mapGradesToUsersForTeamsMarkByBatch(_course: ICourseDocument, _results:
     })
     .then(() => {
       let teamMembers: string[] = [];
-      for (let i = 0; i < teams.length; i++) {
 
-        // find highestGrade and lastGrade per team and then overwrite 
-        // results that have delivMax and delivLast value matches
+      // find highestGrade and lastGrade per team and then overwrite 
+      // results that have delivMax and delivLast value matches
+      // must do this for each DELIV_ID from delivIds (contains all markByBatch delivs)
+      // ** ONLY TRIES TO UPDATE GRADE RESULTS THAT ACTUALLY EXIST**
+      // If a later deliverable is not released, it cannot update anything
+      for (let DELIV_ID of delivIds) {
+
+        for (let i = 0; i < teams.length; i++) {
+          
         let highestGrade: number = 0;
-        let lastGrade: number = 0;
-        let keysToUpdate: string[] = [];        
-
+        let lastGrade: number = UNDEFINED_GRADE;
+        let lastSubmitted: number = 0;
+        let keysToUpdateForMax: string[] = []; 
+        let keysToUpdateForLast: string[] = [];
+          
         for (let j = 0; j < teams[i].members.length; j++) {
           teamMembers.push(teams[i].members[j].username);
         }
-
-        console.log('confirm team members length', teamMembers.length);
-
+          
         // for every result record entry, check for matching delivIds and store latest / highest item.
         Object.keys(results).forEach(key => {
+
+          let result: any = results[key];
           let delivId = String(results[key].delivId);
           let gradeKey = String(results[key].gradeKey);
 
-          if (delivIds.indexOf(delivId) > -1 && teamMembers.indexOf(results[key].username) > -1) {
+          if (delivId === DELIV_ID && teamMembers.indexOf(results[key].username) > -1) {
             console.log('teamMembers indexOf', teamMembers.indexOf(results[key].username));
             // push usernames to update afterwards to keysToUpdate
-            keysToUpdate.push(key);
 
-            // get the highets grade per team and deliverable
-            if (highestGrade < results[key].gradeValue && gradeKey.indexOf('Max') > -1) {
-              highestGrade = results[key].gradeValue;
+            // get the highest grade per team and deliverable
+            if (gradeKey.indexOf('Max') > -1) {
+              if (highestGrade < results[key].gradeValue) {
+                highestGrade = results[key].gradeValue;
+              }
+              // based on DELIV_ID, username, and 'Max' in Results flag matching, push to update
+              keysToUpdateForMax.push(key);              
             }
 
-            // handle the last grade logic
-            // HOW DO WE FIND LAST GRADE OUT OF THESE RESULTS? DO THEY HAVE AN ORDER?
-            // if (lastGrade < ) {
-
-            // }
+            if (gradeKey.indexOf('Last') > -1) {
+              if (lastSubmitted < results[key].submitted) {
+                lastGrade = results[key].gradeValue;
+                lastSubmitted = results[key].submitted;
+              }
+              keysToUpdateForLast.push(key);
+            }
           }
         });
-
+          
         // update grade with highest grade for each student on team
         console.log('keys to update starting');
-        console.log('confirming keysToUpdate length', keysToUpdate.length);
+        console.log('confirming keysToUpdate length', keysToUpdateForMax.length);
 
-        for (let k = 0; k < keysToUpdate.length; k++) {
-          console.log('updating username with ' + results[keysToUpdate[k]].username + ' ' + highestGrade);
-          results[keysToUpdate[k]].gradeValue = highestGrade;
+        for (let k = 0; k < keysToUpdateForMax.length; k++) {
+          console.log('updating username with ' + results[keysToUpdateForMax[k]].username + ' ' + highestGrade);
+          results[keysToUpdateForMax[k]].gradeValue = highestGrade;
         }
 
+        for (let k = 0; k < keysToUpdateForLast.length; k++) {
+          results[keysToUpdateForLast[k]].gradeValue = lastGrade;
+        }
 
+        console.log('a single team', teamMembers);
         // clear teamMembers and keysToUpdate to prep for next Team iteration;
-        keysToUpdate = [];        
+        keysToUpdateForMax = [];
+        keysToUpdateForLast = [];
         teamMembers = [];
         highestGrade = 0;
+        lastSubmitted = 0;
+        lastGrade = UNDEFINED_GRADE;
         console.log('highest grade cleared', highestGrade);
-        console.log('keys to updat cleaned', keysToUpdate);
+        console.log('keys to update for Max cleaned', keysToUpdateForMax);
+        console.log('keys to update for Last cleaned', keysToUpdateForMax);        
         console.log('team members cleared', teamMembers);
       }
+
+      }
+
       return results;
     });
 }
