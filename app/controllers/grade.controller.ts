@@ -1,6 +1,7 @@
 import * as restify from 'restify';
 import {logger} from '../../utils/logger';
 import {Course, ICourseDocument} from '../models/course.model';
+import {Team, ITeamDocument} from '../models/team.model';
 import {Deliverable, IDeliverableDocument} from '../models/deliverable.model';
 import {User, IUserDocument} from '../models/user.model';
 import {Grade, IGradeDocument} from '../models/grade.model';
@@ -302,6 +303,7 @@ function getGradesFromResults(payload: any) {
   const UNIX_TIMESTAMP_DIFFERENCE: number = 25200000;
   const CSV_FORMAT_FLAG = 'csv';
 
+  let teams: ITeamDocument;
   let course: ICourseDocument;
   let deliverables: IDeliverableDocument[];
   let deliverable: IDeliverableDocument;
@@ -486,8 +488,11 @@ function getGradesFromResults(payload: any) {
           }
         }
       });
-      console.log(results);
-      return results;
+      return mapGradesToUsersForTeamsMarkByBatch(course, results)
+        .then((results) => {
+          return results;
+        });
+      // return results;
     });
     // .then((results) => {
     //   // add CSID and SNUM info
@@ -568,6 +573,96 @@ function getGradesFromResults(payload: any) {
     //   }
     //   return csvArray;
     // });
+}
+
+function mapGradesToUsersForTeamsMarkByBatch(_course: ICourseDocument, _results: any) {
+  let deliverables: IDeliverableDocument[];
+  let delivIds: string[] = [];
+  let teams: ITeamDocument[];
+  let course: ICourseDocument = _course;
+  let results: any = _results;
+  
+  return Deliverable.find({markInBatch: true, courseId: _course._id})
+    .then((_delivs: IDeliverableDocument[]) => {
+      if (_delivs) {
+        deliverables = _delivs;
+        for (let i = 0; i < deliverables.length; i++) {
+          delivIds.push(deliverables[i].name);
+        }
+        return _delivs;
+      }
+      throw 'Cannot find Deliverables under markInBatch: true and Course ' + _course.courseId;
+    })
+    .then(() => {
+      return Team.find({courseId: _course._id, deliverableIds: {$exists: true}})
+        .populate('members')
+        .then((_teams: ITeamDocument[]) => {
+          if (_teams) {
+            teams = _teams;
+            return _teams;
+          }
+          throw `Could not find any Teams under course ${course.courseId} with deliverableIds property`; 
+        });
+    })
+    .then(() => {
+      let teamMembers: string[] = [];
+      for (let i = 0; i < teams.length; i++) {
+
+        // find highestGrade and lastGrade per team and then overwrite 
+        // results that have delivMax and delivLast value matches
+        let highestGrade: number = 0;
+        let lastGrade: number = 0;
+        let keysToUpdate: string[] = [];        
+
+        for (let j = 0; j < teams[i].members.length; j++) {
+          teamMembers.push(teams[i].members[j].username);
+        }
+
+        console.log('confirm team members length', teamMembers.length);
+
+        // for every result record entry, check for matching delivIds and store latest / highest item.
+        Object.keys(results).forEach(key => {
+          let delivId = String(results[key].delivId);
+          let gradeKey = String(results[key].gradeKey);
+
+          if (delivIds.indexOf(delivId) > -1 && teamMembers.indexOf(results[key].username) > -1) {
+            console.log('teamMembers indexOf', teamMembers.indexOf(results[key].username));
+            // push usernames to update afterwards to keysToUpdate
+            keysToUpdate.push(key);
+
+            // get the highets grade per team and deliverable
+            if (highestGrade < results[key].gradeValue && gradeKey.indexOf('Max') > -1) {
+              highestGrade = results[key].gradeValue;
+            }
+
+            // handle the last grade logic
+            // HOW DO WE FIND LAST GRADE OUT OF THESE RESULTS? DO THEY HAVE AN ORDER?
+            // if (lastGrade < ) {
+
+            // }
+          }
+        });
+
+        // update grade with highest grade for each student on team
+        console.log('keys to update starting');
+        console.log('confirming keysToUpdate length', keysToUpdate.length);
+
+        for (let k = 0; k < keysToUpdate.length; k++) {
+          console.log('updating username with ' + results[keysToUpdate[k]].username + ' ' + highestGrade);
+          results[keysToUpdate[k]].gradeValue = highestGrade;
+        }
+
+
+        // clear teamMembers and keysToUpdate to prep for next Team iteration;
+        keysToUpdate = [];        
+        teamMembers = [];
+        highestGrade = 0;
+        console.log('highest grade cleared', highestGrade);
+        console.log('keys to updat cleaned', keysToUpdate);
+        console.log('team members cleared', teamMembers);
+      }
+      return results;
+    });
 }
 
 function sortArrayByLastName(csvArray: any[]) {
