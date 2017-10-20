@@ -634,7 +634,9 @@ function mapGradesToUsersForTeams(_course: ICourseDocument, _results: any) {
         for (let i = 0; i < teams.length; i++) {
           
         let highestGrade: number = 0;
+        let highestCommit: string = null;
         let lastGrade: number = UNDEFINED_GRADE;
+        let lastCommit: string = null;
         let lastSubmitted: number = 0;
         let keysToUpdateForMax: string[] = []; 
         let keysToUpdateForLast: string[] = [];
@@ -655,6 +657,7 @@ function mapGradesToUsersForTeams(_course: ICourseDocument, _results: any) {
             if (gradeKey.indexOf(MAX_GRADE_FLAG) > -1) {
               if (highestGrade < results[key].gradeValue) {
                 highestGrade = results[key].gradeValue;
+                highestCommit = results[key].commit;
               }
               // based on DELIV_ID, username, and 'Max' in Results flag matching, push to update
               keysToUpdateForMax.push(key);              
@@ -663,6 +666,7 @@ function mapGradesToUsersForTeams(_course: ICourseDocument, _results: any) {
             if (gradeKey.indexOf(LAST_GRADE_FLAG) > -1) {
               if (lastSubmitted < results[key].submitted) {
                 lastGrade = results[key].gradeValue;
+                lastCommit = results[key].commit;
                 lastSubmitted = results[key].submitted;
               }
               // push keys to update afterwards to for last grade Results
@@ -673,11 +677,12 @@ function mapGradesToUsersForTeams(_course: ICourseDocument, _results: any) {
           
         // update grade with highest grade for each student on team
         for (let k = 0; k < keysToUpdateForMax.length; k++) {
-          console.log('updating username with ' + results[keysToUpdateForMax[k]].username + ' ' + highestGrade);
+          results[keysToUpdateForMax[k]].commit = highestCommit;
           results[keysToUpdateForMax[k]].gradeValue = highestGrade;
         }
 
         for (let k = 0; k < keysToUpdateForLast.length; k++) {
+          results[keysToUpdateForLast[k]].commit = lastCommit;
           results[keysToUpdateForLast[k]].gradeValue = lastGrade;
         }
 

@@ -240,7 +240,7 @@ export class MongoDB {
               if (err) {
                 throw err;
               }
-              console.log('special results');
+
               fulfill(results);
             });
         });
