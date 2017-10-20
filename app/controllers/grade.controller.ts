@@ -7,6 +7,8 @@ import {User, IUserDocument} from '../models/user.model';
 import {Grade, IGradeDocument} from '../models/grade.model';
 import {config} from '../../config/env';
 import {GradePayloadContainer, GradeRow, GradeDetail} from '../interfaces/ui/grade.interface';
+import {ResultRecord, ResultPayload, ResultPayloadContainer,
+  ResultDetail, Student} from '../interfaces/ui/result.interface';
 import db, {Database} from '../db/MongoDBClient';
 import * as parse from 'csv-parse';
 import mongodb = require('mongodb');
@@ -353,15 +355,12 @@ function getGradesFromResults(payload: any) {
       if (!payload.allDeliverables) {
 
         timestamp = new Date(deliverable.close.toString()).getTime();
-        return db.getLatestResultRecords('results', timestamp, {
+        return db.getAllResultRecords('results', timestamp, {
           orgName:     course.githubOrg,
-          report:      {'$ne': REPORT_FAILED_FLAG},
           deliverable: payload.deliverableName,
-          timestamp:   {'$lte': timestamp}
         })
-          .then((result: any[]) => {
-            singleDelivResults = result;
-            return result;
+          .then((results: any[]) => {
+            return results;
           });
       }
       return null;
@@ -401,27 +400,14 @@ function getGradesFromResults(payload: any) {
               index = j;
               timestamp = new Date(deliverables[index].close.toString()).getTime();
 
-              let latestResultRecordsForDeliv = db.getLatestResultRecords('results', timestamp, {
+              let allResultRecordsForDeliv = db.getAllResultRecords('results', timestamp, {
                 orgName:     course.githubOrg,
-                report:      {'$ne': REPORT_FAILED_FLAG},
                 deliverable: deliverableNames[i],
-                timestamp:   {'$lte': timestamp}
               })
-                .then((result: any[]) => {
-                  return result;
+                .then((results: any[]) => {
+                  return results;
                 });
-
-              let highestResultRecordsForDeliv = db.getHighestResultRecords('results', timestamp, {
-                orgName:     course.githubOrg,
-                report:      {'$ne': REPORT_FAILED_FLAG},
-                deliverable: deliverableNames[i],
-                timestamp:   {'$lte': timestamp}
-              })
-                .then((result: any[]) => {
-                  return result;
-                });
-              allDelivQueries.push(highestResultRecordsForDeliv);
-              allDelivQueries.push(latestResultRecordsForDeliv);
+              allDelivQueries.push(allResultRecordsForDeliv);
             }
           }
         }
@@ -444,6 +430,7 @@ function getGradesFromResults(payload: any) {
     })
     .then((results) => {
       // render and clean data for front-end
+
       Object.keys(results).forEach((key) => {
         if (results[key].hasOwnProperty('projectUrl') && results[key].hasOwnProperty('commit')) {
           let appendage = '/commit/' + results[key].commit;
@@ -453,8 +440,8 @@ function getGradesFromResults(payload: any) {
 
         // add in lname, fname, labId, snum
         // adds in labId *only if* user._id matches id listed under lab for a course
-        if (results[key].hasOwnProperty('username')) {
-          let username = String(results[key].username).toLowerCase();
+        if (results[key].hasOwnProperty('user')) {
+          let username = String(results[key].user).toLowerCase();
           let userId: IUserDocument;
           for (let i = 0; i < course.classList.length; i++) {
             let classListItem: IUserDocument = course.classList[i] as IUserDocument;
@@ -476,112 +463,58 @@ function getGradesFromResults(payload: any) {
       });
       return mapGradesToUsersForTeams(course, results)
         .then((results) => {
-          let mappedResults: object[] = [];
-          // Map to UI Interface
+          let mappedResults: ResultRecord[] = [];
           Object.keys(results).forEach((key) => {
-
-            let mappedObj: GradeRow = {
-              userName: results[key].username,
-              commitUrl: results[key].commitUrl,
-              gradeKey: results[key].gradeKey,
-              gradeValue: results[key].gradeValue,              
-              delivId: results[key].delivId,
-              projectUrl:  results[key].projectUrl,
-              projectName:  results[key].projectName,
-              sNum: results[key].snum,
-              fName: results[key].fname,
-              lName: results[key].lname,
-              timeStamp: results[key].submitted,
-              labId: results[key].labId,
-              delivDetails: [], // UNIMPLEMENTED
+            let resultDetail: ResultDetail[] = [];
+            let reportFailed: boolean = results[key].reportFailed;
+            let mappedObj: ResultRecord = {
+              userName: results[key].user,
+              commitUrl: results[key].commit,
+              projectName: results[key].team,
+              projectUrl: '',
+              branchName: results[key].ref,
+              gradeRequested: false,
+              delivId: results[key].deliverable,
+              grade: '0',
+              timeStamp: results[key].timestamp,
+              gradeDetails: resultDetail,
             };
-
+            if (results[key].reportFailed === true) {
+                mappedObj.grade = '0';
+            } else {
+              if (String(results[key].orgName) === 'CPSC210-2017W-T1' && reportFailed === false) {
+                mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
+              } else if (String(results[key].orgName) === 'CPSC310-2017W-T1' && reportFailed === false) {
+                console.log(results[key].report);
+                mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
+              }
+            }
             mappedResults.push(mappedObj);
           });
 
-          return mappedResults;
+          let students: Student[] = [];
+          let classList: IUserDocument[] = course.classList as IUserDocument[];
+          for (let student of classList) {
+            let s: Student = {
+              userName: student.username,
+              userUrl: '',
+              fName: student.fname,
+              lName: student.lname,
+              sNum: student.snum,
+              csId: student.csid,
+              labId: '',
+              TA: [''],
+            };
+            students.push(s);
+          }
+
+          let resultPayload: ResultPayload = {
+            students: students,
+            records: mappedResults,
+          };
+          return resultPayload;
         });
-      // return results;
     });
-    // .then((results) => {
-    //   // add CSID and SNUM info
-      // for (let i = 0; i < course.classList.length; i++) {
-      //   let classListItem: IUserDocument = course.classList[i] as IUserDocument;
-      //   let classListUsername = String(classListItem.username.toLowerCase());
-      //   for (let j = 0; j < results.length; j++) {
-      //     let resultsUsername = String(results[j].username).toLowerCase();
-      //     if (resultsUsername === classListUsername) {
-      //       results[j].csid = classListItem.csid;
-      //       results[j].snum = classListItem.snum;
-      //       results[j].lname = classListItem.lname;
-      //       results[j].fname = classListItem.fname;
-
-      //       // convert timestamp to legible date
-      //       results[j].submitted = new Date(results[j].submitted - UNIX_TIMESTAMP_DIFFERENCE).toString();
-      //     }
-      //   }
-    //   }
-    //   return results;
-    // })
-    // .then((results: any) => {
-    //   // finally, convert to CSV based on class number and map to Interface type
-    //   // skim report to bare essentials if payload.gradeOnly is 'true'
-
-    //   const CSV_COLUMNS_210 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
-    //     'finalGrade', 'deliverableWeight', 'coverageGrade', 'testingGrade', 'coverageWeight',
-    //     'testingWeight', 'coverageMethodWeight', 'coverageLineWeight', 'coverageBranchWeight', 'githubUrl'];
-    //   const CSV_COLUMNS_310 = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'submitted',
-    //     'finalGrade', 'deliverableWeight', 'passPercent', 'passCount', 'failCount', 'skipCount',
-    //     'passNames', 'failNames', 'skipNames', 'githubUrl'];
-    //   const CSV_COLUMNS_GRADE_ONLY = ['csid', 'snum', 'lname', 'fname', 'username', 'deliverable', 'finalGrade'];
-    //   let csvArray: any = [];
-
-    //     if (payload.courseId === '210' && payload.gradeOnly === false) {
-    //       for (let i = 0; i < results.length; i++) {
-    //         let r = results[i];
-    //         let custom = r.customLogic;
-    //         csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted, 
-    //           r.grade.finalGrade, r.grade.deliveableWeight, custom.coverageGrade, custom.testingGrade, 
-    //           custom.coverageWeight, custom.testingWeight, custom.coverageMethodWeight, 
-    //           custom.coverageLineWeight, custom.coverageBranchWeight, r.studentInfo.projectUrl]);
-    //       }
-    //       csvArray.unshift(CSV_COLUMNS_210);          
-    //     } else if (payload.courseId === '310' && payload.gradeOnly === false) {
-    //       for (let i = 0; i < results.length; i++) {
-    //         let r = results[i];
-    //         let stats = r.customLogic.testStats;
-    //         csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, r.submitted, 
-    //           r.grade.finalGrade, r.grade.deliverableWeight, stats.passPercent, stats.passCount, 
-    //           stats.failCount, stats.skipCount,
-    //           stats.passNames.length === 0 ? '' : stats.passNames.join(';'), 
-    //           stats.failNames.length === 0 ? '' : stats.failNames.join(';'), 
-    //           stats.skipNames.length === 0 ? '' : stats.skipNames.join(';'),
-    //           r.studentInfo.projectUrl]);
-    //       }
-    //       csvArray = sortArrayByLastName(csvArray);          
-    //       csvArray.unshift(CSV_COLUMNS_310);          
-    //     } else {
-    //       for (let i = 0; i < results.length; i++) {
-    //         let r = results[i];
-    //         let stats = r.customLogic.testStats;
-    //         csvArray.push([r.csid, r.snum, r.lname, r.fname, r.username, r.deliverable, 
-    //           r.grade.finalGrade]);
-    //       }
-    //       csvArray = sortArrayByLastName(csvArray);
-    //       csvArray.unshift(CSV_COLUMNS_GRADE_ONLY);
-    //     }
-      
-    //   // generate and return csv
-    //   // return results;
-    //   // return csvGenerate(csvArray);
-    //   return csvArray;
-    // })
-    // .then((csvArray: any[]) => {
-    //   if (payload.format === CSV_FORMAT_FLAG) {
-    //     return csvGenerate(csvArray);        
-    //   }
-    //   return csvArray;
-    // });
 }
 
 /**

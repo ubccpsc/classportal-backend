@@ -183,6 +183,60 @@ export class MongoDB {
   // }
 
   /**
+   * Gets all result records for query match 
+   */
+  public async getAllResultRecords(_collectionName: string, _timestamp: number, _query: any): Promise<any[]> {
+    return new Promise<any[]>((fulfill, reject) => {
+      let projection310 = {
+        _id: 1,
+        user: 1,
+        orgName: 1,
+        deliverable: 1,
+        team: 1,
+        reportFailed: 1,
+        'report.tests.grade.finalGrade': 1,
+        'report.studentInfo.projectUrl': 1,                
+        commit: 1,
+        timestamp: 1,    
+        ref: 1,    
+      };
+
+      let projection210 = {
+        _id: "$user",
+        user: 1, 
+        orgName: 1,
+        deliverable: 1,
+        team: 1,
+        reportFailed: 1,
+        'report.tests.grade.finalGrade': 1,
+        "report.studentInfo.projectUrl": 1,                
+        commit: 1,
+        timestamp: 1,   
+        ref: 1,
+      };
+
+
+      let projection: any = "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? projection210 : projection310;      
+
+      try {
+        this.conn.then((db: mongodb.Db) => {
+          return db.collection(_collectionName)
+            .find(_query, projection)
+              .toArray((err: Error, results: any[]) => {
+              if (err) {
+                throw err;
+              }
+              fulfill(results);
+            });
+        });
+      }
+      catch (err) {
+        logger.error(`MongoDBClient::getLatestRecords() ${err}`);
+      }
+    });
+  }
+
+  /**
    * Gets latest record for each match
    */
   public async getHighestResultRecords(_collectionName: string, _timestamp: number, _query: any): Promise<any[]> {
@@ -261,7 +315,7 @@ export class MongoDB {
         _id: "$user",
         username: {"$last": "$user"},
         delivId: {"$last": "$deliverable"},
-        projectName: {$last: "$team"},
+        projectName: {"$last": "$team"},
         gradeValue: {'$last': "$report.tests.grade.finalGrade"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},
         commit: {"$last": "$commit"},
@@ -274,7 +328,7 @@ export class MongoDB {
         _id: "$user",
         username: {"$last": "$user"},
         delivId: {"$last": "$deliverable"},
-        projectName: {$last: "$team"},
+        projectName: {"$last": "$team"},
         gradeValue: {'$last': "$report.tests.grade.finalGrade"},
         projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
         commit: {"$last": "$commit"},
