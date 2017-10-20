@@ -502,7 +502,7 @@ function getGradesFromResults(payload: any) {
           for (let student of classList) {
             let s: Student = {
               userName: student.username,
-              userUrl: '',
+              userUrl: 'https://github.ubc.ca/' + student.username,
               fName: student.fname,
               lName: student.lname,
               sNum: student.snum,
