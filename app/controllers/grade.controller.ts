@@ -507,9 +507,15 @@ function getGradesFromResults(payload: any) {
               lName: student.lname,
               sNum: student.snum,
               csId: student.csid,
-              labId: '',
+              labId: 'UNASSIGNED',
               TA: [''],
             };
+
+            for (let labSection of course.labSections) {
+              if (labSection.users.indexOf(student._id) > -1) {
+                s.labId = labSection.labId;
+              }
+            }
             students.push(s);
           }
 
