@@ -483,9 +483,14 @@ function getGradesFromResults(payload: any) {
                 mappedObj.grade = '0';
             } else {
               if (String(results[key].orgName) === 'CPSC210-2017W-T1' && reportFailed === false) {
+                mappedObj.projectUrl = String(results[key].report.studentInfo.projectUrl).replace('<token>@', '')
+                  .replace('.git', '');                
+                mappedObj.commitUrl = mappedObj.projectUrl + '/commit/' + mappedObj.commitUrl;                  
                 mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
               } else if (String(results[key].orgName) === 'CPSC310-2017W-T1' && reportFailed === false) {
-                console.log(results[key].report);
+                mappedObj.projectUrl = String(results[key].report.studentInfo.projectUrl).replace('<token>@', '')
+                .replace('.git', '');  
+                mappedObj.commitUrl = mappedObj.projectUrl + '/commit/' + mappedObj.commitUrl;
                 mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
               }
             }
