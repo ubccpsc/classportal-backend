@@ -258,12 +258,16 @@ export class Dashboard {
     let returnRows = [];
     for (let rec of records) {
       let row: any = {};
+
       // e.g., if the test container failed
       let missingTestDetails = typeof rec.report === 'undefined' ||
+        rec.report === null ||
         typeof rec.report.tests === 'undefined' ||
+        rec.report.tests === null ||
         typeof rec.report.tests.detailedResults === 'undefined';
 
       let missingUserDetails = typeof rec.report === 'undefined' ||
+        rec.report === null ||
         typeof rec.report.studentInfo === 'undefined' ||
         typeof rec.report.studentInfo.projectUrl === 'undefined';
       row.project = rec.team;
