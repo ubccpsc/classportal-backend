@@ -325,7 +325,7 @@ function getGradesFromResults(payload: any) {
     .then(() => {
       return Deliverable.findOne({name: payload.deliverableName, courseId: course._id})
         .then((_deliv: IDeliverableDocument) => {
-          if (_deliv && !payload.allDeliverables) {
+          if (_deliv && payload.deliverableName) {
             deliverable = _deliv;
             return _deliv;
           }
@@ -354,12 +354,13 @@ function getGradesFromResults(payload: any) {
       // queries the highest grade and last grade, then merges both per user
       if (!payload.allDeliverables) {
 
-        timestamp = new Date(deliverable.close.toString()).getTime();
         return db.getAllResultRecords('results', timestamp, {
           orgName:     course.githubOrg,
           deliverable: payload.deliverableName,
         })
           .then((results: any[]) => {
+            console.log(results);
+            singleDelivResults = results;
             return results;
           });
       }
@@ -417,26 +418,21 @@ function getGradesFromResults(payload: any) {
       }
     })
     .then((results) => {
-      // if multiple arrays from allDelivQueries, combine them
-      if (results.length > 0) {
-        let concatedArray: any = [];
-        results.map((item) => {
-          concatedArray = concatedArray.concat(item);
-        });
-        return concatedArray;
-      } else {
-        return results;
-      }
+      // if multiple arrays because allDeliverables = true, combine them
+      if (payload.allDeliverables) {
+          let concatedArray: any = [];
+          results.map((item) => {
+            concatedArray = concatedArray.concat(item);
+          });
+          return concatedArray;
+        } else {
+          return results;
+        }
     })
     .then((results) => {
       // render and clean data for front-end
 
       Object.keys(results).forEach((key) => {
-        if (results[key].hasOwnProperty('projectUrl') && results[key].hasOwnProperty('commit')) {
-          let appendage = '/commit/' + results[key].commit;
-          results[key].projectUrl = String(results[key].projectUrl).replace('.git', '').replace('<token>@', '');
-          results[key].commitUrl = results[key].projectUrl + appendage;
-        }
 
         // add in lname, fname, labId, snum
         // adds in labId *only if* user._id matches id listed under lab for a course
@@ -451,7 +447,7 @@ function getGradesFromResults(payload: any) {
               results[key].lname = classListItem.lname;
               results[key].fname = classListItem.fname;
               results[key].snum = classListItem.snum;
-              results[key].csid = classListItem.csid;              
+              results[key].csid = classListItem.csid;
               for (let j = 0; j < course.labSections.length; j++) {
                 if (course.labSections[j].users.indexOf(userId) > 0) {
                   results[key].labId = course.labSections[j].labId;
@@ -469,9 +465,9 @@ function getGradesFromResults(payload: any) {
             let reportFailed: boolean = results[key].reportFailed;
             let mappedObj: ResultRecord = {
               userName: results[key].user,
-              commitUrl: results[key].commit,
+              commitUrl: results[key].commitUrl,
               projectName: results[key].team,
-              projectUrl: '',
+              projectUrl: results[key].projectUrl,
               branchName: results[key].ref,
               gradeRequested: false,
               delivId: results[key].deliverable,
@@ -482,15 +478,9 @@ function getGradesFromResults(payload: any) {
             if (results[key].reportFailed === true) {
                 mappedObj.grade = '0';
             } else {
-              if (String(results[key].orgName) === 'CPSC210-2017W-T1' && reportFailed === false) {
-                mappedObj.projectUrl = String(results[key].report.studentInfo.projectUrl).replace('<token>@', '')
-                  .replace('.git', '');                
-                mappedObj.commitUrl = mappedObj.projectUrl + '/commit/' + mappedObj.commitUrl;                  
+              if (String(results[key].orgName) === 'CPSC210-2017W-T1' && reportFailed === false) {            
                 mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
               } else if (String(results[key].orgName) === 'CPSC310-2017W-T1' && reportFailed === false) {
-                mappedObj.projectUrl = String(results[key].report.studentInfo.projectUrl).replace('<token>@', '')
-                .replace('.git', '');  
-                mappedObj.commitUrl = mappedObj.projectUrl + '/commit/' + mappedObj.commitUrl;
                 mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
               }
             }
