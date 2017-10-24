@@ -4,6 +4,7 @@ import * as courseCtrl from '../controllers/course.controller';
 import * as authCtrl from '../controllers/auth.controller';
 import * as delivCtrl from '../controllers/deliverable.controller';
 import * as gradeCtrl from '../controllers/grade.controller';
+import * as resultCtrl from '../controllers/result.controller';
 import * as teamCtrl from '../controllers/team.controller';
 import * as testCtrl from '../controllers/test.controller';
 import * as fileCtrl from '../controllers/file.controller';
@@ -353,17 +354,17 @@ const disbandTeamById = (req: restify.Request, res: restify.Response, next: rest
 };
 
 const getGradesFromResults = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return gradeCtrl.getGradesFromResults(req.params)
-    .then((grades) => {
+  return resultCtrl.getResultsByCourse(req.params)
+    .then((results) => {
       const CSV_FORMAT_FLAG = 'csv';
       if (req.params.format === CSV_FORMAT_FLAG) {
         res.writeHead(200, {
           'Content-Type':        'text/csv',
           'Content-Disposition': 'attachment; filename=Course' + req.params.courseId + 'Grades.csv',
         });
-        res.end(grades);
+        res.end(results);
       }
-      res.json(200, {response: grades});
+      res.json(200, {response: results});
     })
     .catch((err: any) => res.json(500, {err: err.message}));
 };
