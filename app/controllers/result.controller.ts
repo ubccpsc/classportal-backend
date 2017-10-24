@@ -28,6 +28,7 @@ let stringify = require('csv-stringify');
  */
 function getResultsByCourse(payload: any) {
 
+  logger.info(`ResultController:: getGradesfromResults() - start`);
   const REPORT_FAILED_FLAG: string = 'REPORT_FAILED';
   const CSV_FORMAT_FLAG = 'csv';
 
@@ -59,7 +60,7 @@ function getResultsByCourse(payload: any) {
           throw `Could not find deliverable under ${payload.deliverableName} and ${course.courseId}`;
         })
         .catch(err => {
-          logger.error(`GradeController::getGradesFromResults() ERROR ${err}`);
+          logger.error(`ResultController::getGradesFromResults() ERROR ${err}`);
         });
     })
     .then(() => {
@@ -73,7 +74,7 @@ function getResultsByCourse(payload: any) {
           throw `No deliverable names found in ${payload.orgName}`;
         })
         .catch((err: any) => {
-          logger.error(`GradeController::getGradesFromResults() getUniqueStringsInRow ERROR ${err}`);
+          logger.error(`ResultController::getGradesFromResults() getUniqueStringsInRow ERROR ${err}`);
         });
     })
     .then(() => {
@@ -104,7 +105,7 @@ function getResultsByCourse(payload: any) {
             throw `Could not find Deliverables for ${course._id}`;
           })
           .catch((err: any) => {
-            logger.error(`GradeController:: getGradesfromResults() ERROR ${err}`);
+            logger.error(`ResultController:: getGradesfromResults() ERROR ${err}`);
           });
       }
       return null;
@@ -204,7 +205,7 @@ function getResultsByCourse(payload: any) {
             if (results[key].reportFailed === true) {
                 mappedObj.grade = '0';
             } else {
-              if (String(results[key].orgName) === 'CPSC210-2017W-T1' && reportFailed === false) {            
+              if (String(results[key].orgName) === 'CPSC210-2017W-T1' && reportFailed === false) {
                 mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
               } else if (String(results[key].orgName) === 'CPSC310-2017W-T1' && reportFailed === false) {
                 mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
@@ -244,12 +245,14 @@ function getResultsByCourse(payload: any) {
 }
 
 /**
- * 
+ *
  * @param _course The Course that you are getting the Grades for
  * @param _results The results rendered from getGradesFromResults() so we can append marks based on Team
  * @return Promise<any[]> Array of results, but with team marks merged
  */
 function mapResultsToTeams(_course: ICourseDocument, _results: any) {
+  logger.info(`ResultController:: mapResultsToTeams(..) - start`);
+
   let deliverables: IDeliverableDocument[];
   let delivIds: string[] = [];
   let teams: ITeamDocument[];
@@ -258,7 +261,7 @@ function mapResultsToTeams(_course: ICourseDocument, _results: any) {
   const MAX_GRADE_FLAG = 'Max';
   const LAST_GRADE_FLAG = 'Last';
   const UNDEFINED_GRADE = 99999999999;
-  
+
   return Deliverable.find({courseId: _course._id})
     .then((_delivs: IDeliverableDocument[]) => {
       if (_delivs) {
@@ -278,32 +281,32 @@ function mapResultsToTeams(_course: ICourseDocument, _results: any) {
             teams = _teams;
             return _teams;
           }
-          throw `Could not find any Teams under course ${course.courseId} with deliverableIds property`; 
+          throw `Could not find any Teams under course ${course.courseId} with deliverableIds property`;
         });
     })
     .then(() => {
       let teamMembers: string[] = [];
 
-      // find highestGrade and lastGrade per team and then overwrite 
+      // find highestGrade and lastGrade per team and then overwrite
       // results that have delivMax and delivLast value matches
-      // must do this for each DELIV_ID from delivIds 
+      // must do this for each DELIV_ID from delivIds
 
       for (let DELIV_ID of delivIds) {
 
         for (let i = 0; i < teams.length; i++) {
-          
+
         let highestGrade: number = 0;
         let highestCommit: string = null;
         let lastGrade: number = UNDEFINED_GRADE;
         let lastCommit: string = null;
         let lastSubmitted: number = 0;
-        let keysToUpdateForMax: string[] = []; 
+        let keysToUpdateForMax: string[] = [];
         let keysToUpdateForLast: string[] = [];
-          
+
         for (let j = 0; j < teams[i].members.length; j++) {
           teamMembers.push(teams[i].members[j].username);
         }
-          
+
         // for every result record entry, check for matching delivIds and store latest / highest item.
         Object.keys(results).forEach(key => {
 
@@ -319,7 +322,7 @@ function mapResultsToTeams(_course: ICourseDocument, _results: any) {
                 highestCommit = results[key].commit;
               }
               // based on DELIV_ID, username, and 'Max' in Results flag matching, push to update
-              keysToUpdateForMax.push(key);              
+              keysToUpdateForMax.push(key);
             }
 
             if (gradeKey.indexOf(LAST_GRADE_FLAG) > -1) {
@@ -333,7 +336,7 @@ function mapResultsToTeams(_course: ICourseDocument, _results: any) {
             }
           }
         });
-          
+
         // update grade with highest grade for each student on team
         for (let k = 0; k < keysToUpdateForMax.length; k++) {
           results[keysToUpdateForMax[k]].commit = highestCommit;
