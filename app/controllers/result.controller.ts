@@ -184,8 +184,7 @@ function getResultsByCourse(payload: any) {
           }
         }
       });
-      return mapResultsToTeams(course, results)
-        .then((results) => {
+
           let mappedResults: ResultRecord[] = [];
           Object.keys(results).forEach((key) => {
             let resultDetail: ResultDetail[] = [];
@@ -242,7 +241,6 @@ function getResultsByCourse(payload: any) {
           };
           return resultPayload;
         });
-    });
 }
 
 /**
