@@ -248,7 +248,7 @@ function getResultsByCourse(payload: any) {
         records:  mappedResults,
       };
 
-      let newFormat = convertResultFormat(resultPayload);
+      let newFormat = convertResultFormat(resultPayload, payload.deliverableName);
       // NOTE: not returned yet
 
       return resultPayload;
@@ -256,32 +256,23 @@ function getResultsByCourse(payload: any) {
 }
 
 
-function convertResultFormat(data: ResultPayloadInternal) {
-  console.log('ResultsView::convertResultsToGrades(..) - start');
-
-  /*
-  interface StudentResults {
-    userName: string;
-    student: Student;
-    executions: ResultRecord[];
-  }
- */
+function convertResultFormat(data: ResultPayloadInternal, delivId: string): ResultPayload {
+  console.log('result.controller::convertResultFormat(..) - start');
 
   try {
     const start = new Date().getTime();
 
-    // Just a caveat; this could all be done in one pass
-    // but is split up for clarity into 4 steps:
-    // 1) Create a student map
-    // 2) Update students to know what their projectUrl is for the deliverable
-    //    This is needed for teams, but not for single projects (but will work for both)
-    // 3) Add executions to the Student record
-    // 4) Choose the execution we care about from the Student record
+    for (let s of data.students) {
+      if (s.projectUrl === '') {
+        console.warn('result.controller::convertResultFormat(..) - WARN: missing student.projectUrl for student: ' + s.userName);
+      }
+    }
 
+    // create the execution map
     // map execution.projectUrl -> [StudentResults]
     let projectMap: { [projectUrl: string]: ResultRecord[] } = {};
     for (let record of data.records) {
-      if (record.delivId === this.delivId) { // HACK: the query should only get the right deliverables
+      if (record.delivId === delivId) { // HACK: the query should only get the right deliverables
         const key = record.projectUrl;
         if (key !== '') { // HACK: ignore missing key; this should not come back from the backend; fix and remove
           if (typeof projectMap[key] === 'undefined') {
@@ -290,7 +281,7 @@ function convertResultFormat(data: ResultPayloadInternal) {
             projectMap[key].push(record); // add to the existing record for this project
           }
         } else {
-          console.warn('WARN: missing key: ' + record.commitUrl);
+          console.warn('result.controller::convertResultFormat(..) - WARN: missing projectUrl for commit: ' + record.commitUrl);
         }
       } else {
         // wrong deliverable
@@ -300,16 +291,17 @@ function convertResultFormat(data: ResultPayloadInternal) {
     const delta = new Date().getTime() - start;
     console.log('Result->Grade conversion complete; # students: ' + data.students.length +
       '; # records: ' + data.records.length + '. Took: ' + delta + ' ms');
-    
+
     let returnObj: ResultPayload = {
       students:   data.students,
       projectMap: projectMap
     };
 
     return returnObj;
+    
   } catch (err) {
-    console.error('ResultView::convertResultsToGrades(..) - ERROR: ' + err.members, err);
-    return {}; // TODO: return something better here
+    console.error('result.controller::convertResultFormat(..)  - ERROR: ' + err.members, err);
+    return {students: [], projectMap: {}}; // empty return
   }
 
 }
