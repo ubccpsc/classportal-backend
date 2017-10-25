@@ -21,12 +21,9 @@ let fs = require('fs');
 let stringify = require('csv-stringify');
 
 /**
- * If no deliverableName given, then all deliverable marks returned
  * @param courseId courseId number of courseId ie. 310
  * @param deliverableName string name of deliverable ie. 'd2'
- * @param allDeliverables boolean if the report should include all deliverables
- * @param gradeOnly boolean if the report should be limited to only grade, snum, csid, and deliverable info.
- * @return string CSV formatted report
+ * @return ResultPayload 
  */
 function getResultsByCourse(payload: any) {
 
