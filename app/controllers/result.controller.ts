@@ -2,6 +2,7 @@ import * as restify from 'restify';
 import {logger} from '../../utils/logger';
 import {Course, ICourseDocument} from '../models/course.model';
 import {Team, ITeamDocument} from '../models/team.model';
+import {Project, IProjectDocument} from '../models/project.model';
 import {Deliverable, IDeliverableDocument} from '../models/deliverable.model';
 import {User, IUserDocument} from '../models/user.model';
 import {Grade, IGradeDocument} from '../models/grade.model';
@@ -32,6 +33,7 @@ function getResultsByCourse(payload: any) {
   const CSV_FORMAT_FLAG = 'csv';
 
   let teams: ITeamDocument[];
+  let projects: IProjectDocument[];
   let course: ICourseDocument;
   let deliverables: IDeliverableDocument[];
   let deliverable: IDeliverableDocument;
@@ -65,7 +67,6 @@ function getResultsByCourse(payload: any) {
     .then(() => {
       return db.getUniqueStringsInRow('results', {orgName: course.githubOrg}, 'deliverable')
         .then((_deliverableNames: string[]) => {
-          console.log(_deliverableNames);
           if (_deliverableNames) {
             deliverableNames = _deliverableNames;
             return _deliverableNames;
@@ -77,14 +78,24 @@ function getResultsByCourse(payload: any) {
         });
     })
     .then(() => {
-        return Team.find({$or: [{deliverableIds: deliverable._id}, {deliverableId: deliverable._id}]})
+      let promises = [];
+        let teamsQuery = Team.find({$or: [{deliverableIds: deliverable._id}, {deliverableId: deliverable._id}]})
           .then((_team: ITeamDocument[]) => {
             if (_team) {
               teams = _team;
               return _team;
             }
-            throw `Could not find teams`;
+            return null;
           });
+        let projectsQuery = Project.find({deliverableId: deliverable._id})
+          .then((_projects: IProjectDocument[]) => {
+            if (_projects) {
+              projects = _projects;
+              return _projects;
+            }
+            return null;
+          });
+      return promises.push(teamsQuery, projectsQuery);
     })
     .then(() => {
 
@@ -229,14 +240,25 @@ function getResultsByCourse(payload: any) {
       // a deliverable in case they never make a commit
       let students: StudentResult[] = [];
       let classList: IUserDocument[] = course.classList as IUserDocument[];
-      let teamLabUrl: string = '';
+      let repoUrl: string = '';
       for (let student of classList) {
-        for (let team of teams) {
-          if (team.members.indexOf(student._id) > -1) {
-            // team Lab URL should be '' if repo has not yet been created
-            teamLabUrl = team.githubState.repo.url;
+        if (teams) {
+          for (let team of teams) {
+            if (team.members.indexOf(student._id) > -1) {
+              // team Lab URL should be '' if repo has not yet been created
+              repoUrl = team.githubState.repo.url;
+            }
           }
         }
+        if (projects) {
+          for (let project of projects) {
+            if (String(project.student) === String(student._id)) {
+              // team Lab URL should be '' if repo has not yet been created
+              repoUrl = project.githubState.repo.url;
+            }
+          }
+        }
+
         let s: StudentResult = {
           userName:   student.username,
           userUrl:    'https://github.ubc.ca/' + student.username,
@@ -246,7 +268,7 @@ function getResultsByCourse(payload: any) {
           csId:       student.csid,
           labId:      'UNASSIGNED',
           TA:         [''],
-          projectUrl: teamLabUrl, // TODO: need this!
+          projectUrl: repoUrl, // TODO: need this!
         };
 
         for (let labSection of course.labSections) {
