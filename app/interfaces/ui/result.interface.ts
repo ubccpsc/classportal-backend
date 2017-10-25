@@ -8,7 +8,7 @@ export interface ResultPayloadContainer {
 // }
 
 export interface ResultPayloadInternal {
-  students: Student[];
+  students: StudentResult[];
   records: ResultRecord[];
 }
 

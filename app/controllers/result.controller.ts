@@ -9,7 +9,7 @@ import {config} from '../../config/env';
 import {GradePayloadContainer, GradeRow, GradeDetail} from '../interfaces/ui/grade.interface';
 import {
   ResultRecord, ResultPayload, ResultPayloadContainer,
-  ResultDetail, Student, ResultPayloadInternal
+  ResultDetail, Student, ResultPayloadInternal, StudentResult
 } from '../interfaces/ui/result.interface';
 import db, {Database} from '../db/MongoDBClient';
 import * as parse from 'csv-parse';
@@ -220,18 +220,19 @@ function getResultsByCourse(payload: any) {
       // this just adds a .projectUrl to each Student
       // This will make it so we know what project a student is associated with for
       // a deliverable in case they never make a commit
-      let students: Student[] = [];
+      let students: StudentResult[] = [];
       let classList: IUserDocument[] = course.classList as IUserDocument[];
       for (let student of classList) {
-        let s: Student = {
-          userName: student.username,
-          userUrl:  'https://github.ubc.ca/' + student.username,
-          fName:    student.fname,
-          lName:    student.lname,
-          sNum:     student.snum,
-          csId:     student.csid,
-          labId:    'UNASSIGNED',
-          TA:       [''],
+        let s: StudentResult = {
+          userName:   student.username,
+          userUrl:    'https://github.ubc.ca/' + student.username,
+          fName:      student.fname,
+          lName:      student.lname,
+          sNum:       student.snum,
+          csId:       student.csid,
+          labId:      'UNASSIGNED',
+          TA:         [''],
+          projectUrl: '', // TODO: need this!
         };
 
         for (let labSection of course.labSections) {
@@ -258,11 +259,13 @@ function getResultsByCourse(payload: any) {
 function convertResultFormat(data: ResultPayloadInternal) {
   console.log('ResultsView::convertResultsToGrades(..) - start');
 
+  /*
   interface StudentResults {
     userName: string;
     student: Student;
     executions: ResultRecord[];
   }
+ */
 
   try {
     const start = new Date().getTime();
@@ -275,113 +278,35 @@ function convertResultFormat(data: ResultPayloadInternal) {
     // 3) Add executions to the Student record
     // 4) Choose the execution we care about from the Student record
 
-    // map: student.userName -> StudentResults
-    let studentMap: { [userName: string]: StudentResults } = {};
-    for (let student of data.students) {
-      const studentResult: StudentResults = {
-        userName:   student.userName,
-        student:    student,
-        executions: []
-      };
-      studentMap[student.userName] = studentResult;
-    }
-
     // map execution.projectUrl -> [StudentResults]
-    let projectMap: { [projectUrl: string]: StudentResults[] } = {};
+    let projectMap: { [projectUrl: string]: ResultRecord[] } = {};
     for (let record of data.records) {
       if (record.delivId === this.delivId) { // HACK: the query should only get the right deliverables
-        const student = studentMap[record.userName];
-        if (typeof student !== 'undefined' && student.student.sNum !== '') {
-          const key = record.projectUrl;
-          if (key !== '') { // HACK: ignore missing key; this should not come back from the backend; fix and remove
-            if (typeof projectMap[key] === 'undefined') {
-              projectMap[key] = []; // we don't know about this project yet
-            }
-            const existingStudent = projectMap[key].find(function (student: StudentResults) {
-              return student.userName === record.userName; // see if student is already associated with project
-            });
-            if (typeof existingStudent === 'undefined') {
-              projectMap[key].push(studentMap[record.userName]); // add student to the project
-            }
+        const key = record.projectUrl;
+        if (key !== '') { // HACK: ignore missing key; this should not come back from the backend; fix and remove
+          if (typeof projectMap[key] === 'undefined') {
+            projectMap[key] = [record]; // start the record for this project
           } else {
-            console.warn('WARN: missing key: ' + record.commitUrl);
+            projectMap[key].push(record); // add to the existing record for this project
           }
         } else {
-          // this only happens if the student cause a result but was not in the student list
-          // could happen for TAs / instructors, but should not happen for students
-          console.log('WARN: unknown student (probably a TA): ' + record.userName);
+          console.warn('WARN: missing key: ' + record.commitUrl);
         }
       } else {
         // wrong deliverable
       }
-    }
-
-    // add all project executions to student
-    for (let record of data.records) {
-      if (record.delivId === this.delivId) { // HACK: backend should return only the right deliverable
-        if (record.projectUrl !== '') { // HACK: backend should only return complete records
-          const studentResult = studentMap[record.userName];
-          const project = projectMap[record.projectUrl];
-          if (typeof project !== 'undefined' && typeof studentResult !== 'undefined') {
-            for (let studentResult of project) {
-              // associate the execution with all students on that project
-              studentResult.executions.push(record);
-            }
-          } else {
-            // drop the record (either the student does not exist or the project does not exist).
-            // project case would happen if in the last loop we dropped an execution from a TA.
-          }
-        }
-      } else {
-        // wrong deliverable
-      }
-    }
-
-    // now choose the record we want to emit per-student
-    let studentFinal: StudentResults[] = [];
-    for (let userName of Object.keys(studentMap)) {
-      const studentResult = studentMap[userName];
-      const executionsToConsider = studentResult.executions;
-
-      let result: ResultRecord;
-      if (executionsToConsider.length > 0) {
-        // in this case we're going to take the last execution
-        // but you can use any of the ResultRecord rows here (branchName, gradeRequested, grade, etc.)
-        const orderedExecutions = executionsToConsider.sort(function (a: ResultRecord, b: ResultRecord) {
-          return b.timeStamp - a.timeStamp;
-        });
-        result = orderedExecutions[0];
-      } else {
-        // no execution records for student; put in a fake one that counts as 0
-        console.log('WARN: no execution records for student: ' + userName);
-        result = {
-          userName:       userName,
-          timeStamp:      -1, // never happened
-          projectName:    'No Request', // unknown
-          projectUrl:     '', //
-          commitUrl:      '',
-          branchName:     '',
-          gradeRequested: false,
-          grade:          '0',
-          delivId:        this.delivId,
-          gradeDetails:   []
-        };
-      }
-      const finalStudentRecord = {
-        userName:   userName,
-        student:    studentResult.student,
-        executions: [result]
-      };
-      studentFinal.push(finalStudentRecord);
     }
 
     const delta = new Date().getTime() - start;
     console.log('Result->Grade conversion complete; # students: ' + data.students.length +
       '; # records: ' + data.records.length + '. Took: ' + delta + ' ms');
+    
+    let returnObj: ResultPayload = {
+      students:   data.students,
+      projectMap: projectMap
+    };
 
-    this.dataToDownload = studentMap;
-    // this array can be trivially iterated on to turn into a CSV or any other format
-    return studentFinal;
+    return returnObj;
   } catch (err) {
     console.error('ResultView::convertResultsToGrades(..) - ERROR: ' + err.members, err);
     return {}; // TODO: return something better here
