@@ -7,8 +7,10 @@ import {User, IUserDocument} from '../models/user.model';
 import {Grade, IGradeDocument} from '../models/grade.model';
 import {config} from '../../config/env';
 import {GradePayloadContainer, GradeRow, GradeDetail} from '../interfaces/ui/grade.interface';
-import {ResultRecord, ResultPayload, ResultPayloadContainer,
-  ResultDetail, Student} from '../interfaces/ui/result.interface';
+import {
+  ResultRecord, ResultPayload, ResultPayloadContainer,
+  ResultDetail, Student, ResultPayloadInternal
+} from '../interfaces/ui/result.interface';
 import db, {Database} from '../db/MongoDBClient';
 import * as parse from 'csv-parse';
 import mongodb = require('mongodb');
@@ -148,14 +150,14 @@ function getResultsByCourse(payload: any) {
     .then((results) => {
       // if multiple arrays because allDeliverables = true, combine them
       if (payload.allDeliverables) {
-          let concatedArray: any = [];
-          results.map((item) => {
-            concatedArray = concatedArray.concat(item);
-          });
-          return concatedArray;
-        } else {
-          return results;
-        }
+        let concatedArray: any = [];
+        results.map((item) => {
+          concatedArray = concatedArray.concat(item);
+        });
+        return concatedArray;
+      } else {
+        return results;
+      }
     })
     .then((results) => {
       // render and clean data for front-end
@@ -186,63 +188,207 @@ function getResultsByCourse(payload: any) {
         }
       });
 
-          let mappedResults: ResultRecord[] = [];
-          Object.keys(results).forEach((key) => {
-            let resultDetail: ResultDetail[] = [];
-            let reportFailed: boolean = results[key].reportFailed;
-            let mappedObj: ResultRecord = {
-              userName: results[key].user,
-              commitUrl: results[key].commitUrl,
-              projectName: results[key].team,
-              projectUrl: results[key].projectUrl,
-              branchName: results[key].ref,
-              gradeRequested: false,
-              delivId: results[key].deliverable,
-              grade: '0',
-              timeStamp: results[key].timestamp,
-              gradeDetails: resultDetail,
-            };
-            if (results[key].reportFailed === true) {
-                mappedObj.grade = '0';
-            } else {
-              if (String(results[key].orgName) === 'CPSC210-2017W-T1' && reportFailed === false) {
-                mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
-              } else if (String(results[key].orgName) === 'CPSC310-2017W-T1' && reportFailed === false) {
-                mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
-              }
-            }
-            mappedResults.push(mappedObj);
-          });
-
-          let students: Student[] = [];
-          let classList: IUserDocument[] = course.classList as IUserDocument[];
-          for (let student of classList) {
-            let s: Student = {
-              userName: student.username,
-              userUrl: 'https://github.ubc.ca/' + student.username,
-              fName: student.fname,
-              lName: student.lname,
-              sNum: student.snum,
-              csId: student.csid,
-              labId: 'UNASSIGNED',
-              TA: [''],
-            };
-
-            for (let labSection of course.labSections) {
-              if (labSection.users.indexOf(student._id) > -1) {
-                s.labId = labSection.labId;
-              }
-            }
-            students.push(s);
+      let mappedResults: ResultRecord[] = [];
+      Object.keys(results).forEach((key) => {
+        let resultDetail: ResultDetail[] = [];
+        let reportFailed: boolean = results[key].reportFailed;
+        let mappedObj: ResultRecord = {
+          userName:       results[key].user,
+          commitUrl:      results[key].commitUrl,
+          projectName:    results[key].team,
+          projectUrl:     results[key].projectUrl,
+          branchName:     results[key].ref,
+          gradeRequested: false,
+          delivId:        results[key].deliverable,
+          grade:          '0',
+          timeStamp:      results[key].timestamp,
+          gradeDetails:   resultDetail,
+        };
+        if (results[key].reportFailed === true) {
+          mappedObj.grade = '0';
+        } else {
+          if (String(results[key].orgName) === 'CPSC210-2017W-T1' && reportFailed === false) {
+            mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
+          } else if (String(results[key].orgName) === 'CPSC310-2017W-T1' && reportFailed === false) {
+            mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
           }
+        }
+        mappedResults.push(mappedObj);
+      });
 
-          let resultPayload: ResultPayload = {
-            students: students,
-            records: mappedResults,
-          };
-          return resultPayload;
-        });
+      // TODO: what we really want here is to convert Student[] -> StudentRecord[]
+      // this just adds a .projectUrl to each Student
+      // This will make it so we know what project a student is associated with for
+      // a deliverable in case they never make a commit
+      let students: Student[] = [];
+      let classList: IUserDocument[] = course.classList as IUserDocument[];
+      for (let student of classList) {
+        let s: Student = {
+          userName: student.username,
+          userUrl:  'https://github.ubc.ca/' + student.username,
+          fName:    student.fname,
+          lName:    student.lname,
+          sNum:     student.snum,
+          csId:     student.csid,
+          labId:    'UNASSIGNED',
+          TA:       [''],
+        };
+
+        for (let labSection of course.labSections) {
+          if (labSection.users.indexOf(student._id) > -1) {
+            s.labId = labSection.labId;
+          }
+        }
+        students.push(s);
+      }
+
+      let resultPayload: ResultPayloadInternal = {
+        students: students,
+        records:  mappedResults,
+      };
+
+      let newFormat = convertResultFormat(resultPayload);
+      // NOTE: not returned yet
+
+      return resultPayload;
+    });
 }
+
+
+function convertResultFormat(data: ResultPayloadInternal) {
+  console.log('ResultsView::convertResultsToGrades(..) - start');
+
+  interface StudentResults {
+    userName: string;
+    student: Student;
+    executions: ResultRecord[];
+  }
+
+  try {
+    const start = new Date().getTime();
+
+    // Just a caveat; this could all be done in one pass
+    // but is split up for clarity into 4 steps:
+    // 1) Create a student map
+    // 2) Update students to know what their projectUrl is for the deliverable
+    //    This is needed for teams, but not for single projects (but will work for both)
+    // 3) Add executions to the Student record
+    // 4) Choose the execution we care about from the Student record
+
+    // map: student.userName -> StudentResults
+    let studentMap: { [userName: string]: StudentResults } = {};
+    for (let student of data.students) {
+      const studentResult: StudentResults = {
+        userName:   student.userName,
+        student:    student,
+        executions: []
+      };
+      studentMap[student.userName] = studentResult;
+    }
+
+    // map execution.projectUrl -> [StudentResults]
+    let projectMap: { [projectUrl: string]: StudentResults[] } = {};
+    for (let record of data.records) {
+      if (record.delivId === this.delivId) { // HACK: the query should only get the right deliverables
+        const student = studentMap[record.userName];
+        if (typeof student !== 'undefined' && student.student.sNum !== '') {
+          const key = record.projectUrl;
+          if (key !== '') { // HACK: ignore missing key; this should not come back from the backend; fix and remove
+            if (typeof projectMap[key] === 'undefined') {
+              projectMap[key] = []; // we don't know about this project yet
+            }
+            const existingStudent = projectMap[key].find(function (student: StudentResults) {
+              return student.userName === record.userName; // see if student is already associated with project
+            });
+            if (typeof existingStudent === 'undefined') {
+              projectMap[key].push(studentMap[record.userName]); // add student to the project
+            }
+          } else {
+            console.warn('WARN: missing key: ' + record.commitUrl);
+          }
+        } else {
+          // this only happens if the student cause a result but was not in the student list
+          // could happen for TAs / instructors, but should not happen for students
+          console.log('WARN: unknown student (probably a TA): ' + record.userName);
+        }
+      } else {
+        // wrong deliverable
+      }
+    }
+
+    // add all project executions to student
+    for (let record of data.records) {
+      if (record.delivId === this.delivId) { // HACK: backend should return only the right deliverable
+        if (record.projectUrl !== '') { // HACK: backend should only return complete records
+          const studentResult = studentMap[record.userName];
+          const project = projectMap[record.projectUrl];
+          if (typeof project !== 'undefined' && typeof studentResult !== 'undefined') {
+            for (let studentResult of project) {
+              // associate the execution with all students on that project
+              studentResult.executions.push(record);
+            }
+          } else {
+            // drop the record (either the student does not exist or the project does not exist).
+            // project case would happen if in the last loop we dropped an execution from a TA.
+          }
+        }
+      } else {
+        // wrong deliverable
+      }
+    }
+
+    // now choose the record we want to emit per-student
+    let studentFinal: StudentResults[] = [];
+    for (let userName of Object.keys(studentMap)) {
+      const studentResult = studentMap[userName];
+      const executionsToConsider = studentResult.executions;
+
+      let result: ResultRecord;
+      if (executionsToConsider.length > 0) {
+        // in this case we're going to take the last execution
+        // but you can use any of the ResultRecord rows here (branchName, gradeRequested, grade, etc.)
+        const orderedExecutions = executionsToConsider.sort(function (a: ResultRecord, b: ResultRecord) {
+          return b.timeStamp - a.timeStamp;
+        });
+        result = orderedExecutions[0];
+      } else {
+        // no execution records for student; put in a fake one that counts as 0
+        console.log('WARN: no execution records for student: ' + userName);
+        result = {
+          userName:       userName,
+          timeStamp:      -1, // never happened
+          projectName:    'No Request', // unknown
+          projectUrl:     '', //
+          commitUrl:      '',
+          branchName:     '',
+          gradeRequested: false,
+          grade:          '0',
+          delivId:        this.delivId,
+          gradeDetails:   []
+        };
+      }
+      const finalStudentRecord = {
+        userName:   userName,
+        student:    studentResult.student,
+        executions: [result]
+      };
+      studentFinal.push(finalStudentRecord);
+    }
+
+    const delta = new Date().getTime() - start;
+    console.log('Result->Grade conversion complete; # students: ' + data.students.length +
+      '; # records: ' + data.records.length + '. Took: ' + delta + ' ms');
+
+    this.dataToDownload = studentMap;
+    // this array can be trivially iterated on to turn into a CSV or any other format
+    return studentFinal;
+  } catch (err) {
+    console.error('ResultView::convertResultsToGrades(..) - ERROR: ' + err.members, err);
+    return {}; // TODO: return something better here
+  }
+
+}
+
 
 /**
  *
@@ -295,70 +441,70 @@ function mapResultsToTeams(_course: ICourseDocument, _results: any) {
 
         for (let i = 0; i < teams.length; i++) {
 
-        let highestGrade: number = 0;
-        let highestCommit: string = null;
-        let lastGrade: number = UNDEFINED_GRADE;
-        let lastCommit: string = null;
-        let lastSubmitted: number = 0;
-        let keysToUpdateForMax: string[] = [];
-        let keysToUpdateForLast: string[] = [];
+          let highestGrade: number = 0;
+          let highestCommit: string = null;
+          let lastGrade: number = UNDEFINED_GRADE;
+          let lastCommit: string = null;
+          let lastSubmitted: number = 0;
+          let keysToUpdateForMax: string[] = [];
+          let keysToUpdateForLast: string[] = [];
 
-        for (let j = 0; j < teams[i].members.length; j++) {
-          teamMembers.push(teams[i].members[j].username);
-        }
-
-        // for every result record entry, check for matching delivIds and store latest / highest item.
-        Object.keys(results).forEach(key => {
-
-          let delivId = String(results[key].delivId);
-          let gradeKey = String(results[key].gradeKey);
-
-          if (delivId === DELIV_ID && teamMembers.indexOf(results[key].username) > -1) {
-
-            // get the highest grade per team and deliverable
-            if (gradeKey.indexOf(MAX_GRADE_FLAG) > -1) {
-              if (highestGrade < results[key].gradeValue) {
-                highestGrade = results[key].gradeValue;
-                highestCommit = results[key].commit;
-              }
-              // based on DELIV_ID, username, and 'Max' in Results flag matching, push to update
-              keysToUpdateForMax.push(key);
-            }
-
-            if (gradeKey.indexOf(LAST_GRADE_FLAG) > -1) {
-              if (lastSubmitted < results[key].submitted) {
-                lastGrade = results[key].gradeValue;
-                lastCommit = results[key].commit;
-                lastSubmitted = results[key].submitted;
-              }
-              // push keys to update afterwards to for last grade Results
-              keysToUpdateForLast.push(key);
-            }
+          for (let j = 0; j < teams[i].members.length; j++) {
+            teamMembers.push(teams[i].members[j].username);
           }
-        });
 
-        // update grade with highest grade for each student on team
-        for (let k = 0; k < keysToUpdateForMax.length; k++) {
-          results[keysToUpdateForMax[k]].commit = highestCommit;
-          results[keysToUpdateForMax[k]].gradeValue = highestGrade;
+          // for every result record entry, check for matching delivIds and store latest / highest item.
+          Object.keys(results).forEach(key => {
+
+            let delivId = String(results[key].delivId);
+            let gradeKey = String(results[key].gradeKey);
+
+            if (delivId === DELIV_ID && teamMembers.indexOf(results[key].username) > -1) {
+
+              // get the highest grade per team and deliverable
+              if (gradeKey.indexOf(MAX_GRADE_FLAG) > -1) {
+                if (highestGrade < results[key].gradeValue) {
+                  highestGrade = results[key].gradeValue;
+                  highestCommit = results[key].commit;
+                }
+                // based on DELIV_ID, username, and 'Max' in Results flag matching, push to update
+                keysToUpdateForMax.push(key);
+              }
+
+              if (gradeKey.indexOf(LAST_GRADE_FLAG) > -1) {
+                if (lastSubmitted < results[key].submitted) {
+                  lastGrade = results[key].gradeValue;
+                  lastCommit = results[key].commit;
+                  lastSubmitted = results[key].submitted;
+                }
+                // push keys to update afterwards to for last grade Results
+                keysToUpdateForLast.push(key);
+              }
+            }
+          });
+
+          // update grade with highest grade for each student on team
+          for (let k = 0; k < keysToUpdateForMax.length; k++) {
+            results[keysToUpdateForMax[k]].commit = highestCommit;
+            results[keysToUpdateForMax[k]].gradeValue = highestGrade;
+          }
+
+          for (let k = 0; k < keysToUpdateForLast.length; k++) {
+            results[keysToUpdateForLast[k]].commit = lastCommit;
+            results[keysToUpdateForLast[k]].gradeValue = lastGrade;
+          }
+
+          // clear teamMembers and keysToUpdate to prep for next Team iteration;
+          keysToUpdateForMax = [];
+          keysToUpdateForLast = [];
+          teamMembers = [];
+          highestGrade = 0;
+          lastSubmitted = 0;
+          lastGrade = UNDEFINED_GRADE;
         }
-
-        for (let k = 0; k < keysToUpdateForLast.length; k++) {
-          results[keysToUpdateForLast[k]].commit = lastCommit;
-          results[keysToUpdateForLast[k]].gradeValue = lastGrade;
-        }
-
-        // clear teamMembers and keysToUpdate to prep for next Team iteration;
-        keysToUpdateForMax = [];
-        keysToUpdateForLast = [];
-        teamMembers = [];
-        highestGrade = 0;
-        lastSubmitted = 0;
-        lastGrade = UNDEFINED_GRADE;
       }
-    }
       return results;
-  });
+    });
 }
 
 function sortArrayByLastName(csvArray: any[]) {

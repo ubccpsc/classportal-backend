@@ -2,9 +2,30 @@ export interface ResultPayloadContainer {
   response: ResultPayload;
 }
 
+// export interface ResultPayload {
+//  students: Student[]; // _all_ students in the course, whether they invoked AutoTest or not
+//  records: ResultRecord[]; // all records within the valid time range. Single deliverable only (v0 at least).
+// }
+
+export interface ResultPayloadInternal {
+  students: Student[];
+  records: ResultRecord[];
+}
+
 export interface ResultPayload {
-  students: Student[]; // _all_ students in the course, whether they invoked AutoTest or not
-  records: ResultRecord[]; // all records within the valid time range. Single deliverable only (v0 at least).
+  students: StudentResult[];
+  // records: ResultRecord[];
+
+  // TODO: remove records
+  // TODO: update students to studentresult
+
+  // Maps the projects to the result records
+  // Enables quick retrieval of ResultRecord from a StudentRecord
+  projectMap: { [projectUrl: string]: ResultRecord[] };
+}
+
+export interface StudentResult extends Student {
+  projectUrl: string; // the project for a student (deliverableId captured in ResultRecord itself)
 }
 
 export interface ResultRecord {
