@@ -249,9 +249,8 @@ function getResultsByCourse(payload: any) {
       };
 
       let newFormat = convertResultFormat(resultPayload, payload.deliverableName);
-      // NOTE: not returned yet
-
-      return resultPayload;
+      // return resultPayload;
+      return newFormat;
     });
 }
 
