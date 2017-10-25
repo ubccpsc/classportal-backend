@@ -34,7 +34,7 @@ function getResultsByCourse(payload: any) {
   const REPORT_FAILED_FLAG: string = 'REPORT_FAILED';
   const CSV_FORMAT_FLAG = 'csv';
 
-  let teams: ITeamDocument;
+  let teams: ITeamDocument[];
   let course: ICourseDocument;
   let deliverables: IDeliverableDocument[];
   let deliverable: IDeliverableDocument;
@@ -78,6 +78,16 @@ function getResultsByCourse(payload: any) {
         .catch((err: any) => {
           logger.error(`ResultController::getGradesFromResults() getUniqueStringsInRow ERROR ${err}`);
         });
+    })
+    .then(() => {
+        return Team.find({$or: [{deliverableIds: deliverable._id}, {deliverableId: deliverable._id}]})
+          .then((_team: ITeamDocument[]) => {
+            if (_team) {
+              teams = _team;
+              return _team;
+            }
+            throw `Could not find teams`;
+          });
     })
     .then(() => {
 
@@ -222,7 +232,14 @@ function getResultsByCourse(payload: any) {
       // a deliverable in case they never make a commit
       let students: StudentResult[] = [];
       let classList: IUserDocument[] = course.classList as IUserDocument[];
+      let teamLabUrl: string = '';
       for (let student of classList) {
+        for (let team of teams) {
+          if (team.members.indexOf(student._id) > -1) {
+            // team Lab URL should be '' if repo has not yet been created
+            teamLabUrl = team.githubState.repo.url;
+          }
+        }
         let s: StudentResult = {
           userName:   student.username,
           userUrl:    'https://github.ubc.ca/' + student.username,
@@ -232,7 +249,7 @@ function getResultsByCourse(payload: any) {
           csId:       student.csid,
           labId:      'UNASSIGNED',
           TA:         [''],
-          projectUrl: '', // TODO: need this!
+          projectUrl: teamLabUrl, // TODO: need this!
         };
 
         for (let labSection of course.labSections) {
@@ -260,6 +277,7 @@ function convertResultFormat(data: ResultPayloadInternal, delivId: string): Resu
 
   try {
     const start = new Date().getTime();
+
 
     for (let s of data.students) {
       if (s.projectUrl === '') {
