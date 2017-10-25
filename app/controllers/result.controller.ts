@@ -298,7 +298,7 @@ function convertResultFormat(data: ResultPayloadInternal, delivId: string): Resu
     };
 
     return returnObj;
-    
+
   } catch (err) {
     console.error('result.controller::convertResultFormat(..)  - ERROR: ' + err.members, err);
     return {students: [], projectMap: {}}; // empty return
