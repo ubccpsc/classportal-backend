@@ -315,7 +315,19 @@ export class Results {
             if (typeof projectMap[key] === 'undefined') {
               projectMap[key] = [record]; // start the record for this project
             } else {
-              projectMap[key].push(record); // add to the existing record for this project
+
+              let forceInclude = false;
+              const existingRecord = projectMap[key].find(function (rec: ResultRecord) {
+                const exists = rec.commitUrl === record.commitUrl; // see if a record is already in the object
+                if (exists === true && rec.grade !== record.grade) {
+                  console.log('result.controller::convertResultFormat(..) - Grade difference for: ' + rec.commitUrl + '; g1: ' + rec.grade + '; g2: ' + record.grade);
+                  forceInclude = true; // there's a grade difference, include both records (probably due to nondeterminism)
+                }
+                return exists;
+              });
+              if ((typeof existingRecord === 'undefined') || (forceInclude as boolean === true)) {
+                projectMap[key].push(record); // add to the existing record for this project
+              }
             }
           } else {
             console.warn('result.controller::convertResultFormat(..) - WARN: missing projectUrl for commit: ' + record.commitUrl);
