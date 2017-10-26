@@ -108,7 +108,7 @@ export class Results {
             deliverable: payload.deliverableName,
           })
             .then((results: any[]) => {
-              console.log(results);
+              // console.log(results);  // too verbose
               singleDelivResults = results;
               return results;
             });
