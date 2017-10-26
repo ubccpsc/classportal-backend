@@ -29,7 +29,7 @@ export class Results {
    */
   public getResultsByCourse(payload: any) {
 
-    logger.info(`ResultController:: getGradesfromResults() - start`);
+    logger.info(`ResultController::getGradesfromResults() - start`);
     const REPORT_FAILED_FLAG: string = 'REPORT_FAILED';
     const CSV_FORMAT_FLAG = 'csv';
 
@@ -293,7 +293,7 @@ export class Results {
 
 
   private convertResultFormat(data: ResultPayloadInternal, delivId: string): ResultPayload {
-    console.log('result.controller::convertResultFormat(..) - start');
+    console.log('ResultController::convertResultFormat(..) - start');
 
     try {
       const start = new Date().getTime();
@@ -301,7 +301,7 @@ export class Results {
 
       for (let s of data.students) {
         if (s.projectUrl === '') {
-          console.warn('result.controller::convertResultFormat(..) - WARN: missing student.projectUrl for student: ' + s.userName);
+          console.warn('ResultController::convertResultFormat(..) - WARN: missing student.projectUrl for student: ' + s.userName);
         }
       }
 
@@ -318,7 +318,7 @@ export class Results {
               projectMap[key].push(record); // add to the existing record for this project
             }
           } else {
-            console.warn('result.controller::convertResultFormat(..) - WARN: missing projectUrl for commit: ' + record.commitUrl);
+            console.warn('ResultController::convertResultFormat(..) - WARN: missing projectUrl for commit: ' + record.commitUrl);
           }
         } else {
           // wrong deliverable
@@ -326,7 +326,7 @@ export class Results {
       }
 
       const delta = new Date().getTime() - start;
-      console.log('Result->Grade conversion complete; # students: ' + data.students.length +
+      console.log('ResultController::convertResultFormat(..) - complete; # students: ' + data.students.length +
         '; # records: ' + data.records.length + '. Took: ' + delta + ' ms');
 
       let returnObj: ResultPayload = {
@@ -337,7 +337,7 @@ export class Results {
       return returnObj;
 
     } catch (err) {
-      console.error('result.controller::convertResultFormat(..)  - ERROR: ' + err.members, err);
+      console.error('ResultController::convertResultFormat(..)  - ERROR: ' + err.members, err);
       return {students: [], projectMap: {}}; // empty return
     }
 
