@@ -320,7 +320,8 @@ export class Results {
               const existingRecord = projectMap[key].find(function (rec: ResultRecord) {
                 const exists = rec.commitUrl === record.commitUrl; // see if a record is already in the object
                 if (exists === true && rec.grade !== record.grade) {
-                  console.log('result.controller::convertResultFormat(..) - Grade difference for: ' + rec.commitUrl + '; g1: ' + rec.grade + '; g2: ' + record.grade);
+                  console.log('result.controller::convertResultFormat(..) - Grade difference for: ' + rec.commitUrl +
+                    '; g1: ' + rec.grade + '; g2: ' + record.grade);
                   forceInclude = true; // there's a grade difference, include both records (probably due to nondeterminism)
                 }
                 return exists;
