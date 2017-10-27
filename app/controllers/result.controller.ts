@@ -99,7 +99,6 @@ function getResultsByCourse(payload: any) {
     })
     .then(() => {
 
-      // queries the highest grade and last grade, then merges both per user
       if (!payload.allDeliverables) {
 
         return db.getAllResultRecords('results', timestamp, {
@@ -107,7 +106,7 @@ function getResultsByCourse(payload: any) {
           deliverable: payload.deliverableName,
         })
           .then((results: any[]) => {
-            console.log(results);
+            console.log('raw results', results);
             singleDelivResults = results;
             return results;
           });
@@ -216,7 +215,7 @@ function getResultsByCourse(payload: any) {
           projectName:    results[key].team,
           projectUrl:     results[key].projectUrl,
           branchName:     results[key].ref,
-          gradeRequested: false,
+          gradeRequested: results[key].gradeRequested,
           delivId:        results[key].deliverable,
           grade:          '0',
           timeStamp:      results[key].timestamp,
@@ -268,7 +267,7 @@ function getResultsByCourse(payload: any) {
           csId:       student.csid,
           labId:      'UNASSIGNED',
           TA:         [''],
-          projectUrl: repoUrl, // TODO: need this!
+          projectUrl: repoUrl, 
         };
 
         for (let labSection of course.labSections) {
