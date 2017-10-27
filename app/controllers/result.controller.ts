@@ -217,7 +217,7 @@ export class Results {
             projectName:    results[key].team,
             projectUrl:     results[key].projectUrl,
             branchName:     results[key].ref,
-            gradeRequested: false,
+            gradeRequested: results[key].gradeRequested,
             delivId:        results[key].deliverable,
             grade:          '0',
             timeStamp:      results[key].timestamp,
