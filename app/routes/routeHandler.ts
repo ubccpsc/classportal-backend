@@ -4,7 +4,6 @@ import * as courseCtrl from '../controllers/course.controller';
 import * as authCtrl from '../controllers/auth.controller';
 import * as delivCtrl from '../controllers/deliverable.controller';
 import * as gradeCtrl from '../controllers/grade.controller';
-import * as resultCtrl from '../controllers/result.controller';
 import * as teamCtrl from '../controllers/team.controller';
 import * as testCtrl from '../controllers/test.controller';
 import * as fileCtrl from '../controllers/file.controller';
@@ -19,6 +18,7 @@ import {Project, IProjectDocument} from '../models/project.model';
 import {Deliverable, IDeliverableDocument} from '../models/deliverable.model';
 import {Team, ITeamDocument} from '../models/team.model';
 import {Dashboard} from "../controllers/dashboard.controller";
+import {Results} from "../controllers/result.controller";
 
 let mime = require('mime-types');
 
@@ -354,7 +354,7 @@ const disbandTeamById = (req: restify.Request, res: restify.Response, next: rest
 };
 
 const getGradesFromResults = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return resultCtrl.getResultsByCourse(req.params)
+  return new Results().getResultsByCourse(req.params)
     .then((results) => {
       const CSV_FORMAT_FLAG = 'csv';
       if (req.params.format === CSV_FORMAT_FLAG) {
@@ -374,7 +374,7 @@ const getFileFromResultRecord = (req: restify.Request, res: restify.Response, ne
   return fileCtrl.getFileFromResultRecord(req.params)
     .then((response: any) => {
       res.writeHead(200, {
-        'Content-Type': mime.lookup(FILENAME),
+        'Content-Type':        mime.lookup(FILENAME),
         'Content-Disposition': 'inline; filename=' + FILENAME,
       });
       res.end(response);
