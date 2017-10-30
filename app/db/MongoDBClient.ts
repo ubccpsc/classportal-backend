@@ -22,7 +22,7 @@ export class MongoDB {
   /**
    * Gets MongoDB connection
    */
-  public async initDB() {
+  public async initDB(): Promise<mongodb.Db> {
     
     const OPTIONS = {autoReconnect: true};
     const DEBUG_TOGGLE: string = 'debug';
@@ -200,6 +200,7 @@ export class MongoDB {
         commitUrl: 1,     
         commit: 1,
         timestamp: 1,    
+        gradeRequestedTimestamp: 1,
         ref: 1,    
       };
 
@@ -216,6 +217,7 @@ export class MongoDB {
         commitUrl: 1,        
         commit: 1,
         timestamp: 1,   
+        gradeRequestedTimestamp: 1,
         ref: 1,
       };
 

@@ -1,12 +1,23 @@
 import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
-
+import db, {Database, InsertOneResponse} from '../db/MongoDBClient';
+import mongodb = require('mongodb');
+const bfj = require('bfj');
 let fs = require('fs');
+
+const RESULTS_COLLECTION = 'results';
+const REQUESTS_COLLECTION = 'requests';
 
 class DataExporter {
 
+  private context: mongodb.Db;
+
   constructor() {
     // empty
+  }
+
+  public isFinished() {
+    console.log('Done writing file output');
   }
 
   public exportTable(orgName: string, tableName: string, fName: string) {
@@ -16,7 +27,29 @@ class DataExporter {
     }
 
     if (tableName === 'results') {
-      // TODO: impl here
+
+      let resultsOutputFile = 'results_' + orgName + '_dump.json';
+
+      db.initDB().then((_db: mongodb.Db) => {
+        return _db.collection('results').find({orgName})
+          .toArray((err: Error, results: any[]) => {
+            console.log(err);
+            if (err) {
+              throw err;
+            }
+            fs.writeFileSync(resultsOutputFile, "{");
+            for (let i = 0; i < results.length; i++) {
+              fs.appendFileSync(resultsOutputFile, JSON.stringify(results[i]));
+              process.stdout.write(".");
+              if (results.length !== i) {
+                fs.appendFileSync(resultsOutputFile, ",");
+              }
+            }
+            fs.appendFileSync(resultsOutputFile, "}");
+            console.log('stringification worked');
+            return;
+          });
+      });
     } else {
       console.error('DataExporter::exportTable(..) - ERROR: only exporting the "results" table is currently supported.');
     }
