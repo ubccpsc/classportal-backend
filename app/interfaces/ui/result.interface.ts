@@ -19,14 +19,14 @@ export interface StudentResult extends Student {
 export interface ResultRecord {
   userName: string;           // cwl; key back to Student
   timeStamp: number;          // timestamp of the webhoook push event
-
+  gradeRequestedTimeStamp: number; // timestamp of when the grade was requested by student ( -1 if never requested )
+  
   projectName: string;        // string name for project (e.g., cpsc310_team22)
   projectUrl: string;         // full URL to project
 
   commitUrl: string;          // full URL to commit corresponding to the row
   branchName: string;         // branch name
   gradeRequested: boolean;    // was the result explicitly requested by the student
-
   delivId: string;            // deliverable name
   grade: string;              // string, just in case people want to use letters instead of numbers
   gradeDetails: ResultDetail[];

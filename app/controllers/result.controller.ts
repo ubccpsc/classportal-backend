@@ -22,6 +22,7 @@ let fs = require('fs');
 let stringify = require('csv-stringify');
 
 export class Results {
+  
   /**
    * @param courseId courseId number of courseId ie. 310
    * @param deliverableName string name of deliverable ie. 'd2'
@@ -218,6 +219,7 @@ export class Results {
             projectUrl:     results[key].projectUrl,
             branchName:     results[key].ref,
             gradeRequested: results[key].gradeRequested,
+            gradeRequestedTimeStamp: results[key].gradeRequestedTimestamp,
             delivId:        results[key].deliverable,
             grade:          '0',
             timeStamp:      results[key].timestamp,
