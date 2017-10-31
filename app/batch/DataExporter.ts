@@ -2,7 +2,8 @@ import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
 import db, {Database, InsertOneResponse} from '../db/MongoDBClient';
 import mongodb = require('mongodb');
-const bfj = require('bfj');
+
+
 let fs = require('fs');
 
 const RESULTS_COLLECTION = 'results';
@@ -33,19 +34,19 @@ class DataExporter {
       db.initDB().then((_db: mongodb.Db) => {
         return _db.collection('results').find({orgName})
           .toArray((err: Error, results: any[]) => {
-            console.log(err);
             if (err) {
+              console.log(err);              
               throw err;
             }
-            fs.writeFileSync(resultsOutputFile, "{");
+            fs.writeFileSync(resultsOutputFile, `{"${orgName + '":['}`);
             for (let i = 0; i < results.length; i++) {
               fs.appendFileSync(resultsOutputFile, JSON.stringify(results[i]));
               process.stdout.write(".");
-              if (results.length !== i) {
+              if (i !== (results.length - 1)) {
                 fs.appendFileSync(resultsOutputFile, ",");
               }
             }
-            fs.appendFileSync(resultsOutputFile, "}");
+            fs.appendFileSync(resultsOutputFile, "]}");
             console.log('stringification worked');
             return;
           });
