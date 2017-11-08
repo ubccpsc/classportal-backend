@@ -38,7 +38,7 @@ class DataExporter {
               console.log(err);              
               throw err;
             }
-            fs.writeFileSync(resultsOutputFile, `{"${orgName + '":['}`);
+            fs.writeFileSync(resultsOutputFile, `[`);
             for (let i = 0; i < results.length; i++) {
               fs.appendFileSync(resultsOutputFile, JSON.stringify(results[i]));
               process.stdout.write(".");
@@ -46,7 +46,7 @@ class DataExporter {
                 fs.appendFileSync(resultsOutputFile, ",");
               }
             }
-            fs.appendFileSync(resultsOutputFile, "]}");
+            fs.appendFileSync(resultsOutputFile, "]");
             console.log('stringification worked');
             return;
           });
