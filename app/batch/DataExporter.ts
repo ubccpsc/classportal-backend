@@ -29,7 +29,8 @@ class DataExporter {
 
     if (tableName === 'results') {
 
-      let resultsOutputFile = 'results_' + orgName + '_dump.json';
+      let directory = require('readline-sync').question('Enter directory path for output file: ');
+      let resultsOutputFile = directory + 'results_' + orgName + '_dump.json';
 
       db.initDB().then((_db: mongodb.Db) => {
         return _db.collection('results').find({orgName})
