@@ -24,6 +24,10 @@ const isAuthenticated = (req: any, res: any, next: restify.Next) => {
 };
 
 const adminAuthenticated = (req: any, res: restify.Response, next: restify.Next) => {
+  if (typeof req.user === 'undefined') {
+    console.log('auth.middleware::isAuthenticated() - admin authenticated: no session username available');    
+    return next(new errors.UnauthorizedError('Permission denied.'));
+  }
   console.log('auth.middleware::isAuthenticated() - admin authenticated: ' + req.user.username);
   let userrole: string = String(req.user.userrole);
   if (req.isAuthenticated() === true && userrole === ADMIN_ROLE || userrole === SUPERADMIN_ROLE) {
