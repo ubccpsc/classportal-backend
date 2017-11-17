@@ -5,53 +5,43 @@ import {Deliverable, IDeliverableDocument} from '../models/deliverable.model';
 import {Course, ICourseDocument} from '../models/course.model';
 import {User, IUserDocument} from '../models/user.model';
 import {logger} from '../../utils/logger';
+import {DeliverablePayload} from '../interfaces/ui/deliverable.interface';
 
-export interface DeliverablePayload {
-  id: string;
-  open: number; // timestamp
-  close: number; // timestamp
-}
 
-// Retrieves and updates Deliverable object.
-function queryAndUpdateDeliverable(course: ICourseDocument, deliverable: any): Promise<IDeliverableDocument> {
+/**
+ * Updates a deliverable that matches the deliverable MongoDB _id in deliverable object
+ * @param deliverable object new fields with MongoDB _id
+ * @return IDeliverableDocument[] list of deliverables for a course
+ */
+function updateDeliverable(payload: any): Promise<IDeliverableDocument> {
   logger.info('DeliverablesController::updateDeliverables() in Deliverable Controller');
-  let deliverableList = new Array;
-
-  if (deliverable !== null && course !== null) {
-
-    let searchParams = {name: deliverable.name, courseId: course._id};
+    console.log(payload);
+    let searchParams = {_id: payload.deliverable._id};
 
     return Deliverable.findOne(searchParams)
-      .then(d => {
-        if (d !== null) {
-          d.url = deliverable.url;
-          d.open = deliverable.open;
-          d.close = deliverable.close;
-          d.gradesReleased = deliverable.close;
-          d.courseId = course._id;
-          return d.save();
-        } else {
-          return Deliverable.create({
-            url:            deliverable.url,
-            open:           deliverable.open,
-            name:           deliverable.name,
-            close:          deliverable.close,
-            gradesreleased: deliverable.gradesReleased,
-            courseId:       course._id,
-          }).then(d => {
-            course.deliverables.push(d);
-            course.save();
-            return d;
-          })
-            .then(() => {
-              return addDeliverablesToCourse(course, d);
+      .exec()
+      .then((d: IDeliverableDocument) => {
+        if (d) {
+          d.url = payload.deliverable.url;
+          d.open = payload.deliverable.open;
+          d.close = payload.deliverable.close;
+          d.gradesReleased = payload.deliverable.gradesReleased;
+          d.markInBatch = payload.deliverable.markInBatch;
+          d.buildingRepos = payload.deliverable.buildingRepos;
+          // name changes to id on the front-end
+          d.name = payload.deliverable.id;
+          return d.save()
+            .then((d: IDeliverableDocument) => {
+              logger.info('DeliverableController::updateDeliverable() Successfully saved Deliverable');
+              return d;
             });
-        }
+        } 
+        throw 'DeliverableController::queryAndUpdateDeliverable() ERROR Could not find a deliverable to update';
+      })
+      .catch((err) => {
+        logger.error(err);
+        return Promise.reject(err);
       });
-  }
-  logger.info(new Error('updateDeliverables(): Insufficient deliverable payload or CourseId' +
-    ' does not match'));
-  return Promise.reject(new Error('Insufficient deliverable payload or CourseId does not match'));
 }
 
 // Method only adds Deliverable to course if it is not already added.
@@ -62,19 +52,6 @@ function addDeliverablesToCourse(course: any, deliverable: IDeliverableDocument)
     course.deliverables.push(deliverable._id);
   }
   return course.save();
-}
-
-function updateDeliverable(payload: any) {
-  logger.info('DeliverablesController::updateDeliverable() in Deliverable Controller');
-  return Course.findOne({'courseId': payload.courseId})
-    .exec()
-    .then(c => {
-      if (c) {
-        return queryAndUpdateDeliverable(c, payload);
-      } else {
-        return Promise.reject(new Error('Error assigning deliverables to course #' + payload.courseId + '.'));
-      }
-    });
 }
 
 // Adds a deliverable. Rejects if Deliverable exists with same Course Name and Course._id
@@ -149,11 +126,23 @@ function getDeliverablesByCourse(payload: any) {
             // change the database records into the format expected by clients
             let retDelivs: DeliverablePayload[] = [];
             for (let d of delivs) {
+              // temporary unix timestamp to fix deliverable until 
+              // can be properly schemaed on back-end API.
               const open = new Date(d.open).getTime();
               const close = new Date(d.close).getTime();
-              retDelivs.push({id: d.name, open: open, close: close});
+              retDelivs.push({
+                id: d.name,
+                open: open, 
+                close: close, 
+                _id: d._id, 
+                name: d.name, 
+                gradesReleased: d.gradesReleased,
+                projectCount: d.projectCount,
+                markInBatch: d.markInBatch,
+                url: d.url,
+                buildingRepos: d.buildingRepos
+               });
             }
-
             return retDelivs;
           }
           throw new Error(`No deliverables found for course ${payload.courseId}`);
@@ -164,4 +153,4 @@ function getDeliverablesByCourse(payload: any) {
     });
 }
 
-export {updateDeliverable, getDeliverablesByCourse, addDeliverable};
+export {getDeliverablesByCourse, addDeliverable, updateDeliverable};

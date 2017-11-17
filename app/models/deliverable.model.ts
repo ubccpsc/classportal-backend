@@ -10,7 +10,9 @@ interface IDeliverableDocument extends mongoose.Document {
   close: Date;
   projectCount: number;
   teamCount: number;
-  gradesReleased: Boolean;
+  gradesReleased: boolean;
+  markInBatch: boolean;
+  buildingRepos: boolean;
 }
 
 interface IDeliverableModel extends mongoose.Model<IDeliverableDocument> {
@@ -23,6 +25,14 @@ const DeliverableSchema = new mongoose.Schema({
   },
   teamCount:      {
     type: Number,
+  },
+  markInBatch: {
+    type: Boolean,
+    default: false,
+  },
+  buildingRepos: {
+    type: Boolean,
+    default: false,
   },
   name:           {
     type:     String,
