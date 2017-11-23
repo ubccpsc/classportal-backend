@@ -353,6 +353,12 @@ const disbandTeamById = (req: restify.Request, res: restify.Response, next: rest
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
+const getTeamProvisionOverview = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.getTeamProvisionOverview(req.params)
+    .then((overview: any) => res.json(200, {response: overview}))
+    .catch((err: any) => res.json(500, {err: err.message}));
+};
+
 const getGradesFromResults = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return new Results().getResultsByCourse(req.params)
     .then((results) => {
@@ -393,5 +399,5 @@ export {
   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects,
   getUsersNotOnTeam, getCourse, getMyTeams, generateProjects, repairIndividualProvisions, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking, getDashForDeliverable,
-  disbandTeamById, getGradesFromResults, getFileFromResultRecord
+  disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview
 };

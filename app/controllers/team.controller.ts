@@ -566,6 +566,120 @@ function getCourseTeamsPerUser(req: any): Promise<ITeamDocument[]> {
   });
 }
 
+/**
+ * Gets information on a deliverable and course to compare against Teams that 
+ * are created.
+ * @param deliverable string ie. "d0", "d1".
+ * @param courseId number ie. 210, 310, etc.
+ */
+function getTeamProvisionOverview(payload: any): Promise<Object> {
+  let deliverable: IDeliverableDocument;
+  let course: ICourseDocument;
+  let teams: ITeamDocument[];
+  return Course.findOne({courseId: payload.courseId})
+  .then((_course: ICourseDocument) => {
+    if (_course) {
+      course = _course;
+      return _course;
+    }
+    throw `Could not find course ${payload.courseId}`;
+  })
+    .then(() => {
+      return Deliverable.findOne({courseId: course._id, name: payload.deliverable})
+        .then((_deliverable: IDeliverableDocument) => {
+          if (_deliverable) {
+            deliverable = _deliverable;
+            return _deliverable;
+          }
+          throw `Could not find deliverable ${payload.deliverable}`;
+        })
+        .catch((err: any) => {
+          logger.error(`TeamController::getTeamProvisionOverview() ERROR ${err}`);
+          throw "Could not get team provision overview";
+        });
+    })
+    .then(() => {
+      return Team.find({courseId: course._id, deliverableIds: deliverable._id})
+        .then((_teams: ITeamDocument[]) => {
+          if (_teams) {
+            teams = _teams;
+            return _teams;
+          }
+          throw 'Could not get team provision overview';
+        })
+        .catch((err: any) => {
+          return err;
+        });
+    })
+    .then(() => {
+      return createTeamHealthInfo(course, deliverable, teams);
+    })
+    .catch((err: any) => {
+      logger.error(err);
+      return {err};
+    });
+}
+
+/**
+ * Gets information on a deliverable and course to compare against Teams that 
+ * are created.
+ * @param course ICourseDocument Course with classList info for Teams/Deliverable objects to assess.
+ * @param deliverable IDeliverableDocument Deliverable to assess.
+ * @param teams ITeamDocument[] List of Teams with Github States for Deliverable and Class.
+ */
+function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverableDocument, 
+  teams: ITeamDocument[]): Object {
+
+    const CLASS_SIZE = course.classList.length;
+    let getNumberOfTeams = function() {
+      let count = 0;
+      for (let team of teams) {
+        if (team.disbanded === false) {
+          count++;
+        }
+      }
+      return count;
+    };
+    const TEAMS_ALLOWED = deliverable.teamsAllowed;
+    const TEAMS_BY_LAB = deliverable.teamsInSameLab;
+
+    let getStudentsTeamStatus = function() {
+      let studentsOnTeamIds: object[] = [];
+      let studentsWithoutTeamIds: object[] = [];
+      for (let student of course.classList) {
+        let onTeam: boolean = false;
+        for (let team of teams) {
+          if (team.members.indexOf(student as IUserDocument) > -1) {
+            onTeam = true;
+          }
+        }
+        if (onTeam) {
+          studentsOnTeamIds.push(student);
+        } else {
+          studentsWithoutTeamIds.push(student);
+        }
+      }
+      return {studentsWithTeam: studentsOnTeamIds, studentsWithoutTeam: studentsWithoutTeamIds};
+    };
+
+    let mappedObj: any = {};
+
+    console.log('class size', CLASS_SIZE);
+    console.log('num of teams', getNumberOfTeams());
+    console.log(' student team status', getStudentsTeamStatus());
+
+    mappedObj[course.courseId + 'Info'] = { 
+            classSize: CLASS_SIZE,
+            teamsAllowed: TEAMS_ALLOWED,
+            numOfTeams: getNumberOfTeams(),
+            studentTeamStatus: getStudentsTeamStatus()
+          };
+
+    return mappedObj;
+
+}
+
+
 function createGithubRepo(payload: any): Promise<Object> {
 
   const SUPERADMIN = 'superadmin';
@@ -1440,5 +1554,5 @@ function insertTeamDocuments(_bulkInsertArray: any) {
 export {
   createTeam, update, getTeams, createGithubTeam, createGithubRepo, getRepos, getCourseTeamsPerUser,
   randomlyGenerateTeamsPerCourse, getUsersNotOnTeam, getMyTeams, createCustomTeam,
-  getCourseTeamsWithBatchMarking, disbandTeamById
+  getCourseTeamsWithBatchMarking, disbandTeamById, getTeamProvisionOverview
 };
