@@ -620,25 +620,32 @@ function createGithubRepo(payload: any): Promise<Object> {
     });
 }
 
-function getTeams(payload: any) {
+  /**
+   * @param courseId courseId number of courseId ie. 310
+   * @return TeamsPayload
+   */
+function getTeams(payload: any): Promise<ITeamDocument[]> {
   return Course.findOne({courseId: payload.courseId})
-    .exec()
     .then(c => {
-      return Team.find({course: c._id})
-        .select('teamId githubUrl TAs name members deliverable')
+      return Team.find({courseId: c._id})
         .populate({
           path:   'TAs',
-          select: 'fname lname csid snum -_id',
         })
         .populate({
-          path:   'deliverable',
-          select: 'name url open close -_id',
+          path:   'deliverableIds',
+        })
+        .populate({
+          path: 'deliverableId',
         })
         .populate({
           path:   'members',
-          select: 'fname lname csid snum -_id',
         })
-        .exec();
+        .then((teams: ITeamDocument[]) => {
+          if (teams) {
+            return teams;
+          }
+          throw `Cannot find any teams under course ${payload.courseId}`;
+        });
     });
 }
 

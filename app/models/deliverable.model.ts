@@ -2,13 +2,20 @@ import * as mongoose from 'mongoose';
 import {logger} from '../../utils/logger';
 import {ITeamDocument} from './team.model';
 
+const DEFAULT_MAX_TEAM_SIZE: number = 9999;
+const DEFAULT_MIN_TEAM_SIZE: number = 1;
+
 interface IDeliverableDocument extends mongoose.Document {
   courseId: string;
   name: string;
   url: string;
-  open: Date;
-  close: Date;
+  open: number;
+  close: number;
   projectCount: number;
+  teamsInSameLab: boolean;
+  teamsAllowed: boolean;
+  maxTeamSize: number;
+  minTeamSize: number;
   teamCount: number;
   gradesReleased: boolean;
   markInBatch: boolean;
@@ -30,12 +37,28 @@ const DeliverableSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  teamsInSameLab: {
+    type: Boolean,
+    default: false,
+  },
+  maxTeamSize: {
+    type: Number,
+    default: DEFAULT_MAX_TEAM_SIZE,
+  },
+  minTeamSize: {
+    type: Number,
+    default: DEFAULT_MIN_TEAM_SIZE,
+  },
+  teamsAllowed: {
+    type: Boolean,
+    default: false,
+  },
   buildingRepos: {
     type: Boolean,
     default: false,
   },
   name:           {
-    type:     String,
+    type: String,
     required: true,
   },
   githubOrg:      {
@@ -54,10 +77,10 @@ const DeliverableSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, ref: 'User',
   },
   open:           {
-    type: Date,
+    type: Number,
   },
   close:          {
-    type: Date,
+    type: Number,
   },
   gradesReleased: {
     type: Boolean,

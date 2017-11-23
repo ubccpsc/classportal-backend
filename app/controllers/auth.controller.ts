@@ -60,10 +60,11 @@ function addTokenToDB(req: any, res: any): Promise<string> {
  */
 function getCurrentUser(req: any, res: any, next: any): Promise<object> {
   console.log('auth.controller::getCurrentUser(..) - start; user: ' + req.user);
-  return Promise.resolve(res.json(200, {user: req.user}))
-    .catch((err) => {
-      logger.info('auth.controller::getCurrentUser(..) - Error loading user info: ' + err);
-    });
+  if (typeof req.user !== 'undefined') {
+    return Promise.resolve({user: req.user});    
+  } else {
+    return Promise.resolve({user: null});
+  }
 }
 
 /**

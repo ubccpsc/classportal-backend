@@ -26,7 +26,6 @@ const routes = (server: restify.Server) => {
   server.post('/:courseId/students/isInClass', routeHandler.isStudentInSameLab);
   server.get('/:courseId/students/withoutTeam', isAuthenticated, routeHandler.getUsersNotOnTeam);
   server.put('/register', isAuthenticated, routeHandler.validateRegistration);
-  server.get('/:courseId/:userId/teams', isAuthenticated, routeHandler.getCourseTeamsPerUser);
   server.put('/:courseId/team', routeHandler.createTeam);
   server.put('/:courseId/admin/customTeam', isAuthenticated, routeHandler.createCustomTeam);
   server.get('/:courseId/students', isAuthenticated, routeHandler.getStudentNamesFromCourse);
