@@ -631,6 +631,10 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
   teams: ITeamDocument[]): Object {
 
     const CLASS_SIZE = course.classList.length;
+    let studentsTeamStatus: object;
+    let studentsOnTeamIds: object[] = [];
+    let studentsWithoutTeamIds: object[] = [];
+
     let getNumberOfTeams = function() {
       let count = 0;
       for (let team of teams) {
@@ -644,8 +648,8 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
     const TEAMS_BY_LAB = deliverable.teamsInSameLab;
 
     let getStudentsTeamStatus = function() {
-      let studentsOnTeamIds: object[] = [];
-      let studentsWithoutTeamIds: object[] = [];
+
+      let promises: any = [];            
       for (let student of course.classList) {
         let onTeam: boolean = false;
         for (let team of teams) {
@@ -659,26 +663,49 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
           studentsWithoutTeamIds.push(student);
         }
       }
-      return {studentsWithTeam: studentsOnTeamIds, studentsWithoutTeam: studentsWithoutTeamIds};
+
+      let stuWithQuery = function() {
+        return User.find({_id: {$in: studentsOnTeamIds}})
+          .exec()
+          .then((students: IUserDocument[]) => {
+            studentsOnTeamIds = students;
+            console.log('students 2', students);
+            return students;
+          });
+      };
+      let stuWithoutQuery = function() {
+        return User.find({_id: {$in: studentsWithoutTeamIds}})
+          .exec()
+          .then((students: IUserDocument[]) => {
+            console.log('students', students);
+            studentsWithoutTeamIds = students;
+            return students;
+          });
+      };
+
+      return Promise.all([stuWithQuery(), stuWithoutQuery()])
+        .then((results: any) => {
+          console.log(results);
+          studentsTeamStatus = {studentsWithTeam: studentsOnTeamIds, studentsWithoutTeam: studentsWithoutTeamIds};    
+          return studentsTeamStatus;      
+        });
     };
 
-    let mappedObj: any = {};
-
-    console.log('class size', CLASS_SIZE);
-    console.log('num of teams', getNumberOfTeams());
-    console.log(' student team status', getStudentsTeamStatus());
-
-    mappedObj[course.courseId + 'Info'] = { 
-            classSize: CLASS_SIZE,
-            teamsAllowed: TEAMS_ALLOWED,
-            numOfTeams: getNumberOfTeams(),
-            studentTeamStatus: getStudentsTeamStatus()
-          };
+    return getStudentsTeamStatus().then(() => {
+      let mappedObj: any;
+      
+      mappedObj = { 
+        classSize: CLASS_SIZE,
+        teamsAllowed: TEAMS_ALLOWED,
+        numOfTeams: getNumberOfTeams(),
+        studentTeamStatus: studentsTeamStatus
+      };
 
     return mappedObj;
+    });
+
 
 }
-
 
 function createGithubRepo(payload: any): Promise<Object> {
 
