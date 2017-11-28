@@ -599,7 +599,7 @@ function getTeamProvisionOverview(payload: any): Promise<Object> {
         });
     })
     .then(() => {
-      return Team.find({courseId: course._id, deliverableIds: deliverable._id})
+      return Team.find({courseId: course._id, deliverableIds: deliverable._id}, '-__v -_id -courses')
         .then((_teams: ITeamDocument[]) => {
           if (_teams) {
             teams = _teams;
@@ -629,7 +629,9 @@ function getTeamProvisionOverview(payload: any): Promise<Object> {
  */
 function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverableDocument, 
   teams: ITeamDocument[]): Object {
-
+    
+    const TEAMS_ALLOWED = deliverable.teamsAllowed;
+    const TEAMS_BY_LAB = deliverable.teamsInSameLab;
     const CLASS_SIZE = course.classList.length;
     let studentsTeamStatus: object;
     let studentsOnTeamIds: object[] = [];
@@ -644,8 +646,26 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
       }
       return count;
     };
-    const TEAMS_ALLOWED = deliverable.teamsAllowed;
-    const TEAMS_BY_LAB = deliverable.teamsInSameLab;
+
+    let getTeamsWithRepo = function() {
+      let teamsWithRepo: object[] = [];
+      for (let team of teams) {
+        if (team.githubState.repo.url !== '') {
+          teamsWithRepo.push(team);
+        }
+      }
+      return teamsWithRepo;
+    };
+
+    let getTeamsWithoutRepo = function() {
+      let teamsWithoutRepo: object[] = [];
+      for (let team of teams) {
+        if (team.githubState.repo.url === '') {
+          teamsWithoutRepo.push(team);
+        }
+      }
+      return teamsWithoutRepo;
+    };
 
     let getStudentsTeamStatus = function() {
 
@@ -665,7 +685,7 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
       }
 
       let stuWithQuery = function() {
-        return User.find({_id: {$in: studentsOnTeamIds}})
+        return User.find({_id: {$in: studentsOnTeamIds}}, '-__v -_id -courses')
           .exec()
           .then((students: IUserDocument[]) => {
             studentsOnTeamIds = students;
@@ -673,8 +693,9 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
             return students;
           });
       };
+
       let stuWithoutQuery = function() {
-        return User.find({_id: {$in: studentsWithoutTeamIds}})
+        return User.find({_id: {$in: studentsWithoutTeamIds}}, '-__v -_id -courses')
           .exec()
           .then((students: IUserDocument[]) => {
             console.log('students', students);
@@ -685,7 +706,6 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
 
       return Promise.all([stuWithQuery(), stuWithoutQuery()])
         .then((results: any) => {
-          console.log(results);
           studentsTeamStatus = {studentsWithTeam: studentsOnTeamIds, studentsWithoutTeam: studentsWithoutTeamIds};    
           return studentsTeamStatus;      
         });
@@ -698,12 +718,14 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
         classSize: CLASS_SIZE,
         teamsAllowed: TEAMS_ALLOWED,
         numOfTeams: getNumberOfTeams(),
-        studentTeamStatus: studentsTeamStatus
+        numOfTeamsWithRepo: getTeamsWithRepo(),
+        numOfTeamsWithoutRepo: getTeamsWithoutRepo(),
+        studentTeamStatus: studentsTeamStatus,
+        teams: teams
       };
 
     return mappedObj;
     });
-
 
 }
 
