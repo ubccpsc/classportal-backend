@@ -599,7 +599,12 @@ function getTeamProvisionOverview(payload: any): Promise<Object> {
         });
     })
     .then(() => {
-      return Team.find({courseId: course._id, deliverableIds: deliverable._id}, '-__v -_id -courses')
+      // 'or' in query can be deprecated as soon as deliverableIds (pl.) after deliverableId (sing.) is deprecated.
+      return Team.find({$or: [{deliverableIds: deliverable._id}, {deliverableId: deliverable._id}]})
+        .populate({path: 'courseId', select: 'name courseId'})
+        .populate({path: 'members', select: 'fname lname username csid snum _id'})
+        .populate({path: 'deliverableIds', select: 'name'})
+        .select('-__v -_id -courses')
         .then((_teams: ITeamDocument[]) => {
           if (_teams) {
             teams = _teams;
@@ -673,8 +678,10 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
       for (let student of course.classList) {
         let onTeam: boolean = false;
         for (let team of teams) {
-          if (team.members.indexOf(student as IUserDocument) > -1) {
-            onTeam = true;
+          for (let member of team.members) {
+            if (String(member._id) === String(student)) {
+              onTeam = true;
+            }
           }
         }
         if (onTeam) {
@@ -689,7 +696,6 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
           .exec()
           .then((students: IUserDocument[]) => {
             studentsOnTeamIds = students;
-            console.log('students 2', students);
             return students;
           });
       };
@@ -698,7 +704,6 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
         return User.find({_id: {$in: studentsWithoutTeamIds}}, '-__v -_id -courses')
           .exec()
           .then((students: IUserDocument[]) => {
-            console.log('students', students);
             studentsWithoutTeamIds = students;
             return students;
           });
