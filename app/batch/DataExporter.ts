@@ -33,6 +33,7 @@ class DataExporter {
       let resultsOutputFile = directory + 'results_' + orgName + '_dump.json';
       
       db.initDB().then((_db: mongodb.Db) => {
+        console.log('connection status', _db.stats);
         return _db.collection('results').find({orgName})
           .toArray((err: Error, results: any[]) => {
             if (err) {
