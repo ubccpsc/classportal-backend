@@ -31,9 +31,8 @@ class DataExporter {
 
       let directory = require('readline-sync').question('Enter directory path for output file: ');
       let resultsOutputFile = directory + 'results_' + orgName + '_dump.json';
-      
+
       db.initDB().then((_db: mongodb.Db) => {
-        console.log('connection status', _db.stats);
         return _db.collection('results').find({orgName})
           .toArray((err: Error, results: any[]) => {
             if (err) {
@@ -52,9 +51,6 @@ class DataExporter {
             console.log('stringification worked');
             return;
           });
-      })
-      .catch((err) => {
-        console.log(`DataExporter::exportTable(..) - ERROR: ${err}`);
       });
     } else {
       console.error('DataExporter::exportTable(..) - ERROR: only exporting the "results" table is currently supported.');
