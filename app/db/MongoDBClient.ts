@@ -7,6 +7,7 @@ import {config} from '../../config/env';
 import mongodb = require('mongodb');
 
 let MongoClient = mongodb.MongoClient;
+const RESULTS = 'results';
 
 export class MongoDB {
 
@@ -488,7 +489,34 @@ export class MongoDB {
     return null;
   }
 
-  
+  /**
+   * 
+   * @param collectionName - name of the collection, ie. 'courses', 'users'
+   * @param document - object that is being inserted into the database
+   *    
+   */
+  public async getDeliverableStats(deliverable: string, orgName: string): Promise<object> {
+    console.log('deliverable', deliverable);
+    console.log('orgName', orgName);
+    try {
+      return new Promise<object>((fulfill, reject) => {
+        this.conn.then((db: mongodb.Db) => {
+          db.collection(RESULTS).aggregate([
+            {$match: {orgName: orgName, deliverable: deliverable}},
+            {$project: {_id: 1, orgName: 1, deliverable: 1, commit: 1}}
+          ], (err, result) => {
+            if (err) { throw `InsertRecord() ERROR: ${err}`; }
+            logger.info(`MongoDB::getDeliverableStats() Successfully retrieved group count for deliverable in ${orgName}.`);
+            fulfill(result);
+          });
+        });
+      });
+    }
+    catch (err) {
+      logger.error(`MongoDB::getDeliverableStats() Problem retrieving group count on ${orgName}: ${err}`);
+    }
+    return null;
+  }
 }
 
 export interface MongoServer {

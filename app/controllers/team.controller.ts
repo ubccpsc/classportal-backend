@@ -4,6 +4,7 @@ import {ITeamDocument, Team} from '../models/team.model';
 import {ICourseDocument, Course, LabSection} from '../models/course.model';
 import {IUserDocument, User} from '../models/user.model';
 import {IDeliverableDocument, Deliverable} from '../models/deliverable.model';
+import MongoClient from '../db/MongoDBClient';
 import {GithubState, GithubRepo, defaultGithubState} from '../models/github.interfaces';
 import GitHubManager from '../github/githubManager';
 import {TeamPayloadContainer, TeamPayload, TeamRow, Student} from '../interfaces/ui/team.interface';
@@ -639,6 +640,7 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
     const TEAMS_BY_LAB = deliverable.teamsInSameLab;
     const CLASS_SIZE = course.classList.length;
     let studentsTeamStatus: object;
+    let buildStats: object;
     let studentsOnTeamIds: object[] = [];
     let studentsWithoutTeamIds: object[] = [];
 
@@ -709,7 +711,15 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
           });
       };
 
-      return Promise.all([stuWithQuery(), stuWithoutQuery()])
+      let buildStatsQuery = function() {
+        return MongoClient.getDeliverableStats(deliverable.name, course.githubOrg)
+          .then((_buildStats: object) => {
+            buildStats = _buildStats;
+            console.log(_buildStats);
+          });
+      };
+
+      return Promise.all([stuWithQuery(), stuWithoutQuery(), buildStatsQuery()])
         .then((results: any) => {
           studentsTeamStatus = {studentsWithTeam: studentsOnTeamIds, studentsWithoutTeam: studentsWithoutTeamIds};    
           return studentsTeamStatus;      
@@ -725,8 +735,9 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
         numOfTeams: getNumberOfTeams(),
         numOfTeamsWithRepo: getTeamsWithRepo(),
         numOfTeamsWithoutRepo: getTeamsWithoutRepo(),
+        buildStats: buildStats || null,
         studentTeamStatus: studentsTeamStatus,
-        teams: teams
+        teams: teams,
       };
 
     return mappedObj;
@@ -801,9 +812,6 @@ function getTeams(payload: any): Promise<ITeamDocument[]> {
         })
         .populate({
           path:   'deliverableIds',
-        })
-        .populate({
-          path: 'deliverableId',
         })
         .populate({
           path:   'members',
@@ -1168,7 +1176,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       else {
         // else entails that we only want to cross-check team members to see if they are already
         // on a team with this respective DeliverableId
-        return Team.find({courseId: course.id, deliverableId: deliverable._id})
+        return Team.find({courseId: course.id, deliverableIds: deliverable._id})
           .then((teams: ITeamDocument[]) => {
             let filteredUsers: any = filterUsersAlreadyInTeam(teams);
             console.log('splitUsersIntoArrays', splitUsersIntoArrays(filteredUsers));
@@ -1205,7 +1213,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       let teams: ITeamDocument[];
       return getDeliverable(payload.deliverableName, course)
         .then((deliv: IDeliverableDocument) => {
-          return Team.find({courseId: course._id, deliverableId: deliv._id})
+          return Team.find({courseId: course._id, deliverableIds: deliv._id})
             .then((_teams: ITeamDocument[]) => {
               teams = _teams;
               // if (teams.length > 0) {
@@ -1221,7 +1229,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
                   for (let i = 0; i < sortedTeamIdList.length; i++) {
                     let teamObject = {
                       courseId:      course_id,
-                      deliverableId: deliv._id,
+                      deliverableIds: deliv._id,
                       members:       sortedTeamIdList[i],
                       githubState:   defaultGithubState,
                     };
