@@ -1151,41 +1151,15 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
         });
     })
     .then((_deliv: IDeliverableDocument) => {
-      if (payload.markInBatch) {
-        // 'if' entails that we want to cross-check Deliverables and Teams to ensure
-        // students are now already on team for those Deliverables
-        return getDeliverables(course).then((delivs: IDeliverableDocument[]) => {
-          return Team.find({courseId: course.id, deliverableIds: {'$in': delivs}})
-            .then((_teams: ITeamDocument[]) => {
-              teams = _teams;
-              let filteredUsers: any;
-              if (_teams.length > 0) {
-                filteredUsers = filterUsersAlreadyInTeam(_teams);
-                return splitUsersIntoArrays(filteredUsers);
-              }
-              return splitUsersIntoArrays(course.classList);
-            })
-            .catch(err => {
-              logger.error(`TeamController::getDeliverables() filterByTeams() markByBatch ERROR ${err}`);
-            });
+      // checks that user is not already on team with deliverable
+      return Team.find({courseId: course.id, deliverableIds: deliverable._id})
+        .then((teams: ITeamDocument[]) => {
+          let filteredUsers: any = filterUsersAlreadyInTeam(teams);
+          return splitUsersIntoArrays(filteredUsers);
         })
-          .catch(err => {
-            logger.error(`getDeliverables(${course.courseId}) ${err}`);
-          });
-      }
-      else {
-        // else entails that we only want to cross-check team members to see if they are already
-        // on a team with this respective DeliverableId
-        return Team.find({courseId: course.id, deliverableIds: deliverable._id})
-          .then((teams: ITeamDocument[]) => {
-            let filteredUsers: any = filterUsersAlreadyInTeam(teams);
-            console.log('splitUsersIntoArrays', splitUsersIntoArrays(filteredUsers));
-            return splitUsersIntoArrays(filteredUsers);
-          })
-          .catch(err => {
-            logger.error(`TeamController::getDeliverables() filterByTeams() singleDeliv ERROR ${err}`);
-          });
-      }
+        .catch(err => {
+          logger.error(`TeamController::getDeliverables() filterByTeams() singleDeliv ERROR ${err}`);
+        });
     })
     .then((sortedTeamIdList: string[][]) => {
       return createTeamForEachTeamList(sortedTeamIdList);
@@ -1196,18 +1170,10 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
 
   function createTeamForEachTeamList(sortedTeamIdList: string[][]) {
     let bulkInsertArray: any;
-    if (payload.markInBatch) {
-      // bulkInsertArray = createTeamObjectsForBatchMarking();
-      return createTeamObjectsForBatchMarking()
-        .then((_teams: any) => {
-          return insertTeamDocuments(_teams);
-        });
-    } else {
       return createTeamObjectsForSingleDelivMarking()
         .then((_teams: any) => {
           return insertTeamDocuments(_teams);
         });
-    }
 
     function createTeamObjectsForSingleDelivMarking() {
       let teams: ITeamDocument[];
@@ -1263,89 +1229,8 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
               createTeamObjectsForSingleDelivMarking() ERROR ${err}`);
         });
     }
-
-    function checkIfTeamsAlreadyExistForBatch(delivs: IDeliverableDocument[], course: ICourseDocument) {
-      return Team.find({courseId: course._id, 'deliverableIds': {'$in': delivs}})
-        .then((teams: ITeamDocument[]) => {
-          if (teams.length > 0) {
-            return true;
-          }
-          return false;
-        });
-    }
-
-    function createTeamObjectsForBatchMarking() {
-      return getDeliverables(course)
-        .then((delivs: IDeliverableDocument[]) => {
-          return checkIfTeamsAlreadyExistForBatch(delivs, course)
-            .then((teamsExist: Boolean) => {
-              // if (teamsExist) {
-              //   throw `Teams already exist. Please remove teams before generating new teams`;
-              // }
-              return delivs;
-            })
-            .catch((err: any) => {
-              logger.error(`TeamController::createTeamForEachTeamList() --> 
-                  createTeamObjectsForBatchMarking() ERROR ${err}`);
-              return Promise.reject(err);
-            });
-        })
-        .then((delivs: IDeliverableDocument[]) => {
-          let bulkInsertArray = new Array();
-          if (delivs.length > 0) {
-            let deliverableIds = new Array();
-
-            for (let i = 0; i < delivs.length; i++) {
-              deliverableIds.push(delivs[i]._id);
-            }
-
-            for (let i = 0; i < sortedTeamIdList.length; i++) {
-              let teamObject = {
-                courseId:    course_id,
-                deliverableIds,
-                members:     sortedTeamIdList[i],
-                githubState: defaultGithubState,
-              };
-              bulkInsertArray.push(teamObject);
-            }
-          } else {
-            throw `Could not find Deliverables for ${payload.deliverableName} and ${course._id}`;
-          }
-
-          // adds the team number Name property used by AutoTest
-          let counter = teams.length + 1;
-          for (let i = 0; i < bulkInsertArray.length; i++) {
-            bulkInsertArray[i].name = TEAM_PREPENDAGE + counter;
-            counter++;
-          }
-
-          return bulkInsertArray;
-        })
-        .catch((err: any) => {
-          logger.error(`TeamController::createTeamForEachTeamList ERROR ${err}`);
-        });
-    }
   }
-
-  // Gets Deliverables for course with markInBatch flag set to true
-  function getDeliverables(course: ICourseDocument) {
-    let deliverableIds: any = [];
-    return Deliverable.find({courseId: course_id, markInBatch: true}).exec()
-      .then((deliverables: IDeliverableDocument[]) => {
-        if (deliverables) {
-          for (let i = 0; i < deliverables.length; i++) {
-            deliverableIds.push(deliverables[i]._id);
-          }
-          return deliverables;
-        } else {
-          throw `No deliverables found under ${course.courseId} with markInBatch set as true.`;
-        }
-      })
-      .catch(err => {
-        logger.error(`TeamController::getDeliverables() ERROR ${err}`);
-      });
-  }
-
+  
   // Gets CourseSettings to see if markByBatch flag enabled, and then gets Deliverable(s)
   // based markByBatch flag.
   function getDeliverable(deliverableName: string, course: ICourseDocument) {
