@@ -1084,23 +1084,17 @@ function createCustomTeam(req: any, payload: any) {
       .then((teams: ITeamDocument) => {
         let usersOnTeams: any = [];
         let isOnTeam: boolean = false;
-        // console.log('teams', teams);
-        console.log('teamMembers1', teamMembers);
         if (team) {
           for (let i = 0; i < team.members.length; i++) {
             usersOnTeams.push(team.members[i].username);
           }
         }
-        console.log('usersOnTeams', usersOnTeams);
-        console.log('teamMembers', teamMembers);
-        console.log('Users On Teams', usersOnTeams);
         for (let i = 0; i < usersOnTeams.length; i++) {
           let userToAdd: string = usersOnTeams[i].toString();
           for (let j = 0; j < teamMembers.length; j++) {
             let newTeamMember: string = teamMembers[j].toString();
             if (userToAdd === newTeamMember) {
               isOnTeam = true;
-              console.log('Matched user' + userToAdd, newTeamMember);
             }
           }
         }
@@ -1118,6 +1112,7 @@ function createCustomTeam(req: any, payload: any) {
  * // under payload param
  * @param markInBatch type of boolean
  * @param teamSize: The max team size we will create
+ * @param inSameLab: boolean: Ensures that team members are in same lab.
  * @param deliverableName: ie. "d1", etc.
  * @param courseId - ie. 310
  */
@@ -1230,7 +1225,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
         });
     }
   }
-  
+
   // Gets CourseSettings to see if markByBatch flag enabled, and then gets Deliverable(s)
   // based markByBatch flag.
   function getDeliverable(deliverableName: string, course: ICourseDocument) {
