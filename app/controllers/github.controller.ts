@@ -164,12 +164,9 @@ function deleteRepos(payload: any): Promise<[string]> {
 }
 
 function createRepoName(course: ICourseDocument, delivName: string, teamNum: string) {
-  const CPSC_PREPENDAGE = 'cpsc';
-  let courseSettings = course.settings;
 
-    let teamName = `${CPSC_PREPENDAGE}${course.courseId}_${delivName}_${teamNum}`;
-    return teamName;
-  }
+  let teamName = `${delivName}_${teamNum}`;
+  return teamName;
 }
 
 function repairGithubReposForTeams(payload: any): Promise<any> {
@@ -336,8 +333,8 @@ function createGithubReposForTeams(payload: any): Promise<any> {
   }
 
   function getTeamsToBuildForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
-    return Team.find({courseId: course._id, deliverableIds: deliv._id, 
-      $where: 'this.disbanded !== true', 'githubState.repo.url': ''})
+    return Team.find({courseId: course._id, deliverableId: deliv._id, 
+      $where: 'this.deliverableId.length > 0 && this.disbanded !== true', 'githubState.repo.url': ''})
       .populate({path: 'members deliverableId'})
       .exec()
       .then((_teams: ITeamDocument[]) => {
