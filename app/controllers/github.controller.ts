@@ -167,11 +167,6 @@ function createRepoName(course: ICourseDocument, delivName: string, teamNum: str
   const CPSC_PREPENDAGE = 'cpsc';
   let courseSettings = course.settings;
 
-  if (courseSettings.markDelivsByBatch) {
-    let teamName = `${CPSC_PREPENDAGE}${course.courseId}_${teamNum}`;
-    return teamName;
-  }
-  else {
     let teamName = `${CPSC_PREPENDAGE}${course.courseId}_${delivName}_${teamNum}`;
     return teamName;
   }
@@ -294,7 +289,7 @@ function createGithubReposForTeams(payload: any): Promise<any> {
         members:     _teams[i].members.map((user: IUserDocument) => {
           return user.username;
         }),
-        projectName: 'cpsc' + course.courseId + '_' + payload.deliverableName + '_' + _teams[i].name,
+        projectName: payload.deliverableName + '_' + _teams[i].name,
         teamIndex:   i,
         team:        _teams[i].name,
         _team:       _teams[i],
