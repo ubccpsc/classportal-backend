@@ -314,7 +314,7 @@ function createGithubReposForTeams(payload: any): Promise<any> {
   }
 
   function getTeamsToBuildByBatch(course: ICourseDocument) {
-    return Team.find({courseId: course._id, $where: 'this.deliverableIds.length > 0 && this.disbanded !== true',
+    return Team.find({courseId: course._id, $where: 'this.disbanded !== true',
       'githubState.repo.url': ''})
       .populate({path: 'members'})
       .exec()
