@@ -281,11 +281,14 @@ export class Dashboard {
         // TODO: make this more verbose (e.g., 5 min timeout? something else?)
         row.error = 'Something is not right with this execution, see stdio.txt';
       } else {
+        /*
         let rawURL = rec.report.studentInfo.projectUrl;
         rawURL = rawURL.replace('<token>@', ''); // HACK; would be better if there was a rec.url
         rawURL = rawURL.replace('.git', ''); // HACK; would be better if there was a rec.url
         rawURL = rawURL + '/commit/' + rec.report.studentInfo.projectCommit;
         row.url = rawURL;
+        */
+        row.url = rec.commitUrl;
         row.error = ''; // exists, but is empty
       }
 
@@ -301,30 +304,37 @@ export class Dashboard {
         let scoreTest = -1;
         let scoreCover = -1;
 
-        scoreOverall = rec.report.tests.grade.finalGrade;
+        if (typeof rec.report.scoreOverall !== 'undefined') {
+          // Jan 2018 containers
+          scoreOverall = rec.report.scoreOverall;
+          scoreTest = rec.report.scoreTest;
+          scoreCover = rec.report.scoreCover;
+        } else {
+          // older containers
+          scoreOverall = rec.report.tests.grade.finalGrade;
 
-        // 210
-        if (typeof rec.report.tests.custom !== 'undefined') {
-          if (typeof rec.report.tests.custom.testingGrade !== 'undefined') {
-            scoreTest = rec.report.tests.custom.testingGrade;
+          // 210
+          if (typeof rec.report.tests.custom !== 'undefined') {
+            if (typeof rec.report.tests.custom.testingGrade !== 'undefined') {
+              scoreTest = rec.report.tests.custom.testingGrade;
+            }
+            if (typeof rec.report.tests.custom.coverageGrade !== 'undefined') {
+              scoreCover = rec.report.tests.custom.coverageGrade;
+            }
           }
-          if (typeof rec.report.tests.custom.coverageGrade !== 'undefined') {
-            scoreCover = rec.report.tests.custom.coverageGrade;
+
+          // 310
+          if (typeof rec.report.custom !== 'undefined') {
+            if (typeof rec.report.custom.testStats !== 'undefined') {
+              scoreTest = rec.report.custom.testStats.passPercent;
+            }
+          }
+
+          // 310
+          if (typeof rec.report.coverage !== 'undefined' && typeof rec.report.coverage.lines !== 'undefined') {
+            scoreCover = rec.report.coverage.lines.percentage;
           }
         }
-
-        // 310
-        if (typeof rec.report.custom !== 'undefined') {
-          if (typeof rec.report.custom.testStats !== 'undefined') {
-            scoreTest = rec.report.custom.testStats.passPercent;
-          }
-        }
-
-        // 310
-        if (typeof rec.report.coverage !== 'undefined' && typeof rec.report.coverage.lines !== 'undefined') {
-          scoreCover = rec.report.coverage.lines.percentage;
-        }
-
         row.scoreOverall = scoreOverall;
         row.scoreTest = scoreTest;
         row.scoreCover = scoreCover;
@@ -339,18 +349,27 @@ export class Dashboard {
         // print(rec);
       } else {
         // prepare test reports
-        for (let t of rec.report.tests.detailedResults) {
-          if (t.state === 'pass' || t.state === 'passed') {
-            passNames.push(t.testName);
-          } else if (t.state === 'fail' || t.state === 'failed' || t.state === 'failure') {
-            failNames.push(t.testName);
-          } else if (t.state === 'skip' || t.state === 'skipped') {
-            skipNames.push(t.testName);
-          } else if (t.state === 'error' || t.state === 'errored') {
-            failNames.push(t.testName);
-          } else {
-            // too verbose
-            logger.debug('unknown test state: ' + t.state);
+        if (typeof rec.report.passNames !== 'undefined') {
+          // Jan 2018 containers
+          passNames = rec.report.passNames;
+          failNames = rec.report.failNames;
+          skipNames = rec.report.skipNames;
+          failNames = failNames.concat(rec.report.errorNames); // error is just fail
+        } else {
+          // older containers
+          for (let t of rec.report.tests.detailedResults) {
+            if (t.state === 'pass' || t.state === 'passed') {
+              passNames.push(t.testName);
+            } else if (t.state === 'fail' || t.state === 'failed' || t.state === 'failure') {
+              failNames.push(t.testName);
+            } else if (t.state === 'skip' || t.state === 'skipped') {
+              skipNames.push(t.testName);
+            } else if (t.state === 'error' || t.state === 'errored') {
+              failNames.push(t.testName);
+            } else {
+              // too verbose
+              logger.debug('unknown test state: ' + t.state);
+            }
           }
         }
       }
