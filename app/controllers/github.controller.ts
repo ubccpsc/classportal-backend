@@ -250,32 +250,13 @@ function createGithubReposForTeams(payload: any): Promise<any> {
     })
     .then((deliv: IDeliverableDocument) => {
 
-      // IMPORTANT NOTE: Two Types of Teams Can Be Built.
-      // Team type #1: Build teams where all deliverables are in one repo
-      // Team type #2: Build teams where each deliverable is in respective
-      // repo.
-      //
-      // courseSettings contains markByBatch bool to change configuration.
-      // Configuration cannot change after Teams have been built.
-
-      if (courseSettings.markDelivsByBatch) {
-        return getTeamsToBuildByBatch(course)
-          .then((teams: ITeamDocument[]) => {
-            return buildTeamsByBatch(teams);
-          })
-          .catch(err => {
-            logger.error(`GithubController::getTeamsToBuildByBatch()/buildByBatch() ERROR ${err}`);
-          });
-      } else {
         return getTeamsToBuildForSelectedDeliv(course, deliv)
           .then((teams: ITeamDocument[]) => {
             return buildTeamsForSelectedDeliv(teams);
           })
           .catch(err => {
-            logger.error(`GithubController::getTeamsToBuildForSelectedDeliv()/
-              buildTeamsForSelectedDeliv() ERROR ${err}`);
+            logger.error(`GithubController::getTeamsToBuildForSelectedDeliv()/ buildTeamsForSelectedDeliv() ERROR ${err}`);
           });
-      }
     });
 
   function buildTeamsForSelectedDeliv(_teams: ITeamDocument[]) {
@@ -299,7 +280,7 @@ function createGithubReposForTeams(payload: any): Promise<any> {
   function buildTeamsByBatch(_teams: ITeamDocument[]) {
     for (let i = 0; i < _teams.length; i++) {
       let inputGroup = {
-        teamName:    'cpsc310_d1_' + _teams[i].name, // createRepoName(course, payload.deliverableName, _teams[i].name),
+        teamName:    'cpsc310' + _teams[i].name, // createRepoName(course, payload.deliverableName, _teams[i].name),
         members:     _teams[i].members.map((user: IUserDocument) => {
           return user.username;
         }),
