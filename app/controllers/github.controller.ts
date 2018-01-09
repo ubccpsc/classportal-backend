@@ -169,12 +169,15 @@ function createRepoName(course: ICourseDocument, delivName: string, teamNum: str
   return teamName;
 }
 
+/** 
+ * @param payload.courseId = number, ie. 310
+ * @param payload.githubOrg = string, ie. "CPSC310-2017W-T2"
+ * @param payload.deliverableName = string, ie. "d0"
+ *  */
 function repairGithubReposForTeams(payload: any): Promise<any> {
-  // Requires implementation of Deliverable or Deliverables specifics
-  // for MarkbyBatch and SingleDeliv
   let course: ICourseDocument;
   let teams: ITeamDocument[];
-  let githubManager = new GitHubManager('CPSC310-2017W-T1');
+  let githubManager = new GitHubManager(payload.githubOrg);
   return Course.findOne({courseId: payload.courseId})
     .then((_course: ICourseDocument) => {
       course = _course;
@@ -192,7 +195,7 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
             members:     _teams[i].members.map((user: IUserDocument) => {
               return user.username;
             }),
-            projectName: 'cpsc' + course.courseId + '_' + payload.deliverableName + '_' + _teams[i].name,
+            projectName: payload.deliverableName + '_' + _teams[i].name,
             teamIndex:   i,
             team:        _teams[i].name,
             _team:       _teams[i],

@@ -9,6 +9,8 @@ interface ICourseDocument extends mongoose.Document {
   modules: string[];
   batchTeamCount: number;
   customData: any;
+  delivKey: string;
+  solutionsKey: string;
   classList: Object[];
   batchDeliverables: Object[];
   deliverables: Object[];
@@ -122,7 +124,15 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   },
   description:         {
     type: String,
-  },
+  }, 
+  delivKey:            {
+    type: String,
+    default: '',
+  }, 
+  solutionsKey:        {
+    type: String,
+    default: '',
+  }, 
 });
 
 CourseSchema.static({
