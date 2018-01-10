@@ -193,8 +193,10 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
         .then((_deliv: IDeliverableDocument) => {
           if (_deliv) {
             deliverable = _deliv;
+            return;
+          } else {
+            throw `Could not find deliverable ${payload.deliverableName} with ${payload.courseId}`;
           }
-          throw `Could not find deliverable ${payload.deliverableName} with ${payload.courseId}`;
         });
     })
     .then(() => {
