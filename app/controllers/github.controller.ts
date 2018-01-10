@@ -177,6 +177,7 @@ function createRepoName(course: ICourseDocument, delivName: string, teamNum: str
 function repairGithubReposForTeams(payload: any): Promise<any> {
   let course: ICourseDocument;
   let teams: ITeamDocument[];
+  let deliverable: IDeliverableDocument;
   let githubManager = new GitHubManager(payload.githubOrg);
   return Course.findOne({courseId: payload.courseId})
     .then((_course: ICourseDocument) => {
@@ -188,7 +189,16 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
       }
     })
     .then(() => {
-      return Team.find({}).populate({path: 'members'}).then((_teams: ITeamDocument[]) => {
+      return Deliverable.findOne({courseId: course._id, name: payload.deliverableName})
+        .then((_deliv: IDeliverableDocument) => {
+          if (_deliv) {
+            deliverable = _deliv;
+          }
+          throw `Could not find deliverable ${payload.deliverableName} with ${payload.courseId}`;
+        });
+    })
+    .then(() => {
+      return Team.find({courseId: course._id, deliverableIds: deliverable._id}).populate({path: 'members'}).then((_teams: ITeamDocument[]) => {
         for (let i = 0; i < _teams.length; i++) {
           let inputGroup = {
             teamName:    'name',
