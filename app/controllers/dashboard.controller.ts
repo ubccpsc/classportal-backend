@@ -213,6 +213,7 @@ export class Dashboard {
               project:   true,
               user:      true,
               url:       true,
+              stdioRef:  true,
               commit:    true,
               commitUrl: true,
               timestamp: true
