@@ -210,27 +210,44 @@ export class Results {
         let mappedResults: ResultRecord[] = [];
         Object.keys(results).forEach((key) => {
           let resultDetail: ResultDetail[] = [];
-          let reportFailed: boolean = results[key].reportFailed;
+          let reportFailed: boolean;
+          if (typeof results[key].reportFailed === 'undefined') {
+            reportFailed = false; // be optimistic, if the field is missing it should have been all good!
+          } else {
+            reportFailed = results[key].reportFailed;
+          }
+
           let mappedObj: ResultRecord = {
-            userName:       results[key].user,
-            commitUrl:      results[key].commitUrl,
-            projectName:    results[key].team,
-            projectUrl:     results[key].projectUrl,
-            branchName:     results[key].ref,
-            gradeRequested: results[key].gradeRequested,
+            userName:                results[key].user,
+            commitUrl:               results[key].commitUrl,
+            projectName:             results[key].team,
+            projectUrl:              results[key].projectUrl,
+            branchName:              results[key].ref,
+            gradeRequested:          results[key].gradeRequested,
             gradeRequestedTimeStamp: results[key].gradeRequestedTimestamp,
-            delivId:        results[key].deliverable,
-            grade:          '0',
-            timeStamp:      results[key].timestamp,
-            gradeDetails:   resultDetail,
+            delivId:                 results[key].deliverable,
+            grade:                   '0',
+            timeStamp:               results[key].timestamp,
+            gradeDetails:            resultDetail,
           };
-          if (results[key].reportFailed === true) {
+          if (reportFailed === true) {
             mappedObj.grade = '0';
           } else {
-            if (String(results[key].orgName) === 'CPSC210-2017W-T2' && reportFailed === false) { // HACK: org shouldn't be hard coded
+            const orgName = String(results[key].orgName);
+            if (orgName === 'CPSC210-2017W-T2' && reportFailed === false) { // HACK: org shouldn't be hard coded
               mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
-            } else if (String(results[key].orgName) === 'CPSC310-2017W-T2' && reportFailed === false) { // HACK: org shouldn't be hard coded
-              mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
+            } else if (orgName === 'CPSC310-2017W-T2' && reportFailed === false) { // HACK: org shouldn't be hard coded
+              // mappedObj.grade = results[key].report.tests.grade.finalGrade || '0'; // OLD (pre 2017-T2)
+              logger.info("result: " + JSON.stringify(results[key]));
+              if (typeof results[key].report !== 'undefined' &&
+                results[key].report !== null &&
+                typeof results[key].report.scoreOverall !== 'undefined' &&
+                results[key].report.scoreOverall !== null) {
+                mappedObj.grade = results[key].report.scoreOverall || '0';
+              } else {
+                mappedObj.grade = '0';
+              }
+
             }
           }
           mappedResults.push(mappedObj);
