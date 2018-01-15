@@ -19,12 +19,12 @@ export class MongoDB {
   constructor() {
     this.conn = this.initDB();
   }
-  
+
   /**
    * Gets MongoDB connection
    */
   public async initDB(): Promise<mongodb.Db> {
-    
+    logger.info('MongoDB::initDB() - start');
     const OPTIONS = {autoReconnect: true};
     const DEBUG_TOGGLE: string = 'debug';
 
@@ -32,7 +32,8 @@ export class MongoDB {
 
     return new Promise<mongodb.Db>(function (fulfill, reject) {
       try {
-        MongoClient.connect(config.db, OPTIONS, function(err, db) {
+        // logger.info('MongoDB::initDB() - db: ' + config.db + '; options: ' + OPTIONS);
+        MongoClient.connect(config.db, OPTIONS, function (err, db) {
           if (err) {
             throw err;
           }
@@ -71,7 +72,7 @@ export class MongoDB {
     }
   }
 
-    /**
+  /**
    * Queries a collection and returns a single matching result
    */
   public async getLatestRecord(collectionName: string, query: object): Promise<any> {
@@ -96,10 +97,9 @@ export class MongoDB {
    * Gets all unique strings in a row (ie. all Deliverable names "d1", "d2", etc.)
    * @param _collectionName: string Table column ie. 'results'
    * @param _query: string Query to match against
-   * @param _propertyName: string Property to pull unique entries from. 
+   * @param _propertyName: string Property to pull unique entries from.
    */
-  public async getUniqueStringsInRow(_collectionName: string, _query: object, _propertyName: string):
-    Promise<string[]> {
+  public async getUniqueStringsInRow(_collectionName: string, _query: object, _propertyName: string): Promise<string[]> {
     return new Promise<string[]>((fulfill, reject) => {
       try {
         this.conn.then((db: mongodb.Db) => {
@@ -114,7 +114,7 @@ export class MongoDB {
       }
       catch (err) {
         logger.error(`Problem querying for distinct entries with ${_collectionName}, ${_query}, & ${_propertyName}`);
-        reject(err);        
+        reject(err);
       }
     });
   }
@@ -128,11 +128,11 @@ export class MongoDB {
   //     let groupQuery310 = {
   //       _id: "$user",
   //       username: {"$last": "$user"},
-  //       projectUrl: {"$last": "$report.studentInfo.projectUrl"},        
+  //       projectUrl: {"$last": "$report.studentInfo.projectUrl"},
   //       delivId: {"$last": "$deliverable"},
   //       gradeValue: {'$max': "$report.tests.grade.finalGrade"},
   //       commit: {"$last": "$commit"},
-  //       submitted: {'$last': "$timestamp"},        
+  //       submitted: {'$last': "$timestamp"},
   //       // grade: {'$max': "$report.tests.grade"},
   //       // studentInfo: {"$last": "$report.studentInfo"},
   //       // customLogic: {'$last': "$report.custom"}
@@ -140,7 +140,7 @@ export class MongoDB {
   //     let groupQuery210 = {
   //       _id: "$user",
   //       username: {"$last": "$user"},
-  //       projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
+  //       projectUrl: {"$last": "$report.studentInfo.projectUrl"},
   //       delivId: {"$last": "$deliverable"},
   //       gradeValue: {'$max': "$report.tests.grade.finalGrade"},
   //       commit: {"$last": "$commit"},
@@ -184,52 +184,52 @@ export class MongoDB {
   // }
 
   /**
-   * Gets all result records for query match 
+   * Gets all result records for query match
    */
   public async getAllResultRecords(_collectionName: string, _timestamp: number, _query: any): Promise<any[]> {
     return new Promise<any[]>((fulfill, reject) => {
       let projection310 = {
-        _id: 1,
-        user: 1,
-        orgName: 1,
-        deliverable: 1,
-        team: 1,
-        reportFailed: 1,
-        gradeRequested: 1,
+        _id:                             1,
+        user:                            1,
+        orgName:                         1,
+        deliverable:                     1,
+        team:                            1,
+        reportFailed:                    1,
+        gradeRequested:                  1,
         'report.tests.grade.finalGrade': 1,
-        projectUrl: 1,           
-        commitUrl: 1,     
-        commit: 1,
-        timestamp: 1,    
-        gradeRequestedTimestamp: 1,
-        ref: 1,    
+        projectUrl:                      1,
+        commitUrl:                       1,
+        commit:                          1,
+        timestamp:                       1,
+        gradeRequestedTimestamp:         1,
+        ref:                             1,
       };
 
       let projection210 = {
-        _id: "$user",
-        user: 1, 
-        orgName: 1,
-        deliverable: 1,
-        team: 1,
-        reportFailed: 1,
-        gradeRequested: 1,
+        _id:                             "$user",
+        user:                            1,
+        orgName:                         1,
+        deliverable:                     1,
+        team:                            1,
+        reportFailed:                    1,
+        gradeRequested:                  1,
         'report.tests.grade.finalGrade': 1,
-        projectUrl: 1,        
-        commitUrl: 1,        
-        commit: 1,
-        timestamp: 1,   
-        gradeRequestedTimestamp: 1,
-        ref: 1,
+        projectUrl:                      1,
+        commitUrl:                       1,
+        commit:                          1,
+        timestamp:                       1,
+        gradeRequestedTimestamp:         1,
+        ref:                             1,
       };
 
 
-      let projection: any = "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? projection210 : projection310;      
+      let projection: any = "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? projection210 : projection310;
 
       try {
         this.conn.then((db: mongodb.Db) => {
           return db.collection(_collectionName)
             .find(_query, projection)
-              .toArray((err: Error, results: any[]) => {
+            .toArray((err: Error, results: any[]) => {
               if (err) {
                 throw err;
               }
@@ -250,28 +250,28 @@ export class MongoDB {
     return new Promise<any[]>((fulfill, reject) => {
       // fix for 210, as customLogic property slightly off in grade result parser
       let groupQuery310 = {
-        _id: "$user",
-        username: {$last: "$user"},
-        delivId: {$last: "$deliverable"},
+        _id:         "$user",
+        username:    {$last: "$user"},
+        delivId:     {$last: "$deliverable"},
         projectName: {$last: "$team"},
-        gradeValue: {$max: "$report.tests.grade.finalGrade"},
-        projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
-        commit: {"$last": "$commit"},
-        submitted: {$last: "$timestamp"},        
+        gradeValue:  {$max: "$report.tests.grade.finalGrade"},
+        projectUrl:  {"$last": "$report.studentInfo.projectUrl"},
+        commit:      {"$last": "$commit"},
+        submitted:   {$last: "$timestamp"},
         // grade: {$max: "$report.tests.grade"},
         // studentInfo: {$first: "$report.studentInfo"},
         // customLogic: {$first: "$report.tests"}
       };
 
       let groupQuery210 = {
-        _id: "$user",
-        username: {$last: "$user"}, 
-        delivId: {$last: "$deliverable"},
+        _id:         "$user",
+        username:    {$last: "$user"},
+        delivId:     {$last: "$deliverable"},
         projectName: {$last: "$team"},
-        gradeValue: {$max: "$report.tests.grade.finalGrade"},
-        projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
-        commit: {"$last": "$commit"},
-        submitted: {$last: "$timestamp"},        
+        gradeValue:  {$max: "$report.tests.grade.finalGrade"},
+        projectUrl:  {"$last": "$report.studentInfo.projectUrl"},
+        commit:      {"$last": "$commit"},
+        submitted:   {$last: "$timestamp"},
         // grade: {$max: "$report.tests.grade"},
         // studentInfo: {$first: "$report.studentInfo"},
         // customLogic: {$first: "$report.tests.custom"}
@@ -284,20 +284,22 @@ export class MongoDB {
         this.conn.then((db: mongodb.Db) => {
           return db.collection(_collectionName)
             .aggregate([
-              {$match: _query},              
+              {$match: _query},
               {$sort: {'report.tests.grade.finalGrade': 1}},
               {$group: groupQuery},
-              {$project: {
-                username: 1,
-                delivId: 1,
-                projectName: 1,
-                gradeKey: _query.deliverable + 'Max',
-                gradeValue: 1,
-                projectUrl: 1,
-                commitUrl: 1,
-                commit: 1,
-                submitted: 1,
-              }},
+              {
+                $project: {
+                  username:    1,
+                  delivId:     1,
+                  projectName: 1,
+                  gradeKey:    _query.deliverable + 'Max',
+                  gradeValue:  1,
+                  projectUrl:  1,
+                  commitUrl:   1,
+                  commit:      1,
+                  submitted:   1,
+                }
+              },
             ]).toArray((err: Error, results: any[]) => {
               if (err) {
                 throw err;
@@ -320,27 +322,27 @@ export class MongoDB {
     return new Promise<any[]>((fulfill, reject) => {
       // fix for 210, as customLogic property slightly off in grade result parser
       let groupQuery310 = {
-        _id: "$user",
-        username: {"$last": "$user"},
-        delivId: {"$last": "$deliverable"},
+        _id:         "$user",
+        username:    {"$last": "$user"},
+        delivId:     {"$last": "$deliverable"},
         projectName: {"$last": "$team"},
-        gradeValue: {'$last': "$report.tests.grade.finalGrade"},
-        projectUrl: {"$last": "$report.studentInfo.projectUrl"},
-        commit: {"$last": "$commit"},
-        submitted: {'$last': "$timestamp"},        
+        gradeValue:  {'$last': "$report.tests.grade.finalGrade"},
+        projectUrl:  {"$last": "$report.studentInfo.projectUrl"},
+        commit:      {"$last": "$commit"},
+        submitted:   {'$last': "$timestamp"},
         // studentInfo: {"$last": "$report.studentInfo"},
         // grade: {'$last': "$report.tests.grade"},
         // customLogic: {'$last': "$report.custom"}
       };
       let groupQuery210 = {
-        _id: "$user",
-        username: {"$last": "$user"},
-        delivId: {"$last": "$deliverable"},
+        _id:         "$user",
+        username:    {"$last": "$user"},
+        delivId:     {"$last": "$deliverable"},
         projectName: {"$last": "$team"},
-        gradeValue: {'$last': "$report.tests.grade.finalGrade"},
-        projectUrl: {"$last": "$report.studentInfo.projectUrl"},                
-        commit: {"$last": "$commit"},
-        submitted: {'$last': "$timestamp"},
+        gradeValue:  {'$last': "$report.tests.grade.finalGrade"},
+        projectUrl:  {"$last": "$report.studentInfo.projectUrl"},
+        commit:      {"$last": "$commit"},
+        submitted:   {'$last': "$timestamp"},
         // studentInfo: {"$last": "$report.studentInfo"},
         // grade: {'$last': "$report.tests.grade"},
         // customLogic: {'$last': "$report.tests.custom"}
@@ -356,16 +358,18 @@ export class MongoDB {
               {$match: _query},
               {$sort: {timestamp: 1}},
               {$group: groupQuery},
-              {$project: {
-                username: 1,
-                delivId: 1,
-                projectName: 1,
-                gradeKey: _query.deliverable + 'Last',
-                gradeValue: 1,
-                projectUrl: 1,
-                commit: 1,
-                submitted: 1,
-              }},
+              {
+                $project: {
+                  username:    1,
+                  delivId:     1,
+                  projectName: 1,
+                  gradeKey:    _query.deliverable + 'Last',
+                  gradeValue:  1,
+                  projectUrl:  1,
+                  commit:      1,
+                  submitted:   1,
+                }
+              },
             ]).toArray((err: Error, results: any[]) => {
               if (err) {
                 throw err;
@@ -388,29 +392,29 @@ export class MongoDB {
    * @param field - The property that is being queried (ie. '_id' field)
    */
 
-    public getObjectIds(collectionName: string, field: string, queries: any[]): Promise<any[]> {
-      try {
-        let query: any = {};
-        query[field] = {"$in" : queries};
+  public getObjectIds(collectionName: string, field: string, queries: any[]): Promise<any[]> {
+    try {
+      let query: any = {};
+      query[field] = {"$in": queries};
 
-        return new Promise<object[]>((fulfill, reject) => {
-          this.conn.then(db => {
-            db.collection(collectionName)
-              .find(query)
-              .toArray((err: Error, results: any[]) => {
-                if (err) {
-                  throw `Could not find ${JSON.stringify(queries)} under ${collectionName}: ${err}.`;
-                }
-                fulfill(results);
-              });
-          });
+      return new Promise<object[]>((fulfill, reject) => {
+        this.conn.then(db => {
+          db.collection(collectionName)
+            .find(query)
+            .toArray((err: Error, results: any[]) => {
+              if (err) {
+                throw `Could not find ${JSON.stringify(queries)} under ${collectionName}: ${err}.`;
+              }
+              fulfill(results);
+            });
         });
-      }
-      catch (err) {
-        logger.error(`MongoDB::getRecord() Problem querying ${collectionName}: ${err}`);
-      }
-      return null;
+      });
     }
+    catch (err) {
+      logger.error(`MongoDB::getRecord() Problem querying ${collectionName}: ${err}`);
+    }
+    return null;
+  }
 
   /**
    * Queries a collection and returns an array of all subsequent query matches
@@ -440,10 +444,10 @@ export class MongoDB {
   }
 
   /**
-   * 
+   *
    * @param collectionName - name of the collection, ie. 'courses', 'users'
    * @param query - object of potential match, ie. { program: 'space-exploration' }
-   *    
+   *
    * */
   public async getCollection(collectionName: string): Promise<any[]> {
     try {
@@ -451,11 +455,11 @@ export class MongoDB {
         this.conn.then((db: mongodb.Db) => {
           db.collection(collectionName)
             .find().toArray((err: Error, result: JSON[]) => {
-              if (err) {
-                throw err;
-              }
-              fulfill(result);
-            });
+            if (err) {
+              throw err;
+            }
+            fulfill(result);
+          });
         });
       });
     }
@@ -466,17 +470,19 @@ export class MongoDB {
   }
 
   /**
-   * 
+   *
    * @param collectionName - name of the collection, ie. 'courses', 'users'
    * @param document - object that is being inserted into the database
-   *    
+   *
    */
   public async insertRecord(collectionName: string, document: any): Promise<InsertOneResponse> {
     try {
       return new Promise<InsertOneResponse>((fulfill, reject) => {
         this.conn.then((db: mongodb.Db) => {
           db.collection(collectionName).insertOne(document, (err, result) => {
-            if (err) { throw `InsertRecord() ERROR: ${err}`; }
+            if (err) {
+              throw `InsertRecord() ERROR: ${err}`;
+            }
             logger.info(`MongoDB::insertRecord() Successfully inserted document in ${collectionName}.`);
             fulfill(result);
           });
@@ -490,10 +496,10 @@ export class MongoDB {
   }
 
   /**
-   * 
+   *
    * @param collectionName - name of the collection, ie. 'courses', 'users'
    * @param document - object that is being inserted into the database
-   *    
+   *
    */
   public async getDeliverableStats(deliverable: string, orgName: string): Promise<object> {
     console.log('deliverable', deliverable);
@@ -505,7 +511,9 @@ export class MongoDB {
             {$match: {orgName: orgName, deliverable: deliverable}},
             {$project: {_id: 1, orgName: 1, deliverable: 1, commit: 1}}
           ], (err, result) => {
-            if (err) { throw `InsertRecord() ERROR: ${err}`; }
+            if (err) {
+              throw `InsertRecord() ERROR: ${err}`;
+            }
             logger.info(`MongoDB::getDeliverableStats() Successfully retrieved group count for deliverable in ${orgName}.`);
             fulfill(result);
           });
