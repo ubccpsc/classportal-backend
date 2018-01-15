@@ -274,6 +274,7 @@ export class Dashboard {
 
       row.project = rec.team;
       row.user = rec.user;
+      row.stdioRef = rec.stdioRef;
       row.commit = rec.commit;
 
       if (typeof rec.report !== 'undefined' && rec.report !== null && typeof rec.report.scoreOverall !== 'undefined') { // TODO: should be more comprehensive
