@@ -22,7 +22,7 @@ let fs = require('fs');
 let stringify = require('csv-stringify');
 
 export class Results {
-  
+
   /**
    * @param courseId courseId number of courseId ie. 310
    * @param deliverableName string name of deliverable ie. 'd2'
@@ -139,7 +139,6 @@ export class Results {
         if (payload.allDeliverables) {
 
           for (let i = 0; i < deliverableNames.length; i++) {
-
             // get new timestamp for each deliverable due date for query
             let index: number;
 
@@ -228,9 +227,9 @@ export class Results {
           if (results[key].reportFailed === true) {
             mappedObj.grade = '0';
           } else {
-            if (String(results[key].orgName) === 'CPSC210-2017W-T1' && reportFailed === false) {
+            if (String(results[key].orgName) === 'CPSC210-2017W-T2' && reportFailed === false) { // HACK: org shouldn't be hard coded
               mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
-            } else if (String(results[key].orgName) === 'CPSC310-2017W-T1' && reportFailed === false) {
+            } else if (String(results[key].orgName) === 'CPSC310-2017W-T2' && reportFailed === false) { // HACK: org shouldn't be hard coded
               mappedObj.grade = results[key].report.tests.grade.finalGrade || '0';
             }
           }
@@ -264,7 +263,7 @@ export class Results {
 
           let s: StudentResult = {
             userName:   student.username,
-            userUrl:    'https://github.ubc.ca/' + student.username,
+            userUrl:    'https://github.ugrad.cs.ubc.ca/' + student.username, // HACK: shouldn't hardcode URL prefix
             fName:      student.fname,
             lName:      student.lname,
             sNum:       student.snum,
@@ -296,10 +295,8 @@ export class Results {
 
   private convertResultFormat(data: ResultPayloadInternal, delivId: string): ResultPayload {
     console.log('ResultController::convertResultFormat(..) - start');
-
     try {
       const start = new Date().getTime();
-
 
       for (let s of data.students) {
         if (s.projectUrl === '') {
