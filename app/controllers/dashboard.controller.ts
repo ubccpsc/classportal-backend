@@ -145,7 +145,7 @@ export class Dashboard {
 
             resolve(returnRows);
           }).catch(function (err) {
-            console.log('bar catch ' + err);
+            console.log('dashboard.controller::getTeamRows(..) - ERROR: ' + err);
             reject(err);
           });
         });
@@ -245,7 +245,7 @@ export class Dashboard {
 
             resolve(returnRows);
           }).catch(function (err) {
-            console.log('bar catch ' + err);
+            console.log('dashboard.controller::getDeliverableRows(..) - ERROR: ' + err);
             reject(err);
           });
         });
@@ -275,7 +275,7 @@ export class Dashboard {
       row.user = rec.user;
       row.commit = rec.commit;
 
-      if (typeof rec.report.scoreOverall !== 'undefined') { // TODO: should be more comprehensive
+      if (typeof rec.report !== 'undefined' && rec.report !== null && typeof rec.report.scoreOverall !== 'undefined') { // TODO: should be more comprehensive
         // jan 2018 310 container result
         missingTestDetails = false;
 
