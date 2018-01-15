@@ -270,9 +270,19 @@ export class Dashboard {
         rec.report === null ||
         typeof rec.report.studentInfo === 'undefined' ||
         typeof rec.report.studentInfo.projectUrl === 'undefined';
+
       row.project = rec.team;
       row.user = rec.user;
       row.commit = rec.commit;
+
+      if (typeof rec.report.scoreOverall !== 'undefined') { // TODO: should be more comprehensive
+        // jan 2018 310 container result
+        missingTestDetails = false;
+
+        if (typeof rec.projectUrl !== 'undefined') {
+          missingUserDetails = false;
+        }
+      }
 
       row.url = 'UNKNOWN_REPORT_FAILED'; // TODO: make sure the commit URL always gets in there
 
@@ -309,6 +319,17 @@ export class Dashboard {
           scoreOverall = rec.report.scoreOverall;
           scoreTest = rec.report.scoreTest;
           scoreCover = rec.report.scoreCover;
+
+          if (scoreOverall === null) {
+            scoreOverall = 0;
+          }
+          if (scoreTest === null) {
+            scoreTest = 0;
+          }
+          if (scoreCover === null) {
+            scoreCover = 0;
+          }
+
         } else {
           // older containers
           scoreOverall = rec.report.tests.grade.finalGrade;
