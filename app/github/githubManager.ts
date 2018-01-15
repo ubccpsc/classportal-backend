@@ -1607,6 +1607,7 @@ export default class GitHubManager {
 
   reAddUsersToTeam(inputGroup: GroupRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<GroupRepoDescription> {
     let that = this;
+    let failingUserAttempts: string[] = new Array();
     logger.info("GitHubManager::completeTeamProvision(..) - start: " + JSON.stringify(inputGroup));
     return new Promise(function (fulfill, reject) {
       let teamProvisionRecord: any;
@@ -1636,6 +1637,7 @@ export default class GitHubManager {
           logger.error("******");
           logger.error("******");
 
+          console.log('error object output', err);
           inputGroup.url = "";
           reject(err);
         });

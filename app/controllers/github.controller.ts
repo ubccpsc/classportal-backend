@@ -173,6 +173,7 @@ function createRepoName(course: ICourseDocument, delivName: string, teamNum: str
  * @param payload.courseId = number, ie. 310
  * @param payload.githubOrg = string, ie. "CPSC310-2017W-T2"
  * @param payload.deliverableName = string, ie. "d0"
+ * @console.log output usernames that fail to be added at end of script.
  *  */
 function repairGithubReposForTeams(payload: any): Promise<any> {
   let course: ICourseDocument;

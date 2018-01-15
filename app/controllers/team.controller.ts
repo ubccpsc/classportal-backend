@@ -182,6 +182,7 @@ function getMyTeams(req: any) {
   // params from req
   let userName = req.user.username;
   let courseId = req.params.courseId;
+  let delivName = req.params.deliverableName;
 
   let user: IUserDocument;
   let course: ICourseDocument;
@@ -196,9 +197,10 @@ function getMyTeams(req: any) {
     })
     .then((_user: IUserDocument) => {
       return Course.findOne({courseId: courseId})
-        .then((course: ICourseDocument) => {
-          if (course) {
-            return course;
+        .then((_course: ICourseDocument) => {
+          if (_course) {
+            course = _course;
+            return _course;
           }
           throw `Could not find course ${courseId}`;
         })
@@ -206,7 +208,17 @@ function getMyTeams(req: any) {
           logger.error(`TeamController::getMyTeams() ERROR ${err}`);
         });
     })
-    .then((course: ICourseDocument) => {
+    .then((_course: ICourseDocument) => {
+      return Deliverable.findOne({courseId: _course._id, name: delivName})
+        .then((_deliv: IDeliverableDocument) => {
+          if (_deliv) {
+            deliv = _deliv;
+            return deliv;
+          }
+          throw 'Could not find deliverable ' + delivName + ' for course ' + courseId;
+        });
+    })
+    .then(() => {
       return Team.findOne({courseId: course._id, members: user._id, 
           $where: 'this.deliverableIds.length > 0 && this.disbanded !== true'})
         .populate({
