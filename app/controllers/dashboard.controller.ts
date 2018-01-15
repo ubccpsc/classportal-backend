@@ -214,6 +214,7 @@ export class Dashboard {
               user:      true,
               url:       true,
               commit:    true,
+              commitUrl: true,
               timestamp: true
 
               // attachments: false
@@ -287,7 +288,8 @@ export class Dashboard {
       row.url = 'UNKNOWN_REPORT_FAILED'; // TODO: make sure the commit URL always gets in there
 
       if (missingUserDetails === true) {
-        row.url = row.idStamp; // HACK it would be better if there was a rec.url
+        row.url = rec.commitUrl;
+        // row.url = row.idStamp; // HACK it would be better if there was a rec.url
         // TODO: make this more verbose (e.g., 5 min timeout? something else?)
         row.error = 'Something is not right with this execution, see stdio.txt';
       } else {
