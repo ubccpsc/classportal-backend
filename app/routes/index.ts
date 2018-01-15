@@ -50,6 +50,7 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/admin/teams/:deliverable/overview', adminAuthenticated, routeHandler.getTeamProvisionOverview);  
   server.get('/admin/files/:deliverable/:username/:commit/:filename', adminAuthenticated,
     routeHandler.getFileFromResultRecord);
+  server.get('/admin/files/:stdioRef/stdio.txt', adminAuthenticated, routeHandler.getStdioFile);
   server.get('/:courseId/admin/teams/byBatch', adminAuthenticated, routeHandler.getCourseTeamsWithBatchMarking);
   server.get('/:courseId/admin/courseSettings', routeHandler.getCourseSettings);
   server.post('/admin/classList', adminAuthenticated, routeHandler.getClassList);

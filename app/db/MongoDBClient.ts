@@ -199,9 +199,11 @@ export class MongoDB {
         gradeRequested:                  1,
         projectUrl:                      1,
         commitUrl:                       1,
+        stdioRef:                        1,
         commit:                          1,
         timestamp:                       1,
         gradeRequestedTimestamp:         1,
+
         ref:                             1,
       };
 
@@ -216,6 +218,7 @@ export class MongoDB {
         gradeRequested:                  1,
         projectUrl:                      1,
         commitUrl:                       1,
+        stdioRef:                        1,
         commit:                          1,
         timestamp:                       1,
         gradeRequestedTimestamp:         1,
@@ -223,7 +226,7 @@ export class MongoDB {
       };
 
 
-      let projection: any = "CPSC210-2017W-T1".indexOf(_query.orgName) > -1 ? projection210 : projection310;
+      let projection: any = "CPSC210-2017W-T2".indexOf(_query.orgName) > -1 ? projection210 : projection310;
 
       try {
         this.conn.then((db: mongodb.Db) => {

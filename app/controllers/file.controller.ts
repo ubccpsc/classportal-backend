@@ -52,6 +52,23 @@ function getFileFromResultRecord(payload: any): Promise<object[]> {
     });
 }
 
+/**
+ * Gets filename, if exists, from Result Record
+ * @param string stdioRef which is found in the resultRecord. (matches idStamp in Stdio Record)
+ * @returns string format of stdio record
+ */
+function getStdioRecord(stdioRef: string): Promise<string> {
+  const STDIO_REF = stdioRef;
+  const STDIO_COLLECTION = 'stdios';
+  return db.getLatestRecord(STDIO_COLLECTION, {idStamp: STDIO_REF})
+    .then((stdioContainer: any) => {
+      if (stdioContainer) {
+        return stdioContainer.stdio.data;
+      }
+      throw `Could not find stdio record for ${STDIO_REF}`;
+    });
+}
+
 export {
-  getFileFromResultRecord
+  getFileFromResultRecord, getStdioRecord
 };

@@ -399,7 +399,7 @@ export class Dashboard {
       row.passNames = passNames;
       row.failNames = failNames;
       row.skipNames = skipNames;
-      row.stdioURL = `${config.app_path}:${config.port}/admin/files/${delivId}/${row.user}/${row.commit}/stdio.txt`;
+      row.stdioURL = `${config.app_path}:${config.port}/admin/files/${row.stdioRef}/stdio.txt`;
       returnRows.push(row);
     }
 

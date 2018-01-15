@@ -388,6 +388,19 @@ const getFileFromResultRecord = (req: restify.Request, res: restify.Response, ne
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
+const getStdioFile = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  const STDIO_REF: string = req.params.stdioRef;
+  return fileCtrl.getStdioRecord(STDIO_REF)
+    .then((response: any) => {
+      res.writeHead(200, {
+        'Content-Type':        mime.lookup('stdio.txt'),
+        'Content-Disposition': 'inline; filename=stdio.txt'
+      });
+      res.end(response);
+    })
+    .catch((err: any) => res.json(500, {err: err.message}));
+};
+
 
 export {
   pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
@@ -399,5 +412,6 @@ export {
   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects,
   getUsersNotOnTeam, getCourse, getMyTeams, generateProjects, repairIndividualProvisions, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking, getDashForDeliverable,
-  disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview
+  disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
+  getStdioFile
 };
