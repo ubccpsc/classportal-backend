@@ -176,17 +176,19 @@ export class TeamController {
 
 }
 
-
-function getMyTeams(req: any) {
+  /**
+   * @param req.params.courseId course number to find teams in ie. 310
+   * @param req.user.username The user is automatically embedded in the request header thanks to Passport
+   * @returns {MyTeams[]} *interface available in ClassPortal-UI-Next
+   */
+function getMyTeams(req: any): Promise<ITeamDocument[]> {
 
   // params from req
   let userName = req.user.username;
   let courseId = req.params.courseId;
-  let delivName = req.params.deliverableName;
 
   let user: IUserDocument;
   let course: ICourseDocument;
-  let deliv: IDeliverableDocument;
   return User.findOne({username: userName})
     .then((_user: IUserDocument) => {
       if (_user) {
@@ -208,34 +210,21 @@ function getMyTeams(req: any) {
           logger.error(`TeamController::getMyTeams() ERROR ${err}`);
         });
     })
-    .then((_course: ICourseDocument) => {
-      return Deliverable.findOne({courseId: _course._id, name: delivName})
-        .then((_deliv: IDeliverableDocument) => {
-          if (_deliv) {
-            deliv = _deliv;
-            return deliv;
-          }
-          throw 'Could not find deliverable ' + delivName + ' for course ' + courseId;
-        });
-    })
     .then(() => {
-      return Team.findOne({courseId: course._id, members: user._id, 
+      return Team.find({courseId: course._id, members: user._id, 
           $where: 'this.deliverableIds.length > 0 && this.disbanded !== true'})
         .populate({
           path:   'members deliverableIds deliverableId',
           select: 'username _id name url gradesReleased open close',
         })
-        .then((team: ITeamDocument) => {
-          if (team) {
-            return team;
+        .then((teams: ITeamDocument[]) => {
+          if (teams) {
+            return teams;
           }
           else {
-            return `You are not on any teams under ${courseId}.`;
+            throw `You are not on any teams under ${courseId}.`;
           }
         });
-    })
-    .catch(err => {
-      logger.error(`TeamController::getMyTeams() ERROR ${err}`);
     });
 }
 

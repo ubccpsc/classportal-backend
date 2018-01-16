@@ -299,7 +299,7 @@ const getCourse = (req: restify.Request, res: restify.Response, next: restify.Ne
 
 const getMyTeams = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return teamCtrl.getMyTeams(req)
-    .then((teams: ITeamDocument) => res.json(200, {response: teams}))
+    .then((teams: ITeamDocument[]) => res.json(200, {response: teams}))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
