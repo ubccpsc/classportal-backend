@@ -887,8 +887,8 @@ function createCustomTeam(req: any, payload: any) {
       if (membersAlreadyOnTeam) {
         throw `Members are already on team. Cannot add team member to multiple teams per 
           deliverable or sets of deliverables`;
-      } else if (payload.members.length > course.maxTeamSize && user.userrole === STUDENT_ROLE) {
-        throw `Cannot have a team larger than ${course.maxTeamSize}`;
+      } else if (payload.members.length > deliv.maxTeamSize && user.userrole === STUDENT_ROLE) {
+        throw `Cannot have a team larger than ${deliv.maxTeamSize}`;
       } 
       else {
         return createTeamObjectsForSingDelivMarking(payload.members);
@@ -1193,7 +1193,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
         sorted.teams.push(new Array());
       }
 
-      let maxTeamSize = course.maxTeamSize;
+      let maxTeamSize = deliverable.maxTeamSize;
       let teamNumber = 0;
 
       for (let i = 0; i < usersList.length; i++) {
