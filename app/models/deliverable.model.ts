@@ -13,7 +13,7 @@ interface IDeliverableDocument extends mongoose.Document {
   close: number;
   projectCount: number;
   teamsInSameLab: boolean;
-  teamsAllowed: boolean;
+  studentsMakeTeams: boolean;
   maxTeamSize: number;
   minTeamSize: number;
   teamCount: number;
@@ -49,7 +49,7 @@ const DeliverableSchema = new mongoose.Schema({
     type: Number,
     default: DEFAULT_MIN_TEAM_SIZE,
   },
-  teamsAllowed: {
+  studentsMakeTeams: {
     type: Boolean,
     default: false,
   },

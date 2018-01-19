@@ -31,13 +31,6 @@ const createCourse = (req: restify.Request, res: restify.Response) => {
     .catch((err: Error) => res.json(500, {'err': err.message}));
 };
 
-
-const addTokenToDB = (req: restify.Request, res: restify.Response) => {
-  return authCtrl.addTokenToDB(req, res)
-    .then(() => res.json(200, {response: 'Added token to DB'}))
-    .catch((err: Error) => res.json(500, {'err': err.message}));
-};
-
 const getAllCourses = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.getAllCourses(req.params)
     .then((courseList) => res.json(200, {response: courseList}))
@@ -156,20 +149,6 @@ const getGradesAdmin = (req: restify.Request, res: restify.Response, next: resti
 const getGradesStudent = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return gradeCtrl.getReleasedGradesByCourse(req)
     .then((grades: IGradeDocument[]) => res.json(200, {response: grades}))
-    .catch((err: any) => res.json(500, {err: err.message}));
-};
-
-const validateRegistration = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return userCtrl.validateRegistration(req, res, next)
-    .catch((err: any) => res.json(500, {err: err.message}));
-};
-
-const addGithubUsername = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return userCtrl.addGithubUsername(req)
-    .then((user: IUserDocument) => res.json(200, {
-      response: user.username + ' added to CSID #' + user.csid +
-                ' and SNUM #' + user.snum + '.'
-    }))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
@@ -404,10 +383,10 @@ const getStdioFile = (req: restify.Request, res: restify.Response, next: restify
 
 export {
   pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
-  getCurrentUserInfo, validateRegistration, addGithubUsername, updateDeliverable, getDeliverables,
+  getCurrentUserInfo, updateDeliverable, getDeliverables,
   getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
   addAdmins, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
-  deleteRepos, getCurrentUser, addTokenToDB, isAuthenticated, getMyCourses,
+  deleteRepos, getCurrentUser, isAuthenticated, getMyCourses,
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects,
   getUsersNotOnTeam, getCourse, getMyTeams, generateProjects, repairIndividualProvisions, repairGithubReposForTeams,

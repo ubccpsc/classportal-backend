@@ -23,15 +23,13 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/deliverables', isAuthenticated, routeHandler.getDeliverables);
   server.get('/:courseId/grades', isAuthenticated, routeHandler.getGradesStudent);
   server.post('/:courseId/admin/grades/results', adminAuthenticated, routeHandler.getGradesFromResults);
-  server.post('/:courseId/students/isInClass', routeHandler.isStudentInSameLab);
+  server.post('/:courseId/students/isInSameLab', isAuthenticated, routeHandler.isStudentInSameLab);
   server.get('/:courseId/students/withoutTeam', isAuthenticated, routeHandler.getUsersNotOnTeam);
-  server.put('/register', isAuthenticated, routeHandler.validateRegistration);
   server.put('/:courseId/team', routeHandler.createTeam);
   server.put('/:courseId/admin/customTeam', isAuthenticated, routeHandler.createCustomTeam);
   server.get('/:courseId/students', isAuthenticated, routeHandler.getStudentNamesFromCourse);
   server.put('/:courseId/students/customTeam', isAuthenticated, routeHandler.createCustomTeam);
   // OAuth routes by logged-in users only
-  server.put('/register/username', isAuthenticated, routeHandler.addGithubUsername);
   server.post('/logout', auth.loadUser, routeHandler.logout);
   server.get('/auth/login', passport.authenticate(config.auth_strategy), routeHandler.getCurrentUserInfo);
   server.get('/auth/login/return', passport.authenticate(config.auth_strategy, {failureRedirect: '/failed'}),

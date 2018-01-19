@@ -5,7 +5,7 @@ export interface DeliverablePayload {
   close: number; // timestamp
   markInBatch: boolean;
   teamsInSameLab: boolean;
-  teamsAllowed: boolean;
+  studentsMakeTeams: boolean;
   maxTeamSize: number;
   minTeamSize: number;
   buildingRepos: boolean;

@@ -137,7 +137,7 @@ function getDeliverablesByCourse(payload: any) {
                 _id: d._id, 
                 name: d.name, 
                 teamsInSameLab: d.teamsInSameLab,
-                teamsAllowed: d.teamsAllowed,
+                studentsMakeTeams: d.studentsMakeTeams,
                 maxTeamSize: d.maxTeamSize,
                 minTeamSize: d.minTeamSize,
                 gradesReleased: d.gradesReleased,

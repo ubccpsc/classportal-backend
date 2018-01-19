@@ -215,7 +215,7 @@ function getMyTeams(req: any): Promise<ITeamDocument[]> {
           $where: 'this.deliverableIds.length > 0 && this.disbanded !== true'})
         .populate({
           path:   'members deliverableIds deliverableId',
-          select: 'username _id name url gradesReleased open close',
+          select: 'username fname lname _id name url gradesReleased open close',
         })
         .then((teams: ITeamDocument[]) => {
           if (teams) {
@@ -637,7 +637,7 @@ function getTeamProvisionOverview(payload: any): Promise<Object> {
 function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverableDocument, 
   teams: ITeamDocument[]): Object {
     
-    const TEAMS_ALLOWED = deliverable.teamsAllowed;
+    const STUDENTS_MAKE_TEAMS = deliverable.studentsMakeTeams;
     const TEAMS_BY_LAB = deliverable.teamsInSameLab;
     const CLASS_SIZE = course.classList.length;
     let studentsTeamStatus: object;
@@ -732,7 +732,7 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
       
       mappedObj = { 
         classSize: CLASS_SIZE,
-        teamsAllowed: TEAMS_ALLOWED,
+        studentsMakeTeams: STUDENTS_MAKE_TEAMS,
         numOfTeams: getNumberOfTeams(),
         numOfTeamsWithRepo: getTeamsWithRepo(),
         numOfTeamsWithoutRepo: getTeamsWithoutRepo(),
