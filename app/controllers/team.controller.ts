@@ -919,7 +919,6 @@ function createCustomTeam(req: any, payload: any) {
         if (deliv) {
           let deliverableIds: any[] = new Array();
           deliverableIds.push(deliv._id);
-          for (let i = 0; i < userIds.length; i++) {
             let teamObject = {
               courseId:    course._id,
               deliverableIds,
@@ -928,16 +927,14 @@ function createCustomTeam(req: any, payload: any) {
               githubState: defaultGithubState,
             };
             bulkInsertArray.push(teamObject);
-          }
         } else {
           throw `Could not find Deliverables for ${payload.deliverableName} and ${course._id}`;
         }
 
         // adds the team number Name property used by AutoTest
-        let counter = teamIdList.length + 1;
+        let counter = deliv.projectCount + 1;
         for (let i = 0; i < bulkInsertArray.length; i++) {
           bulkInsertArray[i].name = TEAM_PREPENDAGE + counter;
-          counter++;
         }
 
         return bulkInsertArray;
