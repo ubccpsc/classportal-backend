@@ -215,7 +215,7 @@ function getMyTeams(req: any): Promise<ITeamDocument[]> {
           $where: 'this.deliverableIds.length > 0 && this.disbanded !== true'})
         .populate({
           path:   'members deliverableIds deliverableId',
-          select: 'username fname lname _id name url gradesReleased open close',
+          select: 'username fname lname _id name url gradesReleased studentsMakeTeams open close',
         })
         .then((teams: ITeamDocument[]) => {
           if (teams) {
