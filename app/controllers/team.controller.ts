@@ -822,11 +822,7 @@ function getTeams(payload: any): Promise<ITeamDocument[]> {
     });
 }
 
-// payload.markByBatch for old 310 class feature is deprecated: REFERENCES CAN BE REMOVED
 /**
- *
- * // under payload param
- * @param markInBatch type of boolean
  * @param deliverableName: ie. "d1", etc.
  * @param members array of github usernames
  * @param courseId - ie. 310
@@ -876,7 +872,6 @@ function createCustomTeam(req: any, payload: any) {
       return validateGithubNames(payload.members, course);
     })
     .then((validTeamMembers: boolean) => {
-      console.log('IS IT VALID 2', validTeamMembers);
       if (validTeamMembers) {
         return checkIfMembersOnTeam(payload.members, deliv);
       } else {
@@ -891,7 +886,7 @@ function createCustomTeam(req: any, payload: any) {
         throw `Cannot have a team larger than ${deliv.maxTeamSize}`;
       } 
       else {
-        return createTeamObjectsForSingDelivMarking(payload.members);
+        return createTeamObjects(payload.members);
       }
     })
     .then((newTeamInsertList: any) => {
@@ -899,7 +894,7 @@ function createCustomTeam(req: any, payload: any) {
     });
 
 
-  function createTeamObjectsForSingDelivMarking(teamIdList: string[]) {
+  function createTeamObjects(teamIdList: string[]) {
 
     let userIds: string[] = [];
     return User.find({username: {'$in': teamIdList}})
@@ -932,11 +927,13 @@ function createCustomTeam(req: any, payload: any) {
         }
 
         // adds the team number Name property used by AutoTest
-        let counter = deliv.projectCount + 1;
+        let counter = deliv.projectCount;
         for (let i = 0; i < bulkInsertArray.length; i++) {
+          counter++;
           bulkInsertArray[i].name = TEAM_PREPENDAGE + counter;
         }
-
+        deliv.projectCount = counter;
+        deliv.save();
         return bulkInsertArray;
       })
       .catch(err => {
@@ -1006,15 +1003,13 @@ function createCustomTeam(req: any, payload: any) {
 
           if (teams && teams.length > 0) {
             logger.info('TeamController:: checkIfMembersOnTeam(): ALREADY On Team', teamMembers);
-            return true; // someone is on a team for this delvi in this course
+            throw ('TeamController:: checkIfMembersOnTeam(): ALREADY On Team' + JSON.stringify(teamMembers)); 
+            // someone is on a team for this delvi in this course
           } else {
             logger.info('TeamController:: checkIfMembersOnTeam() NOT Already On Team', teamMembers);
             return false; // nobody is already on a team for this deliv in this course
           }
         });
-      })
-      .catch((err) => {
-        logger.error('TeamController:: checkIfMembersOnTeam() ERROR ' + err);
       });
 
       // let arrayOfUsernameQueries: any[] = [];
@@ -1033,7 +1028,7 @@ function createCustomTeam(req: any, payload: any) {
  * // under payload param
  * @param markInBatch type of boolean
  * @param teamSize: The max team size we will create
- * @param inSameLab: boolean: Ensures that team members are in same lab.
+ * @param inSameLab: boolean: Ensures that team members are in same lab. // UNIMPLEMENTED
  * @param deliverableName: ie. "d1", etc.
  * @param courseId - ie. 310
  */
@@ -1086,28 +1081,25 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
 
   function createTeamForEachTeamList(sortedTeamIdList: string[][]) {
     let bulkInsertArray: any;
-      return createTeamObjectsForSingleDelivMarking()
+      return createTeamObjects()
         .then((_teams: any) => {
           return insertTeamDocuments(_teams);
         });
 
-    function createTeamObjectsForSingleDelivMarking() {
+    function createTeamObjects() {
       let teams: ITeamDocument[];
       return getDeliverable(payload.deliverableName, course)
         .then((deliv: IDeliverableDocument) => {
           return Team.find({courseId: course._id, deliverableIds: deliv._id})
             .then((_teams: ITeamDocument[]) => {
               teams = _teams;
-              // if (teams.length > 0) {
-              //   throw `Teams already exist for Deliverable. Cannot generate teams.`;
-              // }
               return false;
             })
             .then((teamsExist: Boolean) => {
               if (!teamsExist) {
                 let bulkInsertArray = new Array();
                 if (deliv) {
-
+                  
                   for (let i = 0; i < sortedTeamIdList.length; i++) {
                     let teamObject = {
                       courseId:      course_id,
@@ -1122,12 +1114,12 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
                 }
 
                 // adds the team number Name property used by AutoTest
-                deliverable.projectCount++;
-
+                let count: number = deliverable.projectCount;
                 for (let i = 0; i < bulkInsertArray.length; i++) {
-                  bulkInsertArray[i].name = TEAM_PREPENDAGE + deliverable.projectCount;
+                  count++;
+                  bulkInsertArray[i].name = TEAM_PREPENDAGE + count;
                 }
-
+                deliverable.projectCount = count;
                 deliverable.save();
 
                 return bulkInsertArray;
@@ -1142,16 +1134,14 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
     }
   }
 
-  // Gets CourseSettings to see if markByBatch flag enabled, and then gets Deliverable(s)
-  // based markByBatch flag.
   function getDeliverable(deliverableName: string, course: ICourseDocument) {
     return Deliverable.findOne({name: deliverableName, courseId: course._id}).exec()
       .then((deliverable: IDeliverableDocument) => {
         if (deliverable) {
           return deliverable;
         }
-        throw `Team.Controller::getDeliverable(${deliverableName}, ${course._id})
-           No Deliverable Found`;
+        throw `Team.Controller::getDeliverable(${deliverableName}, ${course._id}) ` + 
+           `No Deliverable Found`;
       });
   }
 

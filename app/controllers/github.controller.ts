@@ -22,9 +22,14 @@ const STAFF_TEAM = 'staff';
 // if we want to delete projects instead of creating them. be careful with this!
 const CLEAN = false;
 
-
+/**
+ * 
+ * @param payload.courseId string number on Course object ie. '310'
+ * @param payload.deliverableName string name on Deliverable object ie.'d1'
+ * @param payload.githubOrg string name on Course object ie. 'CPSC210-2017W-T2'
+ * @return void
+ */
 function getProjectHealthReport(payload: any) {
-  // requires payload.courseId, payload.deliverableName, payload.githubOrg
   let reposInOrg: any;
   let projects: any;
   let course: ICourseDocument;
@@ -173,7 +178,7 @@ function createRepoName(course: ICourseDocument, delivName: string, teamNum: str
  * @param payload.courseId = number, ie. 310
  * @param payload.githubOrg = string, ie. "CPSC310-2017W-T2"
  * @param payload.deliverableName = string, ie. "d0"
- * @console.log output usernames that fail to be added at end of script.
+ * @console.log output usernames that fail to be added at end of script. // UNIMPLEMENTED
  *  */
 function repairGithubReposForTeams(payload: any): Promise<any> {
   let course: ICourseDocument;
@@ -347,205 +352,6 @@ function createGithubReposForTeams(payload: any): Promise<any> {
   }
 }
 
-function repairIndividualProvisions(payload: any): Promise<any> {
-
-  const ADMIN = 'admin';
-  const PULL = 'pull';
-  const PUSH = 'push';
-
-  let githubManager = new GitHubManager(payload.githubOrg);
-  let course: ICourseDocument;
-  let courseSettings: any;
-  let projects: IProjectDocument[];
-  let project: IProjectDocument;
-  let inputGroup: GroupRepoDescription;
-  let deliverable: IDeliverableDocument;
-
-  return Course.findOne({courseId: payload.courseId}).exec()
-    .then((_course: ICourseDocument) => {
-      if (_course) {
-        course = _course;
-        courseSettings = _course.settings;
-      } else {
-        throw `Could not find course ${payload.courseId}`;
-      }
-      return _course;
-    })
-    .then((_course: ICourseDocument) => {
-      return Deliverable.findOne({courseId: _course._id, name: payload.deliverableName})
-        .then((deliv: IDeliverableDocument) => {
-          if (deliv) {
-            deliverable = deliv;
-            return deliv;
-          }
-          else {
-            throw `Could not find Deliverable ${payload.deliverableName} under 
-            Course ${_course.courseId}`;
-          }
-        })
-        .catch(err => {
-          logger.error(`GithubController:createGithubReposForProjects() ERROR ${err}`);
-        });
-    })
-    .then((deliv: IDeliverableDocument) => {
-
-      if (courseSettings.markDelivsByBatch) {
-        throw `Cannot build projects for Batch Team course`;
-      }
-      return getProjectsToRepairForSelectedDeliv(course, deliv)
-        .then((projects: IProjectDocument[]) => {
-          return repairProjectsForSelectedDeliv(projects);
-        })
-        .catch(err => {
-          logger.error(`GithubController::getProjectsToBuildForSelectedDeliv()/
-             ERROR ${err}`);
-        });
-    });
-
-  function repairProjectsForSelectedDeliv(_projects: IProjectDocument[]) {
-    for (let i = 0; i < _projects.length; i++) {
-      let inputGroup = {
-        repoName:     createRepoName(course, payload.deliverableName, _projects[i].name),
-        projectName:  createRepoName(course, payload.deliverableName, _projects[i].name),
-        projectIndex: i,
-        student:      _projects[i].student.username,
-        project:      _projects[i],
-        projects:     _projects,
-        orgName:      course.githubOrg
-      };
-      if (payload.completeRepair) {
-        githubManager.repairIndividualProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
-      }
-      else if (payload.reAddUserPermissions) {
-        githubManager.reAddUser(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
-      }
-      else if (payload.reAddStaffPermissions) {
-        githubManager.reAddStaff(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
-      }
-      else if (payload.reAddWebhook) {
-        githubManager.reAddWebhook(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
-      }
-    }
-    if (!payload.reAddUserPermissions && !payload.completeRepair && !payload.reAddWebhook) {
-      return `GithubController:: No Payload Instructions Submitted. Repair Cancelled`;
-    }
-    else {
-      return `GithubController:: Repair starting...`;
-    }
-  }
-
-  function getProjectsToRepairForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
-    return Project.find({
-      courseId:      course._id,
-      deliverableId: deliv._id,
-      // 'githubState.repo.url': '',
-    })
-      .populate({path: 'student deliverableId courseId'})
-      .exec()
-      .then((_projects: IProjectDocument[]) => {
-        if (_projects) {
-          projects = _projects;
-          return projects;
-        }
-        throw `Deliverable ${deliv.name} not found under Course ${course.courseId}.`;
-      })
-      .catch(err => {
-        logger.error(`Github.Controller::getProjectsToBuildForSelectedDiv() ERROR ${err}`);
-      });
-  }
-}
-
-function createGithubReposForProjects(payload: any): Promise<any> {
-
-  const ADMIN = 'admin';
-  const PULL = 'pull';
-  const PUSH = 'push';
-
-  let githubManager = new GitHubManager(payload.githubOrg);
-  let course: ICourseDocument;
-  let courseSettings: any;
-  let projects: IProjectDocument[];
-  let project: IProjectDocument;
-  let inputGroup: GroupRepoDescription;
-  let deliverable: IDeliverableDocument;
-
-  return Course.findOne({courseId: payload.courseId}).exec()
-    .then((_course: ICourseDocument) => {
-      if (_course) {
-        course = _course;
-        courseSettings = _course.settings;
-      } else {
-        throw `Could not find course ${payload.courseId}`;
-      }
-      return _course;
-    })
-    .then((_course: ICourseDocument) => {
-      return Deliverable.findOne({courseId: _course._id, name: payload.deliverableName})
-        .then((deliv: IDeliverableDocument) => {
-          if (deliv) {
-            deliverable = deliv;
-            return deliv;
-          }
-          else {
-            throw `Could not find Deliverable ${payload.deliverableName} under 
-            Course ${_course.courseId}`;
-          }
-        })
-        .catch(err => {
-          logger.error(`GithubController:createGithubReposForProjects() ERROR ${err}`);
-        });
-    })
-    .then((deliv: IDeliverableDocument) => {
-
-      if (courseSettings.markDelivsByBatch) {
-        throw `Cannot build projects for Batch Team course`;
-      }
-      return getProjectsToBuildForSelectedDeliv(course, deliv)
-        .then((projects: IProjectDocument[]) => {
-          return buildProjectsForSelectedDeliv(projects);
-        })
-        .catch(err => {
-          logger.error(`GithubController::getProjectsToBuildForSelectedDeliv()/
-             ERROR ${err}`);
-        });
-    });
-
-  function buildProjectsForSelectedDeliv(_projects: IProjectDocument[]) {
-    for (let i = 0; i < _projects.length; i++) {
-      let inputGroup = {
-        repoName:     createRepoName(course, payload.deliverableName, _projects[i].name),
-        projectName:  createRepoName(course, payload.deliverableName, _projects[i].name),
-        projectIndex: i,
-        student:      _projects[i].student.username,
-        project:      _projects[i],
-        projects:     _projects,
-        orgName:      course.githubOrg
-      };
-      githubManager.completeIndividualProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
-    }
-  }
-
-  function getProjectsToBuildForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
-    return Project.find({
-      courseId:               course._id,
-      deliverableId:          deliv._id,
-      'githubState.repo.url': '',
-    })
-      .populate({path: 'student deliverableId courseId'})
-      .exec()
-      .then((_projects: IProjectDocument[]) => {
-        if (_projects) {
-          projects = _projects;
-          return projects;
-        }
-        throw `Deliverable ${deliv.name} not found under Course ${course.courseId}.`;
-      })
-      .catch(err => {
-        logger.error(`Github.Controller::getProjectsToBuildForSelectedDiv() ERROR ${err}`);
-      });
-  }
-}
-
 function getTeams(payload: any) {
   return Course.findOne({courseId: payload.courseId})
     .exec()
@@ -569,6 +375,6 @@ function getTeams(payload: any) {
 }
 
 export {
-  getTeams, createGithubTeam, createGithubReposForTeams, createGithubReposForProjects,
-  getRepos, deleteRepos, getProjectHealthReport, repairIndividualProvisions, repairGithubReposForTeams
+  getTeams, createGithubTeam, createGithubReposForTeams,
+  getRepos, deleteRepos, getProjectHealthReport, repairGithubReposForTeams
 };

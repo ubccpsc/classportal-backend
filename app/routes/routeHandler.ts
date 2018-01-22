@@ -210,18 +210,6 @@ const createGithubReposForTeams = (req: restify.Request, res: restify.Response, 
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
-const createGithubReposForProjects = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return githubCtrl.createGithubReposForProjects(req.params)
-    .then((githubResponse: Object) => res.json(200, {response: 'Successfully created repo with teams and members.'}))
-    .catch((err: any) => res.json(500, {err: err.message}));
-};
-
-const repairIndividualProvisions = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return githubCtrl.repairIndividualProvisions(req.params)
-    .then((githubResponse: any) => res.json(200, {response: githubResponse}))
-    .catch((err: any) => res.json(500, {err: err.message}));
-};
-
 const getRepos = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return githubCtrl.getRepos(req.params.orgName)
     .then((reposList: [Object]) => res.json(200, {response: reposList}))
@@ -279,18 +267,6 @@ const getCourse = (req: restify.Request, res: restify.Response, next: restify.Ne
 const getMyTeams = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return teamCtrl.getMyTeams(req)
     .then((teams: ITeamDocument[]) => res.json(200, {response: teams}))
-    .catch((err: any) => res.json(500, {err: err.message}));
-};
-
-// const generateProjects = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-//   return projectCtrl.generateProjects(req.params)
-//   .then((newProjects: any) => res.json(200, { response: newProjects }))
-//   .catch((err: any) => res.json(500, { err: err.message }));
-// };
-
-const generateProjects = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return projectCtrl.generateProjects(req.params)
-    .then((projects: any) => res.json(200, {response: projects}))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
@@ -388,8 +364,8 @@ export {
   addAdmins, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
   deleteRepos, getCurrentUser, isAuthenticated, getMyCourses,
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
-  addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, createGithubReposForProjects,
-  getUsersNotOnTeam, getCourse, getMyTeams, generateProjects, repairIndividualProvisions, repairGithubReposForTeams,
+  addLabList, addDeliverable, randomlyGenerateTeamsPerCourse,
+  getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
   getStdioFile

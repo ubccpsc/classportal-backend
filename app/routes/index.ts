@@ -26,7 +26,7 @@ const routes = (server: restify.Server) => {
   server.post('/:courseId/students/isInSameLab', isAuthenticated, routeHandler.isStudentInSameLab);
   server.get('/:courseId/students/withoutTeam', isAuthenticated, routeHandler.getUsersNotOnTeam);
   server.put('/:courseId/team', routeHandler.createTeam);
-  server.put('/:courseId/admin/customTeam', isAuthenticated, routeHandler.createCustomTeam);
+  server.put('/:courseId/admin/customTeam', adminAuthenticated, routeHandler.createCustomTeam);
   server.get('/:courseId/students', isAuthenticated, routeHandler.getStudentNamesFromCourse);
   server.put('/:courseId/students/customTeam', isAuthenticated, routeHandler.createCustomTeam);
   // OAuth routes by logged-in users only
@@ -58,10 +58,6 @@ const routes = (server: restify.Server) => {
   server.put('/:courseId/admin/github/team', adminAuthenticated, routeHandler.createGithubTeam);
   server.put('/:courseId/admin/github/repo/team', adminAuthenticated, routeHandler.createGithubReposForTeams);
   server.put('/:courseId/admin/github/repo/team/repair', adminAuthenticated, routeHandler.repairGithubReposForTeams);
-  server.put('/:courseId/admin/github/repo/project', adminAuthenticated, routeHandler.createGithubReposForProjects);
-  server.put('/:courseId/admin/github/repo/project/repair', adminAuthenticated,
-    routeHandler.repairIndividualProvisions);
-  server.post('/:courseId/admin/projectGeneration', adminAuthenticated, routeHandler.generateProjects);
   server.post('/:courseId/admin/teamGeneration', adminAuthenticated, routeHandler.randomlyGenerateTeamsPerCourse);
   server.get('/:courseId/admin/github/repos/:orgName', adminAuthenticated, routeHandler.getRepos);
   server.del('/:courseId/admin/github/repos/:orgName', adminAuthenticated, routeHandler.deleteRepos);
