@@ -1542,7 +1542,7 @@ export default class GitHubManager {
 
         inputGroup.url = newRepoInfo.url;
 
-        logger.info("GitHubManager::completeIndividualProvision(..) - project created; importing url: " + importUrl);
+        logger.info("GitHubManager::completeTeamProvision(..) - project created; importing url: " + importUrl);
         inputGroup._team.githubState.repo.name = newRepoInfo.name;
         inputGroup._team.githubState.repo.id = newRepoInfo.id;
         inputGroup._team.githubState.repo.url = newRepoInfo.url;
@@ -1550,7 +1550,7 @@ export default class GitHubManager {
           .then((team: ITeamDocument) => {
           })
           .catch((err: any) => {
-            logger.error(`GithubManager::completeIndividualProvision() inputGroup.project.save() ERROR ${err}`);
+            logger.error(`GithubManager::completeTeamProvision() inputGroup.project.save() ERROR ${err}`);
           });
         // let importUrl = 'https://github.com/CS310-2016Fall/cpsc310project';
         logger.info("GitHubManager::completeTeamProvision(..) - project created; importing url: " + importUrl);
@@ -1590,6 +1590,10 @@ export default class GitHubManager {
           logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
           fulfill(inputGroup);
         }).catch(function (err) {
+
+        inputGroup._team.githubState.creationRecord.error = err;
+
+
         // logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
         logger.error("******");
         logger.error("******");
@@ -1598,7 +1602,7 @@ export default class GitHubManager {
         logger.error("******");
         logger.error("******");
 
-        inputGroup.url = "";
+        inputGroup._team.save();
         reject(err);
       });
     });

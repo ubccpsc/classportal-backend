@@ -3,7 +3,7 @@ import {logger} from '../../utils/logger';
 import {User, IUserDocument} from '../models/user.model';
 import {Deliverable, IDeliverableDocument} from '../models/deliverable.model';
 import {
-  GithubState, GithubRepo, GithubTeam, defaultGithubState,
+  GithubState, GithubRepo, GithubTeam, defaultGithubState, GithubCreationRecord,
   defaultGithubRepo
 } from './github.interfaces';
 
@@ -83,6 +83,9 @@ const TeamSchema = new mongoose.Schema({
     },
     team: {
       id: {type: Number, default: 0}
+    },
+    creationRecord: {
+      error: {type: Object, default: null}
     }
   },
 });
