@@ -378,7 +378,7 @@ export {
   addAdminList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
   deleteRepos, getCurrentUser, isAuthenticated, getMyCourses,
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
-  addLabList, addDeliverable, randomlyGenerateTeamsPerCourse,
+  addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, getTestDelay,
   getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,

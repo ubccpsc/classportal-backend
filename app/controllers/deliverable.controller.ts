@@ -185,4 +185,4 @@ function getDeliverablesByCourse(payload: any) {
     });
 }
 
-export {getDeliverablesByCourse, addDeliverable, updateDeliverable};
+export {getDeliverablesByCourse, addDeliverable, updateDeliverable, getTestDelay};
