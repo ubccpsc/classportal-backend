@@ -137,7 +137,6 @@ UserSchema.statics = {
       .exec()
       .then((user) => {
         if (user) {
-          console.log('test of course' + user.username);
           return user;
         } else {
           return User.create(query)

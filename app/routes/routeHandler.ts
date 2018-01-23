@@ -163,11 +163,10 @@ const updateTeam = (req: restify.Request, res: restify.Response, next: restify.N
     });
 };
 
-const addAdminsList = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return courseCtrl.addAdminsList(req.params)
-    .then((c: ICourseDocument) => res.json(200, {
-      response: 'Successfully updated course admin list on '
-                + c.courseId + '.'
+const addAdminList = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.addAdminList(req.files, req.params.courseId)
+    .then((courseAdminList: any) => res.json(200, {
+      response: courseAdminList
     }))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
@@ -355,7 +354,7 @@ const isStaff = (req: restify.Request, res: restify.Response, next: restify.Next
 };
 
 const addStaffList = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return courseCtrl.addStaffList(req.params)
+  return courseCtrl.addStaffList(req.files, req.params.courseId)
     .then((isStaff: any) => res.json(200, {response: isStaff}))
     .catch((err: any) => res.json(500, {err: err}));
 };
@@ -370,7 +369,7 @@ export {
   pong, createCourse, getAllCourses, logout, addStudentList, getClassList,
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaff,
   getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
-  addAdminsList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
+  addAdminList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
   deleteRepos, getCurrentUser, isAuthenticated, getMyCourses,
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse,

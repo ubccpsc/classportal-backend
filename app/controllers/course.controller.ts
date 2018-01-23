@@ -68,103 +68,175 @@ function getAllStaff(payload: any) {
 }
 
 /**
- * Adds an admin to a course (must already be a user in DB)
- * @param payload.username string ie. 'steca' or 'x2d3g'
- * @return User[] who was added
+ * Upload an adminList
+ * Admin will be created in Users database as 'admin' userrole.
+ * 
+ * Pre-req #1 is that HEADERS in CSV are labelled with headers below:
+ *                    HEADERS: USERNAME (required), FIRST (optional), LAST (optional)
+ *         #2 Username, first, last must match if already exist.
+ * 
+ * ** WARNING ** Uploading a adminList will overwrite the previous adminList 
+ * in the Course object. Admins are never deleted from DB.
+ * 
+ * @param req.files as reqFiles with FS readable reqFiles['adminList'].path
+ * @param courseId string ie. '310' of the course we are adding labList too
+ * @return adminList object
  */
-function addAdminsList(payload: any) {
-  let userQuery = User.findOne({
-    'username': payload.username,
-  }).exec();
-  let courseQuery = Course.findOne({'courseId': payload.courseId}).populate('admins courses').exec();
-  let user_id: string;
+function addAdminList(reqFiles: any, courseId: string) {
+  logger.info('CourseController:: addAdminList() - start');
+  const ADMIN_USERROLE = 'admin';
+  const options = {
+    columns:          true,
+    skip_empty_lines: true,
+    trim:             true,
+  };
 
-  return courseQuery.then(c => {
-    if (c === null) {
-      throw(Error('Course ' + payload.courseId + ' cannot be found.'));
-    }
+  let rs = fs.createReadStream(reqFiles['adminList'].path);
+  let courseQuery = Course.findOne({'courseId': courseId}).exec();
 
-    return userQuery.then(u => {
-      let throwUserError: boolean;
-      let userAlreadyAdmin: boolean;
-      if (u !== null) {
-        user_id = u._id;
-        userAlreadyAdmin = c.admins.some(function (user: IUserDocument) {
-          return user._id.equals(user_id);
-        });
-      } else {
-        throwUserError = true;
-      }
+  let parser = parse(options, (err, data) => {
 
-      if (userAlreadyAdmin) {
-        return Promise.reject(Error('Admin already exists in ' + c.courseId + '.'));
-      } else if (throwUserError) {
-        return Promise.reject(Error('User does not exist in DB. Please double-check that payload is correct.'));
-      } else {
-        updateUserrole(u, c, payload.userrole)
-          .then(() => {
-            c.admins.push(user_id);
-            c.save();
-          });
-      }
-      return Promise.resolve(c);
+    let usersRepo = User;
+    let userQueries: any = [];
+
+    Object.keys(data).forEach((key: string) => {
+      let admin = data[key];
+      let course: ICourseDocument;
+      logger.info('CourseController:: addAdminList() Creating admin in Users if does not already ' +
+         'exist for CSV line: ' + JSON.stringify(admin));
+      userQueries.push(usersRepo.findOrCreate({
+        username: admin.USERNAME,
+        fname: admin.FIRST,
+        lname: admin.LAST
+      }).then((u: IUserDocument) => {
+        // CSID and SNUM must be unique and exist on User object according to index (so throw in consistent unique value)
+        u.userrole = ADMIN_USERROLE;
+        u.csid = u.username;
+        u.snum = u.username;
+        return u.save();
+      }));
     });
+
+    courseQuery.then((course: ICourseDocument) => {
+      let userIds: IUserDocument[] = [];
+
+      return Promise.all(userQueries)
+        .then((results: any) => {
+          Object.keys(results).forEach((key) => {
+            results[key];
+            userIds.push(results[key]._id as IUserDocument);
+          });
+
+          course.admins = userIds;
+          course.save();
+        });
+    });
+
+    if (err) {
+      throw Error(err);
+    }
   });
+
+  rs.pipe(parser);
+
+  return Course.findOne({courseId})
+    .populate({path: 'admins'})
+    .exec()
+    .then((course: ICourseDocument) => {
+      return course.admins;
+    })
+    .catch(err => {
+      logger.error(`CourseController::addAdminList() ERROR ${err}`);
+    });
 }
 
 /**
- * Adds an admin to a course (must already be a user in DB)
- * @param payload.username string ie. 'steca' or 'x2d3g'
- * @return User[] who was added
+ * Upload a staffList
+ * Staff will be created in Users database as 'student' to ensure that they are seen
+ * by AutoTest as students in other courses (except when in Course.staffList under particular
+ * specified @param courseId)
+ * 
+ * Pre-req #1 is that HEADERS in CSV are labelled with headers below:
+ *                    HEADERS: USERNAME (required) / CSID (optional) / SNUM (optional) 
+ * 
+ * ** WARNING ** Uploading a labList will overwrite the previous labList 
+ * in the Course object.
+ * 
+ * @param req.files as reqFiles with FS readable reqFiles['staffList'].path
+ * @param courseId string ie. '310' of the course we are adding staffList too
+ * @return staffList object
  */
-function addStaffList(payload: any) {
-  let userQuery = User.findOne({
-    'username': payload.username,
-  }).exec();
-  let courseQuery = Course.findOne({'courseId': payload.courseId}).populate('admins courses').exec();
-  let user_id: string;
+function addStaffList(reqFiles: any, courseId: string) {
 
-  return courseQuery.then(c => {
-    if (c === null) {
-      throw(Error('Course ' + payload.courseId + ' cannot be found.'));
-    }
+  const options = {
+    columns:          true,
+    skip_empty_lines: true,
+    trim:             true,
+  };
 
-    return userQuery.then(u => {
-      let throwUserError: boolean;
-      let userAlreadyAdmin: boolean;
-      if (u !== null) {
-        user_id = u._id;
-        userAlreadyAdmin = c.admins.some(function (user: IUserDocument) {
-          return user._id.equals(user_id);
-        });
-      } else {
-        throwUserError = true;
-      }
+  let rs = fs.createReadStream(reqFiles['staffList'].path);
+  let courseQuery = Course.findOne({'courseId': courseId}).exec();
 
-      if (userAlreadyAdmin) {
-        return Promise.reject(Error('Admin already exists in ' + c.courseId + '.'));
-      } else if (throwUserError) {
-        return Promise.reject(Error('User does not exist in DB. Please double-check that payload is correct.'));
-      } else {
-        updateUserrole(u, c, payload.userrole)
-          .then(() => {
-            c.admins.push(user_id);
-            c.save();
-          });
-      }
-      return Promise.resolve(c);
+  let parser = parse(options, (err, data) => {
+
+    let usersRepo = User;
+    let userQueries: any = [];
+
+    Object.keys(data).forEach((key: string) => {
+      let staff = data[key];
+      let course: ICourseDocument;
+      logger.info('CourseController:: addStaffList() Creating staff in Users if does not already ' +
+         'exist for CSV line: ' + JSON.stringify(staff));
+      userQueries.push(usersRepo.findOrCreate({
+        username: staff.USERNAME,
+        csid: staff.USERNAME,
+        snum: staff.USERNAME
+      }).then((u: IUserDocument) => {
+        return u;
+      }));
     });
+
+    courseQuery.then((course: ICourseDocument) => {
+      let userIds: IUserDocument[] = [];
+
+      return Promise.all(userQueries)
+        .then((results: any) => {
+          Object.keys(results).forEach((key) => {
+            results[key];
+            userIds.push(results[key]._id as IUserDocument);
+          });
+
+          course.staffList = userIds;
+          course.save();
+        });
+    });
+
+    if (err) {
+      throw Error(err);
+    }
   });
+
+  rs.pipe(parser);
+
+  return Course.findOne({courseId})
+    .populate({path: 'staffList'})
+    .exec()
+    .then((course: ICourseDocument) => {
+      return course.staffList;
+    })
+    .catch(err => {
+      logger.error(`CourseController::addStaffList() ERROR ${err}`);
+    });
 }
 
 /**
  * Upload a labList
  * Pre-req #1 is that ClassList for specific courseId is uploaded
- * Pre-req #2 is that HEADERS in CSV are labelled correctly.
- * HEADERS: CSID / SNUM / LAST / FIRST / USERNAME / LAB
+ * Pre-req #2 is that HEADERS in CSV are labelled with headers below:
+ *                    HEADERS: CSID / SNUM / LAST / FIRST / USERNAME / LAB
  * 
- * ** WARNING ** Uploading a labList will overwrite the previous labList object
- * underneath the Course object.
+ * ** WARNING ** Uploading a labList will overwrite the previous labList 
+ * in the Course object.
  * 
  * @param req.files as reqFiles with functional reqFiles['labList'].path
  * @param courseId string ie. '310' of the course we are adding labList too
@@ -300,14 +372,24 @@ function getCourseLabSectionList(req: any): Promise<object> {
     });
 }
 
-
 /**
- * Update a class list
- * Input: CSV
+ * Upload a classList
+ * Students will be created in Users database as 'student'.
+ * 
+ * Pre-req #1 is that HEADERS in CSV are labelled with headers below:
+ *                    HEADERS: CSID	/ SNUM / LAST	/ FIRST /	USERNAME / LAB
+ * 
+ * ** WARNING ** Uploading a classList will overwrite the previous classList 
+ * in the Course object. Users fields are overwritten, but original Mongo User Id
+ * property always stays the same to ensure references to are kept in ongoing course
+ * or other courses.
+ * 
+ * @param req.files as reqFiles with FS readable reqFiles['classList'].path
+ * @param courseId string ie. '310' of the course we are adding classList too
+ * @return classList object
  */
-
 function updateClassList(reqFiles: any, courseId: string) {
-  const GITHUB_ENTERPRISE_URL = 'https://github.ubc.ca/';
+  const GITHUB_ENTERPRISE_URL = 'https://github.ugrad.cs.ubc.ca/';
 
   console.log(reqFiles['classList']);
   const options = {
@@ -366,9 +448,10 @@ function updateClassList(reqFiles: any, courseId: string) {
   rs.pipe(parser);
 
   return Course.findOne({'courseId': courseId})
+  .populate('classList')
     .then(c => {
       if (c) {
-        return Promise.resolve(c);
+        return Promise.resolve(c.classList);
       }
       return Promise.reject(Error('Course #' + courseId + ' does not exist. ' +
         'Cannot add class list to course that does not exist.'));
@@ -490,7 +573,7 @@ function isStaff(payload: any): Promise<boolean> {
         });
     })
     .then((isValidUser: boolean) => {
-      if (typeof user !== 'undefined' && course.staff.indexOf(user._id) > -1 && isValidUser) {
+      if (typeof user !== 'undefined' && course.staffList.indexOf(user._id) > -1 && isValidUser) {
         // if user ref found in course.admins array, return true aka. is admin.
         return true;
       } 
@@ -556,5 +639,5 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
 export {
   getAllCourses, create, update, updateClassList, remove, addLabList, getClassList, getStudentNamesFromCourse,
   getAllAdmins, getMyCourses, getCourseSettings, getLabSectionsFromCourse,
-  getCourseLabSectionList, getCourse, isStaff, addAdminsList, addStaffList, getAllStaff
+  getCourseLabSectionList, getCourse, isStaff, addAdminList, addStaffList, getAllStaff
 };

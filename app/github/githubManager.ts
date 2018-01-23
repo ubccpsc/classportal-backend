@@ -1536,7 +1536,6 @@ export default class GitHubManager {
       }).then(function (newRepoInfo: NewGithubRepoInfo) {
 
         inputGroup.url = newRepoInfo.url;
-
         logger.info("GitHubManager::completeTeamProvision(..) - project created; importing url: " + importUrl);
         inputGroup._team.githubState.repo.name = newRepoInfo.name;
         inputGroup._team.githubState.repo.id = newRepoInfo.id;
@@ -1585,10 +1584,7 @@ export default class GitHubManager {
           logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
           fulfill(inputGroup);
         }).catch(function (err) {
-
         inputGroup._team.githubState.creationRecord.error = err;
-
-
         // logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
         logger.error("******");
         logger.error("******");
