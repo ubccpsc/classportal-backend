@@ -17,6 +17,7 @@ interface ICourseDocument extends mongoose.Document {
   grades: [Object];
   labSections: [LabSection];
   admins: [Object];
+  staff: [Object];
   batchImportUrl: string;
   urlWebhook: string;
   githubOrg: string;
@@ -84,6 +85,10 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Grade'}],
   },
   admins:              {
+    type:    [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
+    default: [],
+  },
+  staff:               {
     type:    [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
     default: [],
   },

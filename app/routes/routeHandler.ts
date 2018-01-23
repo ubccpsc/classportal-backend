@@ -163,8 +163,8 @@ const updateTeam = (req: restify.Request, res: restify.Response, next: restify.N
     });
 };
 
-const addAdmin = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return courseCtrl.addAdmin(req.params)
+const addAdminsList = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.addAdminsList(req.params)
     .then((c: ICourseDocument) => res.json(200, {
       response: 'Successfully updated course admin list on '
                 + c.courseId + '.'
@@ -354,17 +354,28 @@ const isStaff = (req: restify.Request, res: restify.Response, next: restify.Next
     .catch((err: any) => res.json(500, {err: err}));
 };
 
+const addStaffList = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.addStaffList(req.params)
+    .then((isStaff: any) => res.json(200, {response: isStaff}))
+    .catch((err: any) => res.json(500, {err: err}));
+};
+
+const getAllStaff = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.getAllStaff(req.params)
+    .then((isStaff: any) => res.json(200, {response: isStaff}))
+    .catch((err: any) => res.json(500, {err: err}));
+};
 
 export {
   pong, createCourse, getAllCourses, logout, addStudentList, getClassList,
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaff,
   getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
-  addAdmin, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
+  addAdminsList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
   deleteRepos, getCurrentUser, isAuthenticated, getMyCourses,
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse,
   getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
-  getStdioFile
+  getStdioFile, addStaffList, getAllStaff
 };

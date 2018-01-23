@@ -49,11 +49,30 @@ function getAllAdmins(payload: any) {
 }
 
 /**
+ * Gets a list of users who are Staff underneath a particular course
+ * @param payload.courseId string ie. '310'
+ * @return User[] A list of staff
+ */
+function getAllStaff(payload: any) {
+  return Course.findOne({courseId: payload.courseId})
+    .populate({path: 'staff', select: 'fname lname snum csid username _id'})
+    .then(c => {
+      if (c !== null && c.admins.length < 1) {
+        return Promise.reject(Error('There are no staff under course ' + payload.courseId + '.'));
+      } else if (c !== null) {
+        return Promise.resolve(c);
+      } else {
+        return Promise.reject(Error('Course ' + payload.courseId + ' does not exist.'));
+      }
+    });
+}
+
+/**
  * Adds an admin to a course (must already be a user in DB)
  * @param payload.username string ie. 'steca' or 'x2d3g'
  * @return User[] who was added
  */
-function addAdmin(payload: any) {
+function addAdminsList(payload: any) {
   let userQuery = User.findOne({
     'username': payload.username,
   }).exec();
@@ -93,6 +112,64 @@ function addAdmin(payload: any) {
   });
 }
 
+/**
+ * Adds an admin to a course (must already be a user in DB)
+ * @param payload.username string ie. 'steca' or 'x2d3g'
+ * @return User[] who was added
+ */
+function addStaffList(payload: any) {
+  let userQuery = User.findOne({
+    'username': payload.username,
+  }).exec();
+  let courseQuery = Course.findOne({'courseId': payload.courseId}).populate('admins courses').exec();
+  let user_id: string;
+
+  return courseQuery.then(c => {
+    if (c === null) {
+      throw(Error('Course ' + payload.courseId + ' cannot be found.'));
+    }
+
+    return userQuery.then(u => {
+      let throwUserError: boolean;
+      let userAlreadyAdmin: boolean;
+      if (u !== null) {
+        user_id = u._id;
+        userAlreadyAdmin = c.admins.some(function (user: IUserDocument) {
+          return user._id.equals(user_id);
+        });
+      } else {
+        throwUserError = true;
+      }
+
+      if (userAlreadyAdmin) {
+        return Promise.reject(Error('Admin already exists in ' + c.courseId + '.'));
+      } else if (throwUserError) {
+        return Promise.reject(Error('User does not exist in DB. Please double-check that payload is correct.'));
+      } else {
+        updateUserrole(u, c, payload.userrole)
+          .then(() => {
+            c.admins.push(user_id);
+            c.save();
+          });
+      }
+      return Promise.resolve(c);
+    });
+  });
+}
+
+/**
+ * Upload a labList
+ * Pre-req #1 is that ClassList for specific courseId is uploaded
+ * Pre-req #2 is that HEADERS in CSV are labelled correctly.
+ * HEADERS: CSID / SNUM / LAST / FIRST / USERNAME / LAB
+ * 
+ * ** WARNING ** Uploading a labList will overwrite the previous labList object
+ * underneath the Course object.
+ * 
+ * @param req.files as reqFiles with functional reqFiles['labList'].path
+ * @param courseId string ie. '310' of the course we are adding labList too
+ * @return labList object
+ */
 function addLabList(reqFiles: any, courseId: string) {
   let newlyCompiledLabSections: any = [];
   let labSectionsSet = new Set();
@@ -102,7 +179,6 @@ function addLabList(reqFiles: any, courseId: string) {
     skip_empty_lines: true,
     trim:             true,
   };
-
 
   let rs = fs.createReadStream(reqFiles['labList'].path);
   let courseQuery = Course.findOne({'courseId': courseId}).exec();
@@ -414,7 +490,7 @@ function isStaff(payload: any): Promise<boolean> {
         });
     })
     .then((isValidUser: boolean) => {
-      if (typeof user !== 'undefined' && course.admins.indexOf(user._id) > -1 && isValidUser) {
+      if (typeof user !== 'undefined' && course.staff.indexOf(user._id) > -1 && isValidUser) {
         // if user ref found in course.admins array, return true aka. is admin.
         return true;
       } 
@@ -479,6 +555,6 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
 
 export {
   getAllCourses, create, update, updateClassList, remove, addLabList, getClassList, getStudentNamesFromCourse,
-  addAdmin, getAllAdmins, getMyCourses, getCourseSettings, getLabSectionsFromCourse,
-  getCourseLabSectionList, getCourse, isStaff
+  getAllAdmins, getMyCourses, getCourseSettings, getLabSectionsFromCourse,
+  getCourseLabSectionList, getCourse, isStaff, addAdminsList, addStaffList, getAllStaff
 };

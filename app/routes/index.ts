@@ -40,7 +40,9 @@ const routes = (server: restify.Server) => {
   // Authenticated routes   
 
   // -- Prof or Admin Routes
-  server.post('/:courseId/admin/admin', /* adminOrProfAuthenticated, */ routeHandler.addAdmin);
+  server.post('/:courseId/admin/admins', adminAuthenticated, routeHandler.addAdminsList);
+  server.post('/:courseId/admin/staff', adminAuthenticated, routeHandler.addStaffList);
+  server.get('/:courseId/admin/staff', adminAuthenticated, routeHandler.getAllStaff);
   server.get('/:courseId/admin/admins', adminAuthenticated, routeHandler.getAllAdmins);
   server.get('/:courseId/admin/teams', adminAuthenticated, routeHandler.getTeams);
   server.post('/:courseId/admin/isStaff', adminAuthenticated, routeHandler.isStaff);
