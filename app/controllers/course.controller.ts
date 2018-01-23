@@ -29,6 +29,11 @@ let addCourseDataToUser = function (user: IUserDocument, course: ICourseDocument
   });
 };
 
+/**
+ * Gets a list of users who are Admins underneath a particular course
+ * @param payload.courseId string ie. '310'
+ * @return User[] A list of admins
+ */
 function getAllAdmins(payload: any) {
   return Course.findOne({courseId: payload.courseId})
     .populate({path: 'admins', select: 'fname lname snum csid username _id'})
@@ -43,11 +48,14 @@ function getAllAdmins(payload: any) {
     });
 }
 
-function addAdmins(payload: any) {
+/**
+ * Adds an admin to a course (must already be a user in DB)
+ * @param payload.username string ie. 'steca' or 'x2d3g'
+ * @return User[] who was added
+ */
+function addAdmin(payload: any) {
   let userQuery = User.findOne({
     'username': payload.username,
-    'fname':    payload.fname,
-    'lname':    payload.lname,
   }).exec();
   let courseQuery = Course.findOne({'courseId': payload.courseId}).populate('admins courses').exec();
   let user_id: string;
@@ -63,7 +71,6 @@ function addAdmins(payload: any) {
       if (u !== null) {
         user_id = u._id;
         userAlreadyAdmin = c.admins.some(function (user: IUserDocument) {
-          console.log('this is runnning ');
           return user._id.equals(user_id);
         });
       } else {
@@ -73,7 +80,7 @@ function addAdmins(payload: any) {
       if (userAlreadyAdmin) {
         return Promise.reject(Error('Admin already exists in ' + c.courseId + '.'));
       } else if (throwUserError) {
-        return Promise.reject(Error('Admin does not exist. Please double-check that payload is correct.'));
+        return Promise.reject(Error('User does not exist in DB. Please double-check that payload is correct.'));
       } else {
         updateUserrole(u, c, payload.userrole)
           .then(() => {
@@ -292,6 +299,10 @@ function updateClassList(reqFiles: any, courseId: string) {
     });
 }
 
+/**
+ * @param courseId string ie. '310'
+ * @return object[] class list of users in course
+ */
 function getClassList(courseId: string) {
   return Course.findOne({'courseId': courseId})
     .populate({
@@ -375,8 +386,41 @@ function getMyCourses(req: any): Promise<object[]> {
 // }
 
 /**
- * Create a team
+ * Determine if a username is a 'staff' in a Course.
+ * @param payload.username string ie. 'steca' or 'x3b3c'
+ * @param payload.courseId string ie. '310' to check for staff members in Course object
+ * @return boolean true if a staff, false otherwise
  */
+function isStaff(payload: any): Promise<boolean> {
+  let course: ICourseDocument;
+  let user: IUserDocument;
+
+  return Course.findOne({courseId: payload.courseId})
+    .then((_course: ICourseDocument) => {
+      if (_course) {
+        course = _course;
+        return course;
+      }
+      throw `Could not find course ${payload.courseId}`;
+    })
+    .then(() => {
+      return User.findOne({username: payload.username})
+        .then((_user: IUserDocument) => {
+          if (_user) {
+            user = _user;
+            return true;
+          } 
+          return false;
+        });
+    })
+    .then((isValidUser: boolean) => {
+      if (typeof user !== 'undefined' && course.admins.indexOf(user._id) > -1 && isValidUser) {
+        // if user ref found in course.admins array, return true aka. is admin.
+        return true;
+      } 
+      return false;
+    });
+}
 
 function create(course: ICourseDocument) {
   logger.info('create() in Courses Controller');
@@ -424,7 +468,6 @@ function getCourseSettings(req: restify.Request): Promise<object> {
     });
 }
 
-
 /**
  * Create a team
  */
@@ -436,6 +479,6 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
 
 export {
   getAllCourses, create, update, updateClassList, remove, addLabList, getClassList, getStudentNamesFromCourse,
-  addAdmins, getAllAdmins, getMyCourses, getCourseSettings, getLabSectionsFromCourse,
-  getCourseLabSectionList, getCourse
+  addAdmin, getAllAdmins, getMyCourses, getCourseSettings, getLabSectionsFromCourse,
+  getCourseLabSectionList, getCourse, isStaff
 };

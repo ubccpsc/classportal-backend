@@ -1,16 +1,13 @@
 import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
-let fs = require('fs');
-
-var tmp = require('tmp-promise');
-var request = require('request');
-var rp = require('request-promise-native');
-
 import {Helper} from "../github/util";
 import {link} from "fs";
 import {ITeamDocument, Team} from '../models/team.model';
 import {IProjectDocument, Project} from '../models/project.model';
-
+let fs = require('fs');
+let tmp = require('tmp-promise');
+let request = require('request');
+let rp = require('request-promise-native');
 let async = require('async');
 let _ = require('lodash');
 let apiPath = config.github_api_path;
@@ -64,9 +61,7 @@ export default class GitHubManager {
   // Use external config file so tokens are not stored in github
   private GITHUB_AUTH_TOKEN = config.github_auth_token;
   private GITHUB_USER_NAME = config.github_user_name;
-
   private ORG_NAME: string;
-
   private DELAY_SEC = 5 * 1000;
 
   constructor(orgName: string) {

@@ -17,7 +17,6 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/myTeams', routeHandler.getMyTeams);
   server.get('/:courseId/labSections', isAuthenticated, routeHandler.getLabSectionsFromCourse);
   server.get('/:courseId/:labId/labList', isAuthenticated, routeHandler.getCourseLabSectionList);
-  server.get('/test', isAuthenticated, routeHandler.testRoute);
   server.get('/isAuthenticated', routeHandler.isAuthenticated);
   server.get('/currentUser', isAuthenticated, routeHandler.getCurrentUser);
   server.get('/:courseId/deliverables', isAuthenticated, routeHandler.getDeliverables);
@@ -41,9 +40,10 @@ const routes = (server: restify.Server) => {
   // Authenticated routes   
 
   // -- Prof or Admin Routes
-  server.post('/:courseId/admin/admins', /* adminOrProfAuthenticated, */ routeHandler.addAdmins);
+  server.post('/:courseId/admin/admin', /* adminOrProfAuthenticated, */ routeHandler.addAdmin);
   server.get('/:courseId/admin/admins', adminAuthenticated, routeHandler.getAllAdmins);
   server.get('/:courseId/admin/teams', adminAuthenticated, routeHandler.getTeams);
+  server.post('/:courseId/admin/isStaff', adminAuthenticated, routeHandler.isStaff);
   server.post('/teams/disband/:teamId', adminAuthenticated, routeHandler.disbandTeamById);
   server.get('/:courseId/admin/teams/:deliverable/overview', adminAuthenticated, routeHandler.getTeamProvisionOverview);  
   server.get('/admin/files/:deliverable/:username/:commit/:filename', adminAuthenticated,
@@ -51,7 +51,7 @@ const routes = (server: restify.Server) => {
   server.get('/admin/files/:stdioRef/stdio.txt', adminAuthenticated, routeHandler.getStdioFile);
   server.get('/:courseId/admin/teams/byBatch', adminAuthenticated, routeHandler.getCourseTeamsWithBatchMarking);
   server.get('/:courseId/admin/courseSettings', routeHandler.getCourseSettings);
-  server.post('/admin/classList', adminAuthenticated, routeHandler.getClassList);
+  server.get('/:courseId/admin/classList', adminAuthenticated, routeHandler.getClassList);
 
 
   // -- Admin or Super Admin Only Routes

@@ -6,17 +6,6 @@ import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
 import * as request from '../helpers/request';
 
-/**
- * User login
- * @param {string} authcode - GitHub authcode
- * @returns {string} servertoken
- */
-function consoleLogRequest(req: restify.Request) {
-  console.log(req);
-  return Promise.resolve('test').catch((err) => {
-    console.log(err);
-  });
-}
 
 /**
  * Gets the logged-in Username that has been deserialized in Passport
@@ -32,4 +21,4 @@ function getCurrentUserInfo(req: any, res: any, next: any) {
     });
 }
 
-export {consoleLogRequest, getCurrentUserInfo};
+export {getCurrentUserInfo};

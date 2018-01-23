@@ -22,7 +22,6 @@ import {Results} from "../controllers/result.controller";
 
 let mime = require('mime-types');
 
-
 const pong = (req: restify.Request, res: restify.Response) => res.send('pong');
 
 const createCourse = (req: restify.Request, res: restify.Response) => {
@@ -79,12 +78,6 @@ const getStudentNamesFromCourse = (req: restify.Request, res: restify.Response) 
     .catch((err: Error) => res.json(500, {err: err.message}));
 };
 
-const testRoute = (req: restify.Request, res: restify.Response) => {
-  return testCtrl.consoleLogRequest(req)
-    .then(() => res.json(200, {response: req}))
-    .catch((err: any) => res.json(500, {err: err.errmsg}));
-};
-
 const logout = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return authCtrl.logout(req, res, next)
     .then(() => res.json(200, {response: 'Successfully logged out.'}))
@@ -94,7 +87,6 @@ const logout = (req: restify.Request, res: restify.Response, next: restify.Next)
 const getCurrentUserInfo = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return testCtrl.getCurrentUserInfo(req, res, next)
     .catch((err: any) => {
-      console.log('in getCurrentUser onCatch: ' + err);
       res.json(500, {err: err.errmsg});
     });
 };
@@ -171,8 +163,8 @@ const updateTeam = (req: restify.Request, res: restify.Response, next: restify.N
     });
 };
 
-const addAdmins = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return courseCtrl.addAdmins(req.params)
+const addAdmin = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.addAdmin(req.params)
     .then((c: ICourseDocument) => res.json(200, {
       response: 'Successfully updated course admin list on '
                 + c.courseId + '.'
@@ -356,12 +348,18 @@ const getStdioFile = (req: restify.Request, res: restify.Response, next: restify
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
+const isStaff = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.isStaff(req.params)
+    .then((isStaff: any) => res.json(200, {response: isStaff}))
+    .catch((err: any) => res.json(500, {err: err}));
+};
+
 
 export {
-  pong, createCourse, getAllCourses, logout, addStudentList, getClassList, testRoute,
-  getCurrentUserInfo, updateDeliverable, getDeliverables,
+  pong, createCourse, getAllCourses, logout, addStudentList, getClassList,
+  getCurrentUserInfo, updateDeliverable, getDeliverables, isStaff,
   getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
-  addAdmins, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
+  addAdmin, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
   deleteRepos, getCurrentUser, isAuthenticated, getMyCourses,
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse,
