@@ -159,7 +159,7 @@ function addAdminList(reqFiles: any, courseId: string) {
  * Pre-req #1 is that HEADERS in CSV are labelled with headers below:
  *                    HEADERS: USERNAME (required) / CSID (optional) / SNUM (optional) 
  * 
- * ** WARNING ** Uploading a labList will overwrite the previous labList 
+ * ** WARNING ** Uploading a staffList will overwrite the previous labList 
  * in the Course object.
  * 
  * @param req.files as reqFiles with FS readable reqFiles['staffList'].path

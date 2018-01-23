@@ -54,6 +54,34 @@ function addDeliverablesToCourse(course: any, deliverable: IDeliverableDocument)
   return course.save();
 }
 
+/**
+ * Returns the time delay that is set on a Deliverable in seconds
+ * @param payload.courseId string course ie. '310'
+ * @param payload.deliverableName string deliverable name ie. 'd2'
+ * @return number (rate to delay deliverables in seconds)
+ */
+function getTestDelay(payload: any): Promise<number> {
+  let course: ICourseDocument;
+  return Course.findOne({courseId: payload.courseId})
+    .then((_course: ICourseDocument) => {
+      if (_course) {
+        course = _course;
+        return _course;
+      }
+      throw `Could not find course ${payload.courseId}`;
+    })
+    .then((course: ICourseDocument) => {
+      return Deliverable.findOne({courseId: course._id, name: payload.deliverableName})
+        .then((deliv: IDeliverableDocument) => {
+          if (deliv) {
+            let seconds: number = (deliv.rate % 60000);
+            return seconds;
+          }
+          throw `Cannot find Deliverable under ${payload.deliverableName} and ${payload.courseId}`;
+        });
+    });
+}
+
 // Adds a deliverable. Rejects if Deliverable exists with same Course Name and Course._id
 // Adds Deliverable reference to Course object
 function addDeliverable(payload: any): Promise<IDeliverableDocument> {

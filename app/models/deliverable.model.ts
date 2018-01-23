@@ -13,6 +13,7 @@ interface IDeliverableDocument extends mongoose.Document {
   close: number;
   projectCount: number;
   teamsInSameLab: boolean;
+  rate: number;
   studentsMakeTeams: boolean;
   maxTeamSize: number;
   minTeamSize: number;
@@ -56,6 +57,10 @@ const DeliverableSchema = new mongoose.Schema({
   buildingRepos: {
     type: Boolean,
     default: false,
+  },
+  rate: {
+    type: Number,
+    default: 1 // in milliseconds aka. no delay
   },
   name:           {
     type: String,

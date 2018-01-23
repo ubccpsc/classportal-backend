@@ -365,6 +365,12 @@ const getAllStaff = (req: restify.Request, res: restify.Response, next: restify.
     .catch((err: any) => res.json(500, {err: err}));
 };
 
+const getTestDelay = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return delivCtrl.getTestDelay(req.params)
+    .then((isStaff: any) => res.json(200, {response: isStaff}))
+    .catch((err: any) => res.json(500, {err: err}));
+};
+
 export {
   pong, createCourse, getAllCourses, logout, addStudentList, getClassList,
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaff,
