@@ -6,15 +6,17 @@ export interface ProvisionHealthCheckContainer {
 
 export interface ProvisionHealthCheck {
   classSize: number;
-  teamsAllowed: boolean;
+  teamsAllowed?: boolean;
   numOfTeams: number;
   numOfTeamsWithRepo: object[];
   numOfTeamsWithoutRepo: object[];
-  studentTeamStatus: StudentTeamStatusContainer;
+  buildStats: object;
+  studentsMakeTeams: boolean;
+  studentTeamStatus: any;
   teams: ITeamDocument[];
 }
 
 export interface StudentTeamStatusContainer {
-  studentsWithTeam: object[];
-  studentsWithoutTeam: object[];
+  studentsWithTeam: any[];
+  studentsWithoutTeam: any[];
 }

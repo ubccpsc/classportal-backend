@@ -9,7 +9,7 @@ import {GithubState, GithubRepo, defaultGithubState} from '../models/github.inte
 import GitHubManager from '../github/githubManager';
 import {TeamPayloadContainer, TeamPayload, TeamRow, Student} from '../interfaces/ui/team.interface';
 import * as auth from '../middleware/auth.middleware';
-import {ProvisionHealthCheck} from '../interfaces/ui/healthCheck.interface';
+import {ProvisionHealthCheck, StudentTeamStatusContainer} from '../interfaces/ui/healthCheck.interface';
 
 const TEAM_PREPENDAGE = 'team';
 
@@ -634,12 +634,12 @@ function getTeamProvisionOverview(payload: any): Promise<ProvisionHealthCheck> {
  * @return healthCheckObj ProvisionHealthCheck 
  */
 function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverableDocument, 
-  teams: ITeamDocument[]): ProvisionHealthCheck {
+  teams: ITeamDocument[]): Promise<ProvisionHealthCheck> {
     
     const STUDENTS_MAKE_TEAMS = deliverable.studentsMakeTeams;
     const TEAMS_BY_LAB = deliverable.teamsInSameLab;
     const CLASS_SIZE = course.classList.length;
-    let studentsTeamStatus: object;
+    let studentsTeamStatus: StudentTeamStatusContainer;
     let buildStats: object;
     let studentsOnTeamIds: object[] = [];
     let studentsWithoutTeamIds: object[] = [];
@@ -727,9 +727,7 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
     };
 
     return getStudentsTeamStatus().then(() => {
-      let mappedObj: any;
-      
-      mappedObj = { 
+      let mappedObj: ProvisionHealthCheck = { 
         classSize: CLASS_SIZE,
         studentsMakeTeams: STUDENTS_MAKE_TEAMS,
         numOfTeams: getNumberOfTeams(),
@@ -740,7 +738,7 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
         teams: teams,
       };
 
-    return mappedObj;
+      return mappedObj;
     });
 
 }
