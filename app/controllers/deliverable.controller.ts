@@ -11,7 +11,7 @@ import {DeliverablePayload} from '../interfaces/ui/deliverable.interface';
 /**
  * Updates a deliverable that matches the deliverable MongoDB _id in deliverable object
  * @param deliverable object new fields with MongoDB _id
- * @return IDeliverableDocument[] list of deliverables for a course
+ * @return IDeliverableDocument updated deliverable
  */
 function updateDeliverable(payload: any): Promise<IDeliverableDocument> {
   logger.info('DeliverablesController::updateDeliverables() in Deliverable Controller');
@@ -54,6 +54,11 @@ function addDeliverablesToCourse(course: any, deliverable: IDeliverableDocument)
   return course.save();
 }
 
+/**
+ * Gets the default deliverable that is being marked by AutoTest at the time.
+ * @param payload.courseId string ie. '310'
+ * @return string ie. 'd1'
+ */
 function getDefaultDeliv(payload: any): Promise<string> {
   let course: ICourseDocument;
   let delivs: IDeliverableDocument[];
@@ -78,14 +83,13 @@ function getDefaultDeliv(payload: any): Promise<string> {
     .then(() => {
       let openDelivs: IDeliverableDocument[] = [];
       let currentDate: number = new Date().getTime();
-      // the "default deliverable" is the open deliverable at the time. If >1 delivs are
-      // open, then earliest close date is default deliverable
+      // the "default deliverable" is the open deliverable at the time. If more than 1
+      // delivs are open, then earliest close date is default deliverable.
       delivs.map((deliv: IDeliverableDocument) => {
         if (deliv.open < currentDate && deliv.close > currentDate) {
           openDelivs.push(deliv);
         }
       });
-      console.log(openDelivs.length);
       if (openDelivs.length === 0) {
         throw `Cannot find any open deliverables to default to.`;
       }
