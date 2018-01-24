@@ -74,7 +74,7 @@ function getTestDelay(payload: any): Promise<number> {
       return Deliverable.findOne({courseId: course._id, name: payload.deliverableName})
         .then((deliv: IDeliverableDocument) => {
           if (deliv) {
-            let seconds: number = (deliv.rate % 60000);
+            let seconds: number = Math.floor(deliv.rate / 1000);
             return seconds;
           }
           throw `Cannot find Deliverable under ${payload.deliverableName} and ${payload.courseId}`;
