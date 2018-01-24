@@ -76,7 +76,7 @@ function getDefaultDeliv(payload: any): Promise<string> {
         });
     })
     .then(() => {
-      let openDelivs: IDeliverableDocument[];
+      let openDelivs: IDeliverableDocument[] = [];
       let currentDate: number = new Date().getTime();
       // the "default deliverable" is the open deliverable at the time. If >1 delivs are
       // open, then earliest close date is default deliverable
@@ -85,7 +85,7 @@ function getDefaultDeliv(payload: any): Promise<string> {
           openDelivs.push(deliv);
         }
       });
-
+      console.log(openDelivs.length);
       if (openDelivs.length === 0) {
         throw `Cannot find any open deliverables to default to.`;
       }
