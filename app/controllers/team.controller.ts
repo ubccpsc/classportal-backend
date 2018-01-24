@@ -396,9 +396,17 @@ function disbandTeamById(payload: any): Promise<string> {
     });
 }
 
-function getCourseTeamsWithBatchMarking(payload: any): Promise<TeamPayload> {
+/**
+ * Creates a TeamPayload object that contains a list of Students without a team
+ * and a list of Teams on the basis of a Course and Deliverable.
+ * 
+ * @param payload.courseId string ie. '310'
+ * @param payload.deliverableName string ie. 'd1'
+ */
+function getCourseTeamInfo(payload: any): Promise<TeamPayload> {
 
   let courseId = payload.courseId;
+  let deliverable: IDeliverableDocument;
   let course: ICourseDocument;
   let courseQuery = Course.findOne({courseId}).exec();
   let teams: ITeamDocument[];
@@ -407,47 +415,60 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<TeamPayload> {
     let teamQueryObject: any = new Object();
     if (_course) {
       course = _course;
-      return Team.find({
-        courseId: _course._id,
-        $where:   'this.disbanded !== true'
-      })
-        .populate({path: 'members classList', select: 'fname lname username profileUrl'})
-        .exec()
-        .then((teams: ITeamDocument[]) => {
-          if (!teams) {
-            return Promise.reject(Error(`TeamController::getCourseTeamsPerUser No teams were found under` +
-            `Course Number ${courseId}`));
-          }
-          for (let team of teams) {
-            let githubStateRepoUrl = String(team.githubState.repo.url);
-            team.teamUrl = githubStateRepoUrl === '' ? null : githubStateRepoUrl;
-          }
-          return Promise.resolve(teams);
-        })
-        .then((_teams: ITeamDocument[]) => {
-          if (!_teams) {
-            return Promise.reject(Error(`TeamController::getCourseTeamsPerUser No teams were found under
-            Course Number ${courseId}`));
-          }
-          for (let team of _teams) {
-            let members = team.members;
-            for (let member of members) {
-              member.profileUrl = 'https://github.ugrad.cs.ubc.ca/' + member.username;
-            }
-            for (let labSection of course.labSections) {
-              if (typeof members[0] !== 'undefined' && labSection.users.indexOf(members[0]._id) > -1) {
-                team.labSection = labSection.labId;
-              }
-            }
-          }
-          teams = _teams;
-          return Promise.resolve(_teams);
-        });
+      return course;
     }
     else {
-      return Promise.reject(Error(`TeamController::getCourseTeamsPerUser Course was not 
-      found under Course Number ${courseId}`));
+      throw `TeamController::getCourseTeamsPerUser Course was not found under Course Number ${courseId}`;
     }
+  })
+  .then(() => {
+    return Deliverable.findOne({courseId: course._id, name: payload.deliverableName})
+      .then((deliv: IDeliverableDocument) => {
+        if (deliv) {
+          deliverable = deliv;
+          return deliv;
+        }
+        throw `Could not find Deliverable under ${payload.courseId} and ${payload.deliverableName}`;
+      });
+  })
+  .then(() => {
+    return Team.find({
+      courseId: course._id,
+      deliverableIds: deliverable._id,
+      $where:   'this.disbanded !== true'
+    })
+      .populate({path: 'members classList', select: 'fname lname username profileUrl'})
+      .exec()
+      .then((teams: ITeamDocument[]) => {
+        if (!teams) {
+          return Promise.reject(Error(`TeamController::getCourseTeamsPerUser No teams were found under` +
+          `Course Number ${courseId}`));
+        }
+        for (let team of teams) {
+          let githubStateRepoUrl = String(team.githubState.repo.url);
+          team.teamUrl = githubStateRepoUrl === '' ? null : githubStateRepoUrl;
+        }
+        return Promise.resolve(teams);
+      })
+      .then((_teams: ITeamDocument[]) => {
+        if (!_teams) {
+          return Promise.reject(Error(`TeamController::getCourseTeamsPerUser No teams were found under
+          Course Number ${courseId}`));
+        }
+        for (let team of _teams) {
+          let members = team.members;
+          for (let member of members) {
+            member.profileUrl = 'https://github.ugrad.cs.ubc.ca/' + member.username;
+          }
+          for (let labSection of course.labSections) {
+            if (typeof members[0] !== 'undefined' && labSection.users.indexOf(members[0]._id) > -1) {
+              team.labSection = labSection.labId;
+            }
+          }
+        }
+        teams = _teams;
+        return Promise.resolve(_teams);
+      });
   })
   .then((_teams: ITeamDocument[]) => {
     // get students not on team
@@ -1180,29 +1201,6 @@ function checkForDuplicateTeamMembers(existingTeams: ITeamDocument[], newTeamMem
   return duplicatedMember;
 }
 
-// let createTeam = function(course_Id: any, req: any) {
-//   let newTeam = {
-//     'course' : course_Id,
-//     'deliverable': req.params.deliverable,
-//     'members': new Array(),
-//     'name': req.params.name,
-//     'teamId': req.params.teamId,
-//     'githubUrl': req.params.githubUrl,
-//   };
-
-//   // Only add non-duplicates
-//   for ( let i = 0; i < req.params.members.length; i++) {
-//     let duplicateEntry = newTeam.members.some(function(member){
-//       return member == req.params.members[i];
-//     });
-//     if (!duplicateEntry) {
-//       newTeam.members.push(req.params.members[i]);
-//     }
-//   }
-
-//   return Team.create(newTeam);
-// };
-
 let updateTeam = function (team_Id: string, updatedModel: ITeamDocument) {
 
   if (updatedModel.members == null || updatedModel.TAs == null) {
@@ -1310,5 +1308,5 @@ function insertTeamDocuments(_bulkInsertArray: any) {
 export {
   createTeam, update, getTeams, createGithubTeam, getRepos, getCourseTeamsPerUser,
   randomlyGenerateTeamsPerCourse, getUsersNotOnTeam, getMyTeams, createCustomTeam,
-  getCourseTeamsWithBatchMarking, disbandTeamById, getTeamProvisionOverview
+  getCourseTeamInfo, disbandTeamById, getTeamProvisionOverview
 };

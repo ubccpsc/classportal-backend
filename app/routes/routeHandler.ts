@@ -279,8 +279,8 @@ const isStudentInSameLab = (req: any, res: restify.Response, next: restify.Next)
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
-const getCourseTeamsWithBatchMarking = (req: any, res: restify.Response, next: restify.Next) => {
-  return teamCtrl.getCourseTeamsWithBatchMarking(req.params)
+const getCourseTeamInfo = (req: any, res: restify.Response, next: restify.Next) => {
+  return teamCtrl.getCourseTeamInfo(req.params)
     .then((teamPayload: TeamPayload) => res.json(200, {response: teamPayload}))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
@@ -386,7 +386,7 @@ export {
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
   addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, getTestDelay,
   getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,
-  createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking, getDashForDeliverable,
+  createCustomTeam, isStudentInSameLab, getCourseTeamInfo, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
   getStdioFile, addStaffList, getAllStaff, getDefaultDeliv
 };
