@@ -545,7 +545,7 @@ function getMyCourses(req: any): Promise<object[]> {
 // }
 
 /**
- * Determine if a username is a 'staff' in a Course.
+ * Determine if a username is a 'staff' member in a Course.
  * @param payload.username string ie. 'steca' or 'x3b3c'
  * @param payload.courseId string ie. '310' to check for staff members in Course object
  * @return boolean true if a staff, false otherwise

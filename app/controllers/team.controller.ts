@@ -9,6 +9,7 @@ import {GithubState, GithubRepo, defaultGithubState} from '../models/github.inte
 import GitHubManager from '../github/githubManager';
 import {TeamPayloadContainer, TeamPayload, TeamRow, Student} from '../interfaces/ui/team.interface';
 import * as auth from '../middleware/auth.middleware';
+import {ProvisionHealthCheck} from '../interfaces/ui/healthCheck.interface';
 
 const TEAM_PREPENDAGE = 'team';
 
@@ -228,15 +229,18 @@ function getMyTeams(req: any): Promise<ITeamDocument[]> {
     });
 }
 
+/**
+ * 
+ * @param payload.courseId string ie. '310'
+ * @param payload.deliverable.name
+ */
 function getUsersNotOnTeam(payload: any) {
 
-  let markByBatchFlag: boolean;
   let course: ICourseDocument;
 
   return Course.findOne({courseId: payload.courseId})
     .then((_course: ICourseDocument) => {
       course = _course;
-      markByBatchFlag = payload.markInBatch;
       return _course;
     })
     .then((course) => {
@@ -405,7 +409,7 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<TeamPayload> {
       course = _course;
       return Team.find({
         courseId: _course._id,
-        $where:   'this.deliverableIds.length > 0 && this.disbanded !== true'
+        $where:   'this.disbanded !== true'
       })
         .populate({path: 'members classList', select: 'fname lname username profileUrl'})
         .exec()
@@ -426,10 +430,9 @@ function getCourseTeamsWithBatchMarking(payload: any): Promise<TeamPayload> {
             Course Number ${courseId}`));
           }
           for (let team of _teams) {
-
             let members = team.members;
             for (let member of members) {
-              member.profileUrl = 'https://github.ubc.ca/' + member.username;
+              member.profileUrl = 'https://github.ugrad.cs.ubc.ca/' + member.username;
             }
             for (let labSection of course.labSections) {
               if (typeof members[0] !== 'undefined' && labSection.users.indexOf(members[0]._id) > -1) {
@@ -567,10 +570,13 @@ function getCourseTeamsPerUser(req: any): Promise<ITeamDocument[]> {
 /**
  * Gets information on a deliverable and course to compare against Teams that 
  * are created.
+ * 
+ * Creates a TeamHealth state object that shows how many people are on team versus
+ * not on a team, have repos built for a team, etc.
  * @param deliverable string ie. "d0", "d1".
  * @param courseId number ie. 210, 310, etc.
  */
-function getTeamProvisionOverview(payload: any): Promise<Object> {
+function getTeamProvisionOverview(payload: any): Promise<ProvisionHealthCheck> {
   let deliverable: IDeliverableDocument;
   let course: ICourseDocument;
   let teams: ITeamDocument[];
@@ -616,10 +622,6 @@ function getTeamProvisionOverview(payload: any): Promise<Object> {
     })
     .then(() => {
       return createTeamHealthInfo(course, deliverable, teams);
-    })
-    .catch((err: any) => {
-      logger.error(err);
-      return {err};
     });
 }
 
@@ -629,9 +631,10 @@ function getTeamProvisionOverview(payload: any): Promise<Object> {
  * @param course ICourseDocument Course with classList info for Teams/Deliverable objects to assess.
  * @param deliverable IDeliverableDocument Deliverable to assess.
  * @param teams ITeamDocument[] List of Teams with Github States for Deliverable and Class.
+ * @return healthCheckObj ProvisionHealthCheck 
  */
 function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverableDocument, 
-  teams: ITeamDocument[]): Object {
+  teams: ITeamDocument[]): ProvisionHealthCheck {
     
     const STUDENTS_MAKE_TEAMS = deliverable.studentsMakeTeams;
     const TEAMS_BY_LAB = deliverable.teamsInSameLab;
@@ -797,8 +800,10 @@ function createGithubRepo(payload: any): Promise<Object> {
 }
 
   /**
-   * @param courseId courseId number of courseId ie. 310
-   * @return TeamsPayload
+   * Returns all of the raw ITeamDocument[] mongoose documents
+   * underneath a courseId.
+   * @param courseId string - courseId ie. '310'
+   * @return ITeamDocument[] list
    */
 function getTeams(payload: any): Promise<ITeamDocument[]> {
   return Course.findOne({courseId: payload.courseId})
@@ -823,6 +828,13 @@ function getTeams(payload: any): Promise<ITeamDocument[]> {
 }
 
 /**
+ * Creates a custom team for the selected Deliverable with the members in the 'members' array.
+ * If any members in the team are already on a team that is not marked with 'disbanded === true', 
+ * then the team creation process fails.
+ * 
+ * *** NOTE *** Front-end confirms that team members are in the same lab before adding them. 
+ * This logic does not.
+ * 
  * @param deliverableName: ie. "d1", etc.
  * @param members array of github usernames
  * @param courseId - ie. 310
@@ -944,8 +956,8 @@ function createCustomTeam(req: any, payload: any) {
   /**
    * Ensures that the teamMembers object contains usernames that are registered underneath the 
    * classList of the Course object.
-   * @param course Course object to test for usernames in course.classList
-   * @param teamMembers List of usernames
+   * @param course The Course object to test for usernames inside course.classList
+   * @param teamMembers List of usernames to search for in course.classList
    * @return boolean Returns true if all teamMembers are valid or false otherwise.
    */
   function validateGithubNames(teamMembers: string[], course: ICourseDocument): boolean {
@@ -1011,26 +1023,21 @@ function createCustomTeam(req: any, payload: any) {
           }
         });
       });
-
-      // let arrayOfUsernameQueries: any[] = [];
-      // teamMembers.map((member) => {
-      //   arrayOfUsernameQueries.push({member});
-      // });
   }
 }
 
-// if markInBatch is true in payload.markInBatch, then
-// teams will be created with multiple Deliverables under CourseSettings.
-// if not true, Teams will be created with the specified single Deliverable property
-// in payload.deliverableName;
 /**
- *
- * // under payload param
- * @param markInBatch type of boolean
- * @param teamSize: The max team size we will create
- * @param inSameLab: boolean: Ensures that team members are in same lab. // UNIMPLEMENTED
- * @param deliverableName: ie. "d1", etc.
- * @param courseId - ie. 310
+ * Creates a random team compilations with the number of team members specified. The last team 
+ * that is randomly generated may have a lesser number than specified based on the remainder of
+ * the division of all team member numbers by the team size requested.
+ * 
+ * *** IMPORTANT *** This method is used to generate Teams of 1 for Github Repos that only have 
+ * one team member. ie. Pcar's '210' class logic.
+ * 
+ * @param payload.teamSize: The max team size we will create
+ * @param payload.inSameLab: boolean: Ensures that team members are in same lab. // UNIMPLEMENTED
+ * @param payload.deliverableName: ie. "d1", etc.
+ * @param payload.courseId - ie. 310
  */
 function randomlyGenerateTeamsPerCourse(payload: any) {
   let course_id: string;

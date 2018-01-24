@@ -54,7 +54,7 @@ const routes = (server: restify.Server) => {
     routeHandler.getFileFromResultRecord);
   server.get('/admin/files/:stdioRef/stdio.txt', adminAuthenticated, routeHandler.getStdioFile);
   server.get('/:courseId/admin/teams/byBatch', adminAuthenticated, routeHandler.getCourseTeamsWithBatchMarking);
-  server.get('/:courseId/admin/courseSettings', routeHandler.getCourseSettings);
+  server.get('/:courseId/admin/courseSettings', adminAuthenticated, routeHandler.getCourseSettings);
   server.get('/:courseId/admin/classList', adminAuthenticated, routeHandler.getClassList);
 
 
