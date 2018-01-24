@@ -568,11 +568,11 @@ function getCourseTeamsPerUser(req: any): Promise<ITeamDocument[]> {
 }
 
 /**
- * Gets information on a deliverable and course to compare against Teams that 
- * are created.
- * 
  * Creates a TeamHealth state object that shows how many people are on team versus
- * not on a team, have repos built for a team, etc.
+ * not on a team, have repos built for a team, etc., based on Deliverable and Course
+ * 
+ * Used by FRONT-END: viewAdmin/ProvisionTeamsDetailsView
+ *
  * @param deliverable string ie. "d0", "d1".
  * @param courseId number ie. 210, 310, etc.
  */
@@ -727,7 +727,7 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
     };
 
     return getStudentsTeamStatus().then(() => {
-      let mappedObj: ProvisionHealthCheck = { 
+      let healthCheckObj: ProvisionHealthCheck = { 
         classSize: CLASS_SIZE,
         studentsMakeTeams: STUDENTS_MAKE_TEAMS,
         numOfTeams: getNumberOfTeams(),
@@ -738,63 +738,9 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
         teams: teams,
       };
 
-      return mappedObj;
+      return healthCheckObj;
     });
 
-}
-
-function createGithubRepo(payload: any): Promise<Object> {
-
-  const SUPERADMIN = 'superadmin';
-  const ADMIN = 'admin';
-  const PULL = 'pull';
-  const PUSH = 'push';
-
-  let githubManager = new GitHubManager(payload.orgName);
-
-  return githubManager.createRepo(payload.name)
-    .then((newRepoName) => {
-      if (payload.importUrl != '') {
-        return githubManager.importRepoToNewRepo(payload.name, payload.importUrl)
-          .then((results) => {
-            return results;
-          });
-      }
-      return newRepoName;
-    })
-    .then((newRepoName: string) => {
-
-      // As repo is now created, add teams and members in Promise.All()
-
-      let adminTeamNumbers = Promise.all(payload.adminTeams.map((teamName: string) => {
-        return githubManager.getTeamNumber(teamName);
-      }));
-      let memberTeamNumbers = Promise.all(payload.memberTeams.map((teamName: string) => {
-        return githubManager.getTeamNumber(teamName);
-      }));
-      let addAdmins = Promise.all(payload.admins.map((admin: string) => {
-        return githubManager.addCollaboratorToRepo(admin, payload.name, ADMIN);
-      }));
-      let addMembers = Promise.all(payload.members.map((member: string) => {
-        return githubManager.addCollaboratorToRepo(member, payload.name, PUSH);
-      }));
-
-      let addTeamsAndMembers = [adminTeamNumbers, memberTeamNumbers, addMembers, addAdmins];
-
-      adminTeamNumbers.then(teamNums => {
-        return Promise.all(teamNums.map((teamNum: number) => {
-          return githubManager.addTeamToRepo(teamNum, payload.name, ADMIN);
-        }));
-      });
-
-      memberTeamNumbers.then(teamNums => {
-        return Promise.all(teamNums.map((teamNum: number) => {
-          return githubManager.addTeamToRepo(teamNum, payload.name, PUSH);
-        }));
-      });
-
-      return Promise.all(addTeamsAndMembers);
-    });
 }
 
   /**
@@ -1360,52 +1306,9 @@ function insertTeamDocuments(_bulkInsertArray: any) {
       logger.error(`TeamController::bulkInsertOp ERROR ${err}`);
     });
 }
-// One student per deliverable --> Maps to these conditions:
-// 1) Students must be unique on the team.
-// 2) Amongst the teams that exist with a particular Deliverable ID,
-//    students must also be unique.
-// ---> These conditions ensure that students cannot be on multiple teams
-//      per deliverable.
-// 3) If no teams with deliverableId found, create new team.
-
-// function add(req: any) {
-//   let courseId = req.params.courseId;
-//   let deliverable = req.params.deliverable;
-//   let newTeamMembers = req.params.members;
-//   let name = req.params.name;
-//   let githubUrl = req.params.githubUrl;
-//   let teamId = req.params.teamId;
-//   let teamSize: number;
-
-
-//   let getTeamsUnderDeliverable = Team.find({ 'deliverable' : deliverable })
-//     .populate('deliverable')
-//     .exec()
-//     .then( existingTeams => {
-//       return checkForDuplicateTeamMembers(existingTeams, newTeamMembers);
-//     })
-//     .catch(err => logger.info(err));
-
-//   let courseQuery = getTeamsUnderDeliverable.then( duplicateMembers => {
-//       return Course.findOne({ 'courseId' : courseId })
-//         .exec();
-//   })
-//   .catch(err => logger.info(err));
-
-//   return Promise.all([getTeamsUnderDeliverable, courseQuery])
-//     .then(function(results: any) {
-//       if (results[0] !== true) {
-//         return isWithinTeamSize(results[1]._id, req.params.members.length)
-//           .then( () => {
-//             return createTeam(results[1]._id, req);
-//           });
-//       }
-//       throw Error('Cannot add duplicate team members to deliverable.');
-//     });
-// }
 
 export {
-  createTeam, update, getTeams, createGithubTeam, createGithubRepo, getRepos, getCourseTeamsPerUser,
+  createTeam, update, getTeams, createGithubTeam, getRepos, getCourseTeamsPerUser,
   randomlyGenerateTeamsPerCourse, getUsersNotOnTeam, getMyTeams, createCustomTeam,
   getCourseTeamsWithBatchMarking, disbandTeamById, getTeamProvisionOverview
 };
