@@ -371,6 +371,12 @@ const getTestDelay = (req: restify.Request, res: restify.Response, next: restify
     .catch((err: any) => res.json(500, {err: err}));
 };
 
+const getDefaultDeliv = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return delivCtrl.getDefaultDeliv(req.params)
+    .then((defaultDeliv: any) => res.json(200, {response: defaultDeliv}))
+    .catch((err: any) => res.json(500, {err: err}));
+};
+
 export {
   pong, createCourse, getAllCourses, logout, addStudentList, getClassList,
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaff,
@@ -382,5 +388,5 @@ export {
   getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamsWithBatchMarking, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
-  getStdioFile, addStaffList, getAllStaff
+  getStdioFile, addStaffList, getAllStaff, getDefaultDeliv
 };

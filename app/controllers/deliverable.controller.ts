@@ -54,6 +54,57 @@ function addDeliverablesToCourse(course: any, deliverable: IDeliverableDocument)
   return course.save();
 }
 
+function getDefaultDeliv(payload: any): Promise<string> {
+  let course: ICourseDocument;
+  let delivs: IDeliverableDocument[];
+  return Course.findOne({courseId: payload.courseId})
+    .then((_course: ICourseDocument) => {
+      if (_course) {
+        course = _course;
+        return _course;
+      }
+      throw `Cannot find course ${payload.courseId}`;
+    })
+    .then(() => {
+      return Deliverable.find({courseId: course._id})
+        .then((_delivs: IDeliverableDocument[]) => {
+          if (_delivs) {
+            delivs = _delivs;
+            return _delivs;
+          }
+          throw `Cannot find any deliverables under ${payload.courseId}`;
+        });
+    })
+    .then(() => {
+      let openDelivs: IDeliverableDocument[];
+      let currentDate: number = new Date().getTime();
+      // the "default deliverable" is the open deliverable at the time. If >1 delivs are
+      // open, then earliest close date is default deliverable
+      delivs.map((deliv: IDeliverableDocument) => {
+        if (deliv.open < currentDate && deliv.close > currentDate) {
+          openDelivs.push(deliv);
+        }
+      });
+
+      if (openDelivs.length === 0) {
+        throw `Cannot find any open deliverables to default to.`;
+      }
+
+      let earliestDatedDeliv: IDeliverableDocument;
+
+      openDelivs.map((deliv: IDeliverableDocument) => {
+        if (typeof earliestDatedDeliv === 'undefined') {
+          earliestDatedDeliv = deliv;
+        } else {
+          if (earliestDatedDeliv.close > deliv.close) {
+            earliestDatedDeliv = deliv;
+          }
+        }
+      });
+      return earliestDatedDeliv.name;
+    });
+}
+
 /**
  * Returns the time delay that is set on a Deliverable in seconds
  * @param payload.courseId string course ie. '310'
@@ -185,4 +236,5 @@ function getDeliverablesByCourse(payload: any) {
     });
 }
 
-export {getDeliverablesByCourse, addDeliverable, updateDeliverable, getTestDelay};
+export {getDeliverablesByCourse, addDeliverable, updateDeliverable, getTestDelay,
+        getDefaultDeliv};
