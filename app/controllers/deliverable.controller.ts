@@ -56,19 +56,20 @@ function addDeliverablesToCourse(course: any, deliverable: IDeliverableDocument)
 
 /**
  * Gets the default deliverable that is being marked by AutoTest at the time.
+ * 
+ * ** INFO ** Null is produced if Course does not exist, as we do not want to reveal
+ * course information.
+ * 
  * @param payload.courseId string ie. '310'
- * @return string ie. 'd1'
+ * @return <string || null> ie. 'd1' or null
  */
 function getDefaultDeliv(payload: any): Promise<string> {
   let course: ICourseDocument;
   let delivs: IDeliverableDocument[];
   return Course.findOne({courseId: payload.courseId})
     .then((_course: ICourseDocument) => {
-      if (_course) {
-        course = _course;
-        return _course;
-      }
-      throw `Cannot find course ${payload.courseId}`;
+      course = _course;
+      return _course;
     })
     .then(() => {
       return Deliverable.find({courseId: course._id})
@@ -77,21 +78,25 @@ function getDefaultDeliv(payload: any): Promise<string> {
             delivs = _delivs;
             return _delivs;
           }
-          throw `Cannot find any deliverables under ${payload.courseId}`;
+          return null;
         });
     })
     .then(() => {
-      let openDelivs: IDeliverableDocument[] = [];
-      let currentDate: number = new Date().getTime();
       // the "default deliverable" is the open deliverable at the time. If more than 1
       // delivs are open, then earliest close date is default deliverable.
-      delivs.map((deliv: IDeliverableDocument) => {
-        if (deliv.open < currentDate && deliv.close > currentDate) {
-          openDelivs.push(deliv);
-        }
-      });
+      let openDelivs: IDeliverableDocument[] = [];
+      let currentDate: number = new Date().getTime();
+
+      if (delivs) {
+        delivs.map((deliv: IDeliverableDocument) => {
+          if (deliv.open < currentDate && deliv.close > currentDate) {
+            openDelivs.push(deliv);
+          }
+        });
+      }
+
       if (openDelivs.length === 0) {
-        throw `Cannot find any open deliverables to default to.`;
+        return null;
       }
 
       let earliestDatedDeliv: IDeliverableDocument;
@@ -106,6 +111,10 @@ function getDefaultDeliv(payload: any): Promise<string> {
         }
       });
       return earliestDatedDeliv.name;
+    })
+    .catch((err) => {
+      logger.error('DeliverableController:: getDefaultDeliv() ERROR ' + err);
+      return null;
     });
 }
 
@@ -113,7 +122,7 @@ function getDefaultDeliv(payload: any): Promise<string> {
  * Returns the time delay that is set on a Deliverable in seconds
  * @param payload.courseId string course ie. '310'
  * @param payload.deliverableName string deliverable name ie. 'd2'
- * @return number (rate to delay deliverables in seconds)
+ * @return <number || null> rate to delay deliverables in seconds or null
  */
 function getTestDelay(payload: any): Promise<number> {
   let course: ICourseDocument;
@@ -123,17 +132,23 @@ function getTestDelay(payload: any): Promise<number> {
         course = _course;
         return _course;
       }
-      throw `Could not find course ${payload.courseId}`;
+      throw `Cannot find Course ${payload.courseId}`;
     })
     .then((course: ICourseDocument) => {
       return Deliverable.findOne({courseId: course._id, name: payload.deliverableName})
-        .then((deliv: IDeliverableDocument) => {
-          if (deliv) {
-            let seconds: number = Math.floor(deliv.rate / 1000);
+        .then((_deliv: IDeliverableDocument) => {
+          if (_deliv) {
+            let seconds: number = Math.floor(_deliv.rate / 1000);
             return seconds;
           }
-          throw `Cannot find Deliverable under ${payload.deliverableName} and ${payload.courseId}`;
+          throw `Cannot find Deliverables for ${payload.courseId}`;
         });
+    })
+    .catch((err) => {
+      logger.error('DeliverableController:: getTestDelay() ERROR ' + err);
+      // If cannot find course or deliverables, hide info and return null so as not to guess
+      // that Course or Deliverables does or does not exist.
+      return null;
     });
 }
 
