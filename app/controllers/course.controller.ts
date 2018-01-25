@@ -573,7 +573,10 @@ function isStaff(payload: any): Promise<boolean> {
         });
     })
     .then((isValidUser: boolean) => {
-      if (typeof user !== 'undefined' && course.staffList.indexOf(user._id) > -1 && isValidUser) {
+
+      let isStaffOrAdmin: boolean = course.staffList.indexOf(user._id) > -1 || course.admins.indexOf(user._id) > -1 ? true : false;
+
+      if (typeof user !== 'undefined' && isStaffOrAdmin && isValidUser) {
         // if user ref found in course.admins array, return true aka. is admin.
         return true;
       } 
