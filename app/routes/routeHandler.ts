@@ -347,8 +347,8 @@ const getStdioFile = (req: restify.Request, res: restify.Response, next: restify
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
-const isStaff = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return courseCtrl.isStaff(req.params)
+const isStaffOrAdmin = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.isStaffOrAdmin(req.params)
     .then((isStaff: any) => res.json(200, {response: isStaff}))
     .catch((err: any) => res.json(500, {err: err}));
 };
@@ -379,7 +379,7 @@ const getDefaultDeliv = (req: restify.Request, res: restify.Response, next: rest
 
 export {
   pong, createCourse, getAllCourses, logout, addStudentList, getClassList,
-  getCurrentUserInfo, updateDeliverable, getDeliverables, isStaff,
+  getCurrentUserInfo, updateDeliverable, getDeliverables, isStaffOrAdmin,
   getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
   addAdminList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
   deleteRepos, getCurrentUser, isAuthenticated, getMyCourses,

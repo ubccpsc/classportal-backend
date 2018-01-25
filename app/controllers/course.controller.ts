@@ -545,12 +545,12 @@ function getMyCourses(req: any): Promise<object[]> {
 // }
 
 /**
- * Determine if a username is a 'staff' member in a Course.
+ * Determine if a username is a 'staff' or 'admin' member in a Course.
  * @param payload.username string ie. 'steca' or 'x3b3c'
  * @param payload.courseId string ie. '310' to check for staff members in Course object
  * @return boolean true if a staff, false otherwise
  */
-function isStaff(payload: any): Promise<boolean> {
+function isStaffOrAdmin(payload: any): Promise<boolean> {
   let course: ICourseDocument;
   let user: IUserDocument;
 
@@ -573,11 +573,11 @@ function isStaff(payload: any): Promise<boolean> {
         });
     })
     .then((isValidUser: boolean) => {
-
-      let isStaffOrAdmin: boolean = course.staffList.indexOf(user._id) > -1 || course.admins.indexOf(user._id) > -1 ? true : false;
-
-      if (typeof user !== 'undefined' && isStaffOrAdmin && isValidUser) {
-        // if user ref found in course.admins array, return true aka. is admin.
+      let isStaffOrAdmin: boolean;
+      if (typeof user !== 'undefined') {
+        isStaffOrAdmin = course.staffList.indexOf(user._id) > -1 || course.admins.indexOf(user._id) > -1 ? true : false;
+      }
+      if (isStaffOrAdmin && isValidUser) {
         return true;
       } 
       return false;
@@ -642,5 +642,5 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
 export {
   getAllCourses, create, update, updateClassList, remove, addLabList, getClassList, getStudentNamesFromCourse,
   getAllAdmins, getMyCourses, getCourseSettings, getLabSectionsFromCourse,
-  getCourseLabSectionList, getCourse, isStaff, addAdminList, addStaffList, getAllStaff
+  getCourseLabSectionList, getCourse, isStaffOrAdmin, addAdminList, addStaffList, getAllStaff
 };
