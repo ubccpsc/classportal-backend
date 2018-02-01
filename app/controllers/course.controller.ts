@@ -389,7 +389,7 @@ function getCourseLabSectionList(req: any): Promise<object> {
  * @return classList object
  */
 function updateClassList(reqFiles: any, courseId: string) {
-  const GITHUB_ENTERPRISE_URL = config.GITHUB_ENTERPRISE_URL;
+  const GITHUB_ENTERPRISE_URL = config.github_enterprise_url;
 
   console.log(reqFiles['classList']);
   const options = {
