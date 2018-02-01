@@ -7,7 +7,6 @@ import {User, IUserDocument} from '../models/user.model';
 import {logger} from '../../utils/logger';
 import {DeliverablePayload} from '../interfaces/ui/deliverable.interface';
 
-
 /**
  * Updates a deliverable that matches the deliverable MongoDB _id in deliverable object
  * @param deliverable object new fields with MongoDB _id

@@ -24,6 +24,7 @@ const config: any = {
   github_clone_token:   process.env.GITHUB_CLONE_TOKEN,
   github_user_name:     process.env.GITHUB_USER_NAME,
   github_api_path:      process.env.GITHUB_API_PATH,
+  github_enterprise_url: process.env.GITHUB_ENTERPRISE_URL,
 };
 
 // specific to test config

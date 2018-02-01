@@ -389,7 +389,7 @@ function getCourseLabSectionList(req: any): Promise<object> {
  * @return classList object
  */
 function updateClassList(reqFiles: any, courseId: string) {
-  const GITHUB_ENTERPRISE_URL = 'https://github.ugrad.cs.ubc.ca/';
+  const GITHUB_ENTERPRISE_URL = config.GITHUB_ENTERPRISE_URL;
 
   console.log(reqFiles['classList']);
   const options = {
@@ -409,14 +409,14 @@ function updateClassList(reqFiles: any, courseId: string) {
 
     for (let key in data) {
       let student = data[key];
-      logger.info('Parsing student into user model: ' + JSON.stringify(student));
+      logger.info('CourseController:: updateClassList() INFO Parsing student into user model: ' + JSON.stringify(student));
       usersRepo.findOrCreate({
         csid:     student.CSID,
         snum:     student.SNUM,
         lname:    student.LAST,
         fname:    student.FIRST,
         username: student.USERNAME,
-        profileUrl: GITHUB_ENTERPRISE_URL + student.USERNAME,
+        profileUrl: GITHUB_ENTERPRISE_URL + '/' + student.USERNAME,
       })
         .then(user => {
           newClassList.push(user._id);
