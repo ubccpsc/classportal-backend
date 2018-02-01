@@ -72,8 +72,8 @@ function getAllStaff(payload: any) {
  * Admin will be created in Users database as 'admin' userrole.
  * 
  * Pre-req #1 is that HEADERS in CSV are labelled with headers below:
- *                    HEADERS: USERNAME (required), FIRST (optional), LAST (optional)
- *         #2 Username, first, last must match if already exist.
+ *                    HEADERS: CWL (required), FIRST (optional), LAST (optional)
+ *         #2 CWL, first, last must match if already exist.
  * 
  * ** WARNING ** Uploading a adminList will overwrite the previous adminList 
  * in the Course object. Admins are never deleted from DB.
@@ -105,7 +105,7 @@ function addAdminList(reqFiles: any, courseId: string) {
       logger.info('CourseController:: addAdminList() Creating admin in Users if does not already ' +
          'exist for CSV line: ' + JSON.stringify(admin));
       userQueries.push(usersRepo.findOrCreate({
-        username: admin.USERNAME,
+        username: admin.CWL,
         fname: admin.FIRST,
         lname: admin.LAST
       }).then((u: IUserDocument) => {
@@ -157,7 +157,7 @@ function addAdminList(reqFiles: any, courseId: string) {
  * specified @param courseId)
  * 
  * Pre-req #1 is that HEADERS in CSV are labelled with headers below:
- *                    HEADERS: USERNAME (required) / CSID (optional) / SNUM (optional) 
+ *                    HEADERS: CWL (required) / CSID (optional) / SNUM (optional) 
  * 
  * ** WARNING ** Uploading a staffList will overwrite the previous labList 
  * in the Course object.
@@ -188,9 +188,9 @@ function addStaffList(reqFiles: any, courseId: string) {
       logger.info('CourseController:: addStaffList() Creating staff in Users if does not already ' +
          'exist for CSV line: ' + JSON.stringify(staff));
       userQueries.push(usersRepo.findOrCreate({
-        username: staff.USERNAME,
-        csid: staff.USERNAME,
-        snum: staff.USERNAME
+        username: staff.CWL,
+        csid: staff.CWL,
+        snum: staff.CWL
       }).then((u: IUserDocument) => {
         return u;
       }));
@@ -377,7 +377,7 @@ function getCourseLabSectionList(req: any): Promise<object> {
  * Students will be created in Users database as 'student'.
  * 
  * Pre-req #1 is that HEADERS in CSV are labelled with headers below:
- *                    HEADERS: CSID	/ SNUM / LAST	/ FIRST /	USERNAME / LAB
+ *                    HEADERS: CSID	/ SNUM / LAST	/ FIRST /	CWL / LAB
  * 
  * ** WARNING ** Uploading a classList will overwrite the previous classList 
  * in the Course object. Users fields are overwritten, but original Mongo User Id
@@ -415,8 +415,8 @@ function updateClassList(reqFiles: any, courseId: string) {
         snum:     student.SNUM,
         lname:    student.LAST,
         fname:    student.FIRST,
-        username: student.USERNAME,
-        profileUrl: GITHUB_ENTERPRISE_URL + '/' + student.USERNAME,
+        username: student.CWL,
+        profileUrl: GITHUB_ENTERPRISE_URL + '/' + student.CWL,
       })
         .then(user => {
           newClassList.push(user._id);
@@ -527,22 +527,6 @@ function getMyCourses(req: any): Promise<object[]> {
       return user.courses;
     });
 }
-
-/**
- * Gets user role
- * @param {restify.Request} restify request object
- * @param {restify.Response} restify response object
- * @returns an array of Courses for user
- */
-// function getAdminCourseList(req: any): Promise<object[]> {
-//   // should find all admins, and the courses that they are in.
-//   return Course.find({ username: req.user.username })
-//     .populate({ path: 'courses.courseId', select: 'courseId name icon description' })
-//     .exec()
-//     .then((user: IUserDocument) => {
-//       return user.courses;
-//     });
-// }
 
 /**
  * Determine if a username is a 'staff' or 'admin' member in a Course.
