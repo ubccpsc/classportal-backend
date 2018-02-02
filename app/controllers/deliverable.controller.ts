@@ -82,7 +82,7 @@ function getDefaultDeliv(payload: any): Promise<string> {
     })
     .then(() => {
       // the "default deliverable" is the open deliverable at the time. If more than 1
-      // delivs are open, then earliest close date is default deliverable.
+      // delivs are open, then latest close date is default deliverable.
       let openDelivs: IDeliverableDocument[] = [];
       let currentDate: number = new Date().getTime();
 
@@ -178,9 +178,6 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
               return createdDeliv;
             });
         });
-    })
-    .catch(err => {
-      logger.error(`DeliverableController::addDeliverable ERROR ${err}`);
     });
 
   function findDelivWithCourse(name: string, course_id: string) {
@@ -199,7 +196,7 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
 }
 
 /**
- *
+ * Gets a list of Deliverables based on a Course Id.
  * @param courseId course number, ie. 310
  * @return IDeliverableDocument[] list of deliverables for a course
  */
@@ -223,8 +220,6 @@ function getDeliverablesByCourse(payload: any) {
             // change the database records into the format expected by clients
             let retDelivs: DeliverablePayload[] = [];
             for (let d of delivs) {
-              // temporary unix timestamp to fix deliverable until 
-              // can be properly schemaed on back-end API.
               const open = new Date(d.open).getTime();
               const close = new Date(d.close).getTime();
               retDelivs.push({
@@ -237,11 +232,20 @@ function getDeliverablesByCourse(payload: any) {
                 studentsMakeTeams: d.studentsMakeTeams,
                 maxTeamSize: d.maxTeamSize,
                 minTeamSize: d.minTeamSize,
+                dockerImage: d.dockerImage, 
+                dockerBuild: d.dockerBuild,
+                dockerOverride: d.dockerOverride,
+                containerBuilt: d.containerBuilt,
+                solutionsUrl: d.solutionsUrl,
+                solutionsKey: d.solutionsKey,
                 gradesReleased: d.gradesReleased,
                 projectCount: d.projectCount,
                 markInBatch: d.markInBatch,
                 url: d.url,
-                buildingRepos: d.buildingRepos
+                deliverableKey: d.deliverableKey,
+                buildingRepos: d.buildingRepos,
+                customHtml: d.customHtml,
+                custom: d.custom
                });
             }
             return retDelivs;

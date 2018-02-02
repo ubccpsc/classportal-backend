@@ -494,5 +494,3 @@ export class Results {
     return csvArray;
   }
 }
-
-// export {getResultsByCourse};

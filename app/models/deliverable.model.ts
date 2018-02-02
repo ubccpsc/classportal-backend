@@ -9,18 +9,27 @@ interface IDeliverableDocument extends mongoose.Document {
   courseId: string;
   name: string;
   url: string;
+  deliverableKey: string;
   open: number;
   close: number;
   projectCount: number;
   teamsInSameLab: boolean;
   rate: number;
   studentsMakeTeams: boolean;
+  solutionsUrl: string;
+  solutionsKey: string;
+  dockerImage: string;
+  dockerBuild: string;
+  dockerOverride: boolean;
+  containerBuilt: boolean;
   maxTeamSize: number;
   minTeamSize: number;
   teamCount: number;
   gradesReleased: boolean;
   markInBatch: boolean;
   buildingRepos: boolean;
+  customHtml: boolean;
+  custom: object;
 }
 
 interface IDeliverableModel extends mongoose.Model<IDeliverableDocument> {
@@ -38,6 +47,22 @@ const DeliverableSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  dockerImage: {
+    type: String,
+    default: '',
+  },
+  dockerBuild: {
+    type: String,
+    default: '',
+  },
+  containerBuilt: {
+    type: Boolean,
+    default: false,
+  },
+  dockerOverride: {
+    type: Boolean,
+    default: false,
+  },
   teamsInSameLab: {
     type: Boolean,
     default: false,
@@ -49,6 +74,14 @@ const DeliverableSchema = new mongoose.Schema({
   minTeamSize: {
     type: Number,
     default: DEFAULT_MIN_TEAM_SIZE,
+  },
+  solutionsKey: {
+    type: String,
+    default: '',
+  },
+  solutionsUrl: {
+    type: String,
+    default: '',
   },
   studentsMakeTeams: {
     type: Boolean,
@@ -72,6 +105,10 @@ const DeliverableSchema = new mongoose.Schema({
   url:            {
     type: String,
   },
+  deliverableKey: {
+    type: String,
+    default: '',
+  },
   projectCount:   {
     type: Number,
   },
@@ -93,6 +130,14 @@ const DeliverableSchema = new mongoose.Schema({
   reposCreated:   {
     type:    Boolean,
     default: false,
+  },
+  customHtml: {
+    type:    Boolean,
+    default: false,
+  },
+  custom: {
+    type:    Object,
+    default: {},
   }
 });
 
