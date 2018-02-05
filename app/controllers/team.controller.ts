@@ -246,7 +246,6 @@ function getUsersNotOnTeam(payload: any) {
     .then((course) => {
 
       let teamQuery: any = {courseId: course._id};
-      teamQuery.deliverableIds = {'$in': course.deliverables};
 
       return Team.find(teamQuery).exec()
         .then((teams: ITeamDocument[]) => {
@@ -1148,7 +1147,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
     try {
 
       // divides number of teams needed and rounds up
-      let teamSize = typeof payload.teamSize === 'undefined' ? course.maxTeamSize : payload.teamSize;
+      let teamSize = typeof payload.teamSize === 'undefined' ? deliverable.maxTeamSize : payload.teamSize;
       const numberOfTeams = Math.ceil(usersList.length / teamSize);
       // creates arrays for each Team
       for (let i = 0; i < numberOfTeams; i++) {
@@ -1240,31 +1239,6 @@ let updateTeam = function (team_Id: string, updatedModel: ITeamDocument) {
       return t.save();
     });
 };
-
-function isWithinTeamSize(courseObjectId: string, teamSize: number) {
-
-  let minTeamSize: number;
-  let maxTeamSize: number;
-
-  if (teamSize !== null && teamSize > 0) {
-    return Course.findOne({'_id': courseObjectId})
-      .exec()
-      .then(c => {
-        minTeamSize = c.minTeamSize;
-        maxTeamSize = c.maxTeamSize;
-      })
-      .then((c) => {
-        if (teamSize < minTeamSize) {
-          return Promise.reject(Error('Cannot create team. The minimum team size is ' + minTeamSize + '.'));
-        } else if (teamSize > maxTeamSize) {
-          return Promise.reject(Error('Cannot create team. The maximum team size is ' + maxTeamSize + '.'));
-        }
-        return Promise.resolve(true);
-      });
-  } else {
-    return Promise.reject(Error('Cannot add team without team members.'));
-  }
-}
 
 function update(req: any) {
 

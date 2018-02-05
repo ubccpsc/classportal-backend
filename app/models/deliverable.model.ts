@@ -16,6 +16,7 @@ interface IDeliverableDocument extends mongoose.Document {
   teamsInSameLab: boolean;
   rate: number;
   studentsMakeTeams: boolean;
+  whitelistedServers: string;
   solutionsUrl: string;
   solutionsKey: string;
   dockerImage: string;
@@ -111,6 +112,10 @@ const DeliverableSchema = new mongoose.Schema({
   },
   projectCount:   {
     type: Number,
+  },
+  whitelistedServers: {
+    type: String,
+    default: 'portal.cs.ubc.ca:1210 portal.cs.ubc.ca:1310 portal.cs.ubc.ca:1311'
   },
   team:           {
     type: mongoose.Schema.Types.ObjectId, ref: 'Team',

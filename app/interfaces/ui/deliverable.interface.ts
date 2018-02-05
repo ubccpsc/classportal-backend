@@ -16,6 +16,7 @@ export interface DeliverablePayload {
   containerBuilt: boolean;
   buildingRepos: boolean;
   gradesReleased: boolean;
+  whitelistedServers: string;
   projectCount: number;
   url: string;
   deliverableKey: string;

@@ -4,24 +4,16 @@ import {logger} from '../../utils/logger';
 
 interface ICourseDocument extends mongoose.Document {
   courseId: string;
-  minTeamSize: number;
-  maxTeamSize: number;
-  modules: string[];
-  batchTeamCount: number;
   customData: any;
   delivKey: string;
   solutionsKey: string;
   classList: Object[];
-  batchDeliverables: Object[];
-  deliverables: Object[];
   grades: [Object];
   labSections: [LabSection];
   admins: IUserDocument[];
   staffList: IUserDocument[];
-  batchImportUrl: string;
   urlWebhook: string;
   githubOrg: string;
-  teamMustBeInSameLab: Boolean;
   settings: CourseSettings;
 }
 
@@ -63,23 +55,11 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     type:    String,
     default: '//cdn.ubc.ca/clf/7.0.5/img/favicon.ico',
   },
-  minTeamSize:         {
-    type: Number,
-  },
-  maxTeamSize:         {
-    type: Number,
-  },
   modules:             {
     type: [String],
   },
   classList:           {
     type: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
-  },
-  batchDeliverables:   {
-    type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable'}],
-  },
-  deliverables:        {
-    type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Deliverable'}],
   },
   grades:              {
     type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Grade'}],
@@ -103,25 +83,11 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
       },
     },
   ],
-  studentsSetTeams:    {
-    type: Boolean,
-  },
-  customData:          {
+  custom:          {
     type: Object,
-  },
-  teamMustBeInSameLab: {
-    type:     Boolean,
-    required: true,
-    default:  true,
+    default: {},
   },
   githubOrg:           {
-    type: String,
-  },
-  batchTeamCount:      {
-    type:    Number,
-    default: 0,
-  },
-  batchImportUrl:      {
     type: String,
   },
   settings:            {

@@ -172,11 +172,12 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
           return newDeliv;
         })
         .then((createdDeliv: IDeliverableDocument) => {
-          queriedCourse.deliverables.push(createdDeliv._id);
-          return queriedCourse.save()
-            .then(() => {
-              return createdDeliv;
-            });
+          return null;
+          // queriedCourse.deliverables.push(createdDeliv._id);
+          // return queriedCourse.save()
+          //   .then(() => {
+          //     return createdDeliv;
+          //   });
         });
     });
 
@@ -239,6 +240,7 @@ function getDeliverablesByCourse(payload: any) {
                 solutionsUrl: d.solutionsUrl,
                 solutionsKey: d.solutionsKey,
                 gradesReleased: d.gradesReleased,
+                whitelistedServers: d.whitelistedServers,
                 projectCount: d.projectCount,
                 markInBatch: d.markInBatch,
                 url: d.url,

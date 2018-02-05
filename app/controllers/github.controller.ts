@@ -298,23 +298,6 @@ function createGithubReposForTeams(payload: any): Promise<any> {
     }
   }
 
-  function buildTeamsByBatch(_teams: ITeamDocument[]) {
-    for (let i = 0; i < _teams.length; i++) {
-      let inputGroup = {
-        teamName:    'cpsc310' + _teams[i].name, // createRepoName(course, payload.deliverableName, _teams[i].name),
-        members:     _teams[i].members.map((user: IUserDocument) => {
-          return user.username;
-        }),
-        projectName: createRepoName(course, payload.deliverableName, _teams[i].name),
-        teamIndex:   i,
-        team:        _teams[i].name,
-        _team:       _teams[i],
-        orgName:     course.githubOrg
-      };
-      githubManager.completeTeamProvision(inputGroup, course.batchImportUrl, STAFF_TEAM, course.urlWebhook);
-    }
-  }
-
   function getTeamsToBuildByBatch(course: ICourseDocument) {
     return Team.find({courseId: course._id, $where: 'this.disbanded !== true',
       'githubState.repo.url': ''})
