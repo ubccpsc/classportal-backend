@@ -56,8 +56,11 @@ function addDeliverablesToCourse(course: any, deliverable: IDeliverableDocument)
 /**
  * Gets the default deliverable that is being marked by AutoTest at the time.
  * 
- * ** INFO ** Null is produced if Course does not exist, as we do not want to reveal
+ * ** INFO ** Null is returned if Course does not exist, as we do not want to reveal
  * course information.
+ * 
+ * The default deliverable is the open deliverable at the time. If more than 1
+ * deliverable is open, then latest timestamp creation date is the default deliverable.
  * 
  * @param payload.courseId string ie. '310'
  * @return <string || null> ie. 'd1' or null
@@ -81,8 +84,6 @@ function getDefaultDeliv(payload: any): Promise<string> {
         });
     })
     .then(() => {
-      // the "default deliverable" is the open deliverable at the time. If more than 1
-      // delivs are open, then latest close date is default deliverable.
       let openDelivs: IDeliverableDocument[] = [];
       let currentDate: number = new Date().getTime();
 
@@ -98,18 +99,18 @@ function getDefaultDeliv(payload: any): Promise<string> {
         return null;
       }
 
-      let earliestDatedDeliv: IDeliverableDocument;
+      let latestDatedDeliv: IDeliverableDocument;
 
       openDelivs.map((deliv: IDeliverableDocument) => {
-        if (typeof earliestDatedDeliv === 'undefined') {
-          earliestDatedDeliv = deliv;
+        if (typeof latestDatedDeliv === 'undefined') {
+          latestDatedDeliv = deliv;
         } else {
-          if (earliestDatedDeliv.close > deliv.close) {
-            earliestDatedDeliv = deliv;
+          if (latestDatedDeliv._id > deliv._id) {
+            latestDatedDeliv = deliv;
           }
         }
       });
-      return earliestDatedDeliv.name;
+      return latestDatedDeliv.name;
     })
     .catch((err) => {
       logger.error('DeliverableController:: getDefaultDeliv() ERROR ' + err);
