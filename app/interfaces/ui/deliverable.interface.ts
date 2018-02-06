@@ -10,6 +10,7 @@ export interface DeliverablePayload {
   solutionsKey: string;
   maxTeamSize: number;
   minTeamSize: number;
+  rate: number;
   dockerImage: string;
   dockerBuild: string;
   dockerOverride: boolean;

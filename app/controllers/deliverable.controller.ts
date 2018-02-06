@@ -202,7 +202,6 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
  * @return IDeliverableDocument[] list of deliverables for a course
  */
 function getDeliverablesByCourse(payload: any) {
-  console.log(payload);
   logger.info('DeliverableController::getDeliverablesByCourse()');
 
   return Course.findOne({courseId: payload.courseId})
@@ -233,6 +232,7 @@ function getDeliverablesByCourse(payload: any) {
                 studentsMakeTeams: d.studentsMakeTeams,
                 maxTeamSize: d.maxTeamSize,
                 minTeamSize: d.minTeamSize,
+                rate: d.rate,
                 dockerImage: d.dockerImage, 
                 dockerBuild: d.dockerBuild,
                 dockerOverride: d.dockerOverride,
