@@ -9,6 +9,7 @@ interface IDeliverableDocument extends mongoose.Document {
   courseId: string;
   name: string;
   url: string;
+  courseNum: string;
   deliverableKey: string;
   open: number;
   close: number;
@@ -27,6 +28,8 @@ interface IDeliverableDocument extends mongoose.Document {
   minTeamSize: number;
   teamCount: number;
   gradesReleased: boolean;
+  regressionTest: boolean;
+  regressionTests: string;
   markInBatch: boolean;
   buildingRepos: boolean;
   customHtml: boolean;
@@ -47,6 +50,9 @@ const DeliverableSchema = new mongoose.Schema({
   markInBatch: {
     type: Boolean,
     default: false,
+  },
+  courseNum: {
+    type: Number,
   },
   dockerImage: {
     type: String,
@@ -112,6 +118,14 @@ const DeliverableSchema = new mongoose.Schema({
   },
   projectCount:   {
     type: Number,
+  },
+  regressionTest: {
+    type: Boolean,
+    default: false
+  },
+  regressionTests: {
+    type: String,
+    default: '',
   },
   whitelistedServers: {
     type: String,

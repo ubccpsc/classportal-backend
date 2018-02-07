@@ -6,6 +6,43 @@ import {Course, ICourseDocument} from '../models/course.model';
 import {User, IUserDocument} from '../models/user.model';
 import {logger} from '../../utils/logger';
 import {DeliverablePayload} from '../interfaces/ui/deliverable.interface';
+import {isAdmin} from '../middleware/auth.middleware';
+import {TEAM_ADMINS} from '../../test/assets/mockDataObjects';
+
+/**
+ * Checks to see if the Deliverable being added or edited has valid fields
+ * Validation should remain consistent with front-end checks.
+ * 
+ * @param IDeliverableDocument or similar object
+ * @return boolean true if valid
+ */
+function isDeliverableValid(deliv: IDeliverableDocument): boolean {
+  const HTTPS_REGEX = new RegExp(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
+  const NAME_REGEX: RegExp = /^[^_]+([0-9])/;
+  const TEAM_SIZE_ERR: string = 'The minimum team size cannot be greater than the maximum team size';
+  const CUSTOM_JSON_ERR: string = 'Your custom JSON input should be valid stringified JSON: ';
+  const DELIV_NAME_ERR: string = 'A deliverable name must be all lowercase letters, up to 10 characters, and a combination of [a-z] and [0-9].';
+  const HTTPS_GIT_REPO_ERR: string = 'Please make sure your Git repo addresses are valid Https URIs.';
+
+  if (deliv.minTeamSize > deliv.maxTeamSize) {
+      throw TEAM_SIZE_ERR;
+  }
+
+  if (typeof deliv.custom !== 'object') {
+    throw CUSTOM_JSON_ERR;
+  }
+
+  let name: string = deliv.name;
+  if (name.length > 10 || name.search(NAME_REGEX) === -1) {
+      throw DELIV_NAME_ERR;
+  }
+
+  if (deliv.url.search(HTTPS_REGEX) === -1 || deliv.solutionsUrl.search(HTTPS_REGEX) === -1) {
+      throw HTTPS_GIT_REPO_ERR;
+  }
+
+  return true;
+}
 
 /**
  * Updates a deliverable that matches the deliverable MongoDB _id in deliverable object
@@ -14,33 +51,54 @@ import {DeliverablePayload} from '../interfaces/ui/deliverable.interface';
  */
 function updateDeliverable(payload: any): Promise<IDeliverableDocument> {
   logger.info('DeliverablesController::updateDeliverables() in Deliverable Controller');
-    console.log(payload);
-    let searchParams = {_id: payload.deliverable._id};
-
-    return Deliverable.findOne(searchParams)
-      .exec()
-      .then((d: IDeliverableDocument) => {
-        if (d) {
-          d.url = payload.deliverable.url;
-          d.open = payload.deliverable.open;
-          d.close = payload.deliverable.close;
-          d.gradesReleased = payload.deliverable.gradesReleased;
-          d.markInBatch = payload.deliverable.markInBatch;
-          d.buildingRepos = payload.deliverable.buildingRepos;
-          // name changes to id on the front-end
-          d.name = payload.deliverable.id;
-          return d.save()
-            .then((d: IDeliverableDocument) => {
-              logger.info('DeliverableController::updateDeliverable() Successfully saved Deliverable');
-              return d;
-            });
-        } 
-        throw 'DeliverableController::queryAndUpdateDeliverable() ERROR Could not find a deliverable to update';
-      })
-      .catch((err) => {
-        logger.error(err);
-        return Promise.reject(err);
-      });
+  console.log(payload);
+  let searchParams = {_id: payload.deliverable._id};
+  let deliv: IDeliverableDocument = payload.deliverable as IDeliverableDocument;
+  return Deliverable.findOne(searchParams)
+    .exec()
+    .then((d: IDeliverableDocument) => {
+      if (d && isDeliverableValid(deliv)) {
+        d._id = deliv._id;
+        d.open = deliv.open;
+        d.close = deliv.close;
+        d.teamsInSameLab = deliv.teamsInSameLab;
+        d.studentsMakeTeams = deliv.studentsMakeTeams;
+        d.solutionsUrl = deliv.solutionsUrl;
+        d.solutionsKey = deliv.solutionsKey;
+        d.maxTeamSize = deliv.maxTeamSize;
+        d.minTeamSize = deliv.minTeamSize;
+        d.rate = deliv.rate;
+        d.dockerImage = deliv.dockerImage;
+        d.dockerBuild = deliv.dockerBuild;
+        d.dockerOverride = deliv.dockerOverride;
+        d.containerBuilt = deliv.containerBuilt;
+        d.buildingRepos = deliv.buildingRepos;
+        d.gradesReleased = deliv.gradesReleased;
+        d.regressionTest = deliv.regressionTest;
+        d.regressionTests = deliv.regressionTests;
+        d.whitelistedServers = deliv.whitelistedServers;
+        d.projectCount = deliv.projectCount;
+        d.url = deliv.url;
+        d.deliverableKey = deliv.deliverableKey;
+        d.custom = deliv.custom;
+        d.customHtml = deliv.customHtml;
+        if (isAdmin) {
+          // only admins can change name (though not enabled on front-end)
+          d.name = deliv.name;
+        }
+        // name changes to id on the front-end
+        return d.save()
+          .then((d: IDeliverableDocument) => {
+            logger.info(`DeliverableController::updateDeliverable() Successfully saved Deliverable`);
+            return d;
+          });
+      }
+      throw `DeliverableController::queryAndUpdateDeliverable() ERROR Could not update ${deliv.name}.`;
+    })
+    .catch((err) => {
+      logger.error(err);
+      return Promise.reject(err);
+    });
 }
 
 // Method only adds Deliverable to course if it is not already added.
@@ -174,11 +232,6 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
         })
         .then((createdDeliv: IDeliverableDocument) => {
           return null;
-          // queriedCourse.deliverables.push(createdDeliv._id);
-          // return queriedCourse.save()
-          //   .then(() => {
-          //     return createdDeliv;
-          //   });
         });
     });
 
@@ -200,7 +253,7 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
 /**
  * Gets a list of Deliverables based on a Course Id.
  * @param courseId course number, ie. 310
- * @return IDeliverableDocument[] list of deliverables for a course
+ * @return <DeliverablePayload[] || null> list of deliverables for a course
  */
 function getDeliverablesByCourse(payload: any) {
   logger.info('DeliverableController::getDeliverablesByCourse()');
@@ -216,7 +269,7 @@ function getDeliverablesByCourse(payload: any) {
       return Deliverable.find({courseId: course._id})
         .then((delivs: IDeliverableDocument[]) => {
           if (delivs) {
-            logger.info('DeliverableController::getDeliverablesByCourse() - returning length: ' + delivs.length);
+            logger.info('DeliverableController::getDeliverablesByCourse() - returning ' + delivs.length + ' deliverables');
 
             // change the database records into the format expected by clients
             let retDelivs: DeliverablePayload[] = [];
@@ -241,9 +294,10 @@ function getDeliverablesByCourse(payload: any) {
                 solutionsUrl: d.solutionsUrl,
                 solutionsKey: d.solutionsKey,
                 gradesReleased: d.gradesReleased,
+                regressionTest: d.regressionTest,
+                regressionTests: d.regressionTests,
                 whitelistedServers: d.whitelistedServers,
                 projectCount: d.projectCount,
-                markInBatch: d.markInBatch,
                 url: d.url,
                 deliverableKey: d.deliverableKey,
                 buildingRepos: d.buildingRepos,
@@ -253,7 +307,7 @@ function getDeliverablesByCourse(payload: any) {
             }
             return retDelivs;
           }
-          throw new Error(`No deliverables found for course ${payload.courseId}`);
+          return null;
         });
     })
     .catch(err => {

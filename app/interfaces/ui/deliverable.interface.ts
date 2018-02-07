@@ -3,7 +3,6 @@ export interface DeliverablePayload {
   id: string;
   open: number; // timestamp
   close: number; // timestamp
-  markInBatch: boolean;
   teamsInSameLab: boolean;
   studentsMakeTeams: boolean;
   solutionsUrl: string;
@@ -17,6 +16,8 @@ export interface DeliverablePayload {
   containerBuilt: boolean;
   buildingRepos: boolean;
   gradesReleased: boolean;
+  regressionTest: boolean;
+  regressionTests: string;
   whitelistedServers: string;
   projectCount: number;
   url: string;
