@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import {logger} from '../../utils/logger';
 import {ITeamDocument} from './team.model';
 
-const DEFAULT_MAX_TEAM_SIZE: number = 8;
+const DEFAULT_MAX_TEAM_SIZE: number = 1;
 const DEFAULT_MIN_TEAM_SIZE: number = 1;
 
 interface IDeliverableDocument extends mongoose.Document {
