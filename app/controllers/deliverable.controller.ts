@@ -89,7 +89,7 @@ function updateDeliverable(payload: any): Promise<IDeliverableDocument> {
         d.customHtml = deliv.customHtml;
         if (isAdmin) {
           // only admins can change name (though not enabled on front-end)
-          d.name = deliv.name;
+          d.name = String(deliv.name).toLowerCase();
         }
         // name changes to id on the front-end
         return d.save()
@@ -101,7 +101,7 @@ function updateDeliverable(payload: any): Promise<IDeliverableDocument> {
       throw `DeliverableController::queryAndUpdateDeliverable() ERROR Could not update ${deliv.name}.`;
     })
     .catch((err) => {
-      logger.error(err);
+      logger.error('DeliverableController::updateDeliverable() ERROR ' + err);
       return Promise.reject(err);
     });
 }
@@ -206,7 +206,8 @@ function getTestDelay(payload: any): Promise<number> {
 }
 
 /**
- * Creates a new Deliverable if it passes validation.
+ * Creates a new Deliverable if it passes validation. Ensures that Deliverable
+ * 'name' is all lowercase.
  * 
  * @param payload.deliverable IDeliverableDocument
  * @return IDeliverableDocument returned on successful creation
@@ -218,6 +219,8 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
   // Delete these properties as a HACK due to a front-end model issue.
   delete newDeliverable._id;
   delete newDeliverable.courseId;
+  newDeliverable.name = String(newDeliverable.name).toLowerCase();
+
   let isValid: boolean = isDeliverableValid(newDeliverable);
   let createdDeliv: IDeliverableDocument;
   if (isValid) {
@@ -229,31 +232,20 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
       return deliv;
     })
     .then((deliv: IDeliverableDocument) => {
-      if (deliv) {
         return Course.findOne({courseId: payload.courseId})
-        .then((course: ICourseDocument) => {
-          if (course) {
-            deliv.courseId = course._id;
-            return deliv;
-          }
-          throw `Could not find Course`;
-        });
-      }
-      return null;
+          .then((course: ICourseDocument) => {
+            if (course) {
+              newDeliverable.courseId = course._id;
+              return newDeliverable;
+            }
+            throw `Could not find Course`;
+          });
     })
     .then(() => {
       return Deliverable.create(newDeliverable)
         .then((deliv: IDeliverableDocument) => {
           return deliv;
-        })
-        .catch((err) => {
-          logger.error('DeliverableController::addDeliverable() ERROR ' + err);
-          throw 'Cannot create duplicate Deliverabe "' + newDeliverable.name + '"';
         });
-    })
-    .catch((err) => {
-      logger.error('DeliverableController::addDeliverable() ERROR ' + err);
-      return err;
     });
   } else {
     throw 'Deliverable Valdiation failed.';

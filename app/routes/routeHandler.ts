@@ -100,7 +100,7 @@ const oauthCallback = (req: restify.Request, res: restify.Response, next: restif
 const updateDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return delivCtrl.updateDeliverable(req.params)
     .then((updatedDeliv: IDeliverableDocument) => res.json(200, {response: updatedDeliv}))
-    .catch((err: any) => res.json(500, {err: err.message}));
+    .catch((err: any) => res.json(500, {err: err}));
 };
 
 const addDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {

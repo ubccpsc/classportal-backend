@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import {logger} from '../../utils/logger';
 import {ITeamDocument} from './team.model';
 
-const DEFAULT_MAX_TEAM_SIZE: number = 9999;
+const DEFAULT_MAX_TEAM_SIZE: number = 8;
 const DEFAULT_MIN_TEAM_SIZE: number = 1;
 
 interface IDeliverableDocument extends mongoose.Document {
@@ -30,7 +30,6 @@ interface IDeliverableDocument extends mongoose.Document {
   gradesReleased: boolean;
   regressionTest: boolean;
   regressionTests: string;
-  markInBatch: boolean;
   buildingRepos: boolean;
   customHtml: boolean;
   custom: object;
@@ -46,10 +45,6 @@ const DeliverableSchema = new mongoose.Schema({
   },
   teamCount:      {
     type: Number,
-  },
-  markInBatch: {
-    type: Boolean,
-    default: false,
   },
   courseNum: {
     type: Number,
