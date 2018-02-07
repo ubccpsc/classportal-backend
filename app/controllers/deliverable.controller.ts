@@ -242,15 +242,14 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
       return null;
     })
     .then(() => {
-      try {
-        return Deliverable.create(newDeliverable)
+      return Deliverable.create(newDeliverable)
         .then((deliv: IDeliverableDocument) => {
           return deliv;
+        })
+        .catch((err) => {
+          logger.error('DeliverableController::addDeliverable() ERROR ' + err);
+          throw 'Cannot create duplicate Deliverabe "' + newDeliverable.name + '"';
         });
-      }
-      catch (err) {
-        throw 'Deliverable already exists';
-      }
     })
     .catch((err) => {
       logger.error('DeliverableController::addDeliverable() ERROR ' + err);
