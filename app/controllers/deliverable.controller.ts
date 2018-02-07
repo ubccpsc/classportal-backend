@@ -23,9 +23,14 @@ function isDeliverableValid(deliv: IDeliverableDocument): boolean {
   const CUSTOM_JSON_ERR: string = 'Your custom JSON input should be valid stringified JSON: ';
   const DELIV_NAME_ERR: string = 'A deliverable name must be all lowercase letters, up to 10 characters, and a combination of [a-z] and [0-9].';
   const HTTPS_GIT_REPO_ERR: string = 'Please make sure your Git repo addresses are valid Https URIs.';
+  const OPEN_CLOSE_ERR: string = 'The close date must be greater than the open date.';
 
   if (deliv.minTeamSize > deliv.maxTeamSize) {
       throw TEAM_SIZE_ERR;
+  }
+
+  if (deliv.open > deliv.close) {
+    throw OPEN_CLOSE_ERR;
   }
 
   if (typeof deliv.custom !== 'object') {
@@ -209,7 +214,6 @@ function getTestDelay(payload: any): Promise<number> {
 function addDeliverable(payload: any): Promise<IDeliverableDocument> {
   logger.info('DeliverableController::addDeliverable(..)');
   console.log(payload);
-  let courseQuery = {courseId: payload.courseId};
   let newDeliverable: IDeliverableDocument = payload.deliverable as IDeliverableDocument;
   // Delete these properties as a HACK due to a front-end model issue.
   delete newDeliverable._id;
@@ -217,17 +221,35 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
   let isValid: boolean = isDeliverableValid(newDeliverable);
   let createdDeliv: IDeliverableDocument;
   if (isValid) {
-    return Course.findOne(courseQuery)
-      .then((course: ICourseDocument) => {
-        // replace "310" courseId with a refernece to _id object
-        newDeliverable.courseId = course._id;
-        return Deliverable.findOrCreate(newDeliverable)
-          .then((deliv: IDeliverableDocument) => {
-            if (deliv) {
-              return deliv;
-            }
-            throw 'Could not create Deliverable';
-          });
+    return Deliverable.findOne(newDeliverable)
+    .then((deliv: IDeliverableDocument) => {
+      if (deliv) {
+        throw 'Deliverable already exists';
+      }
+      return deliv;
+    })
+    .then((deliv: IDeliverableDocument) => {
+      if (deliv) {
+        return Course.findOne({courseId: payload.courseId})
+        .then((course: ICourseDocument) => {
+          if (course) {
+            deliv.courseId = course._id;
+            return deliv;
+          }
+          throw `Could not find Course`;
+        });
+      }
+      return null;
+    })
+    .then(() => {
+      return Deliverable.create(newDeliverable)
+        .then((deliv: IDeliverableDocument) => {
+          return deliv;
+        });
+    })
+    .catch((err) => {
+      logger.error('DeliverableController::addDeliverable() ERROR ' + err);
+      return err;
     });
   } else {
     throw 'Deliverable Valdiation failed.';
