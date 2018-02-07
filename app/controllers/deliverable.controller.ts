@@ -101,16 +101,6 @@ function updateDeliverable(payload: any): Promise<IDeliverableDocument> {
     });
 }
 
-// Method only adds Deliverable to course if it is not already added.
-function addDeliverablesToCourse(course: any, deliverable: IDeliverableDocument) {
-  logger.info('DeliverablesController::addDeliverablesToCourse(..)');
-  let isntAssigned = (course.deliverables.indexOf(deliverable._id) === -1);
-  if (isntAssigned) {
-    course.deliverables.push(deliverable._id);
-  }
-  return course.save();
-}
-
 /**
  * Gets the default deliverable that is being marked by AutoTest at the time.
  * 
@@ -210,46 +200,39 @@ function getTestDelay(payload: any): Promise<number> {
     });
 }
 
-// Adds a deliverable. Rejects if Deliverable exists with same Course Name and Course._id
-// Adds Deliverable reference to Course object
+/**
+ * Creates a new Deliverable if it passes validation.
+ * 
+ * @param payload.deliverable IDeliverableDocument
+ * @return IDeliverableDocument returned on successful creation
+ */
 function addDeliverable(payload: any): Promise<IDeliverableDocument> {
   logger.info('DeliverableController::addDeliverable(..)');
-  console.log(payload.params);
-  let newDeliverable = payload.params.deliverable;
-  let courseQuery = {courseId: newDeliverable.courseId};
-  let queriedCourse: ICourseDocument;
-  return Course.findOne(courseQuery)
-    .then((course: ICourseDocument) => {
-      // replace "310" courseId with a refernece to _id object
-      newDeliverable.courseId = course._id;
-      queriedCourse = course;
-      return findDelivWithCourse(newDeliverable.name, course._id);
-    })
-    .then(() => {
-      return Deliverable.findOrCreate(newDeliverable)
-        .then((newDeliv: IDeliverableDocument) => {
-          return newDeliv;
-        })
-        .then((createdDeliv: IDeliverableDocument) => {
-          return null;
-        });
+  console.log(payload);
+  let courseQuery = {courseId: payload.courseId};
+  let newDeliverable: IDeliverableDocument = payload.deliverable as IDeliverableDocument;
+  // Delete these properties as a HACK due to a front-end model issue.
+  delete newDeliverable._id;
+  delete newDeliverable.courseId;
+  let isValid: boolean = isDeliverableValid(newDeliverable);
+  let createdDeliv: IDeliverableDocument;
+  if (isValid) {
+    return Course.findOne(courseQuery)
+      .then((course: ICourseDocument) => {
+        // replace "310" courseId with a refernece to _id object
+        newDeliverable.courseId = course._id;
+        return Deliverable.findOrCreate(newDeliverable)
+          .then((deliv: IDeliverableDocument) => {
+            if (deliv) {
+              return deliv;
+            }
+            throw 'Could not create Deliverable';
+          });
     });
-
-  function findDelivWithCourse(name: string, course_id: string) {
-    let delivQuery = {name: newDeliverable.name, courseId: course_id};
-    return Deliverable.findOne(delivQuery)
-      .then((deliv: IDeliverableDocument) => {
-        if (deliv) {
-          throw new Error(`Deliverable with same Name and CourseId already exist.`);
-        }
-        return deliv;
-      })
-      .catch(err => {
-        logger.error(`DeliverableController::findDelivWithCourse() ERROR ${err}`);
-      });
+  } else {
+    throw 'Deliverable Valdiation failed.';
   }
 }
-
 /**
  * Gets a list of Deliverables based on a Course Id.
  * @param courseId course number, ie. 310

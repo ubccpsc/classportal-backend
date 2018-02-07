@@ -170,22 +170,31 @@ DeliverableSchema.static({
    * @param {object} search parameters
    * @returns {Promise<IDeliverableDocument>} Returns a Promise of the user.
    */
+  /**
+   * Find a user by Github username. If does not exist, then user created in DB.
+   * @param {string} github username
+   * @returns {Promise<IUserDocument>} Returns a Promise of the user.
+   */
   findOrCreate: (query: Object): Promise<IDeliverableDocument> => {
     return Deliverable
       .findOne(query)
       .exec()
-      .then((deliverable) => {
-        if (deliverable) {
-          return deliverable;
+      .then((deliv) => {
+        if (deliv) {
+          return deliv;
         } else {
           return Deliverable.create(query)
-            .then((d) => {
-              return d.save();
+            .then((deliv) => {
+              return deliv.save();
             })
             .catch((err) => {
               logger.info(err);
             });
         }
+      })
+      .catch((err) => {
+        logger.error('DeliverableModel::findOrCreate() ERROR' + err);
+        return err;
       });
   },
 });

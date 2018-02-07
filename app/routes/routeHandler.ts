@@ -99,13 +99,13 @@ const oauthCallback = (req: restify.Request, res: restify.Response, next: restif
 
 const updateDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return delivCtrl.updateDeliverable(req.params)
-    .then((d: IDeliverableDocument) => res.json(200, {response: 'Successfully updated Deliverable.'}))
+    .then((updatedDeliv: IDeliverableDocument) => res.json(200, {response: updatedDeliv}))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
 const addDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return delivCtrl.addDeliverable(req)
-    .then((d: IDeliverableDocument) => res.json(200, {response: 'Successfully added Deliverable.'}))
+  return delivCtrl.addDeliverable(req.params)
+    .then((newDeliv: IDeliverableDocument) => res.json(200, {response: newDeliv}))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 

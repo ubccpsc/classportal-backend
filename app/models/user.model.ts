@@ -150,6 +150,7 @@ UserSchema.statics = {
       })
       .catch((err) => {
         logger.error('UserModel::findOrCreate() ERROR' + err);
+        return err;
       });
   },
 };
