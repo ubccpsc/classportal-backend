@@ -9,7 +9,7 @@ interface ICourseDocument extends mongoose.Document {
   solutionsKey: string;
   classList: Object[];
   grades: [Object];
-  labSections: [LabSection];
+  labSections: LabSection[];
   admins: IUserDocument[];
   staffList: IUserDocument[];
   urlWebhook: string;

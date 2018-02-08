@@ -54,16 +54,16 @@ const getCourseLabSectionList = (req: restify.Request, res: restify.Response) =>
     .catch((err: Error) => res.json(500, {'err': err.message}));
 };
 
-const addLabList = (req: restify.Request, res: restify.Response) => {
-  return courseCtrl.addLabList(req.files, req.params.courseId)
-    .then((course: ICourseDocument) => res.json(200, {response: course.labSections}))
-    .catch((err: Error) => res.json(500, {'err': err.message}));
-};
-
-const addStudentList = (req: restify.Request, res: restify.Response) => {
+const updateClassList = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.updateClassList(req.files, req.params.courseId)
-    .then(() => res.json(200, {response: 'Successfully updated Class List on course #' + req.params.courseId}))
-    .catch((err: any) => res.json(500, {'err': err.message}));
+    .then((c: ICourseDocument) => res.json(200, {response: 
+      {
+        classList: c.classList,
+        labSections: c.labSections
+      }
+    }
+    ))
+    .catch((err: Error) => res.json(500, {'err': err.message}));
 };
 
 const getClassList = (req: restify.Request, res: restify.Response) => {
@@ -378,13 +378,13 @@ const getDefaultDeliv = (req: restify.Request, res: restify.Response, next: rest
 };
 
 export {
-  pong, createCourse, getAllCourses, logout, addStudentList, getClassList,
+  pong, createCourse, getAllCourses, logout, updateClassList, getClassList,
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaffOrAdmin,
   getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
   addAdminList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
   deleteRepos, getCurrentUser, isAuthenticated, getMyCourses,
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
-  addLabList, addDeliverable, randomlyGenerateTeamsPerCourse, getTestDelay,
+  addDeliverable, randomlyGenerateTeamsPerCourse, getTestDelay,
   getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamInfo, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,

@@ -42,6 +42,7 @@
     "restify": "^4.1.1",
     "restify-cookies": "^0.2.2",
     "restify-errors": "^4.3.0",
+    "socket.io": "^2.0.4",
     "tmp-promise": "^1.0.3",
     "ts-node": "^3.3.0"
   },

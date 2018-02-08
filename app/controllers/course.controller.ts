@@ -6,6 +6,7 @@ import {IUserDocument, User, CourseData} from '../models/user.model';
 import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
 import * as request from '../helpers/request';
+import {log} from 'util';
 
 let updateUserrole = function (u: IUserDocument, c: ICourseDocument, userrole: string) {
   for (let i = 0; i < u.courses.length; i++) {
@@ -230,126 +231,180 @@ function addStaffList(reqFiles: any, courseId: string) {
 }
 
 /**
- * Upload a labList
- * Pre-req #1 is that ClassList for specific courseId is uploaded
- * Pre-req #2 is that HEADERS in CSV are labelled with headers below:
- *                    HEADERS: CSID / SNUM / LAST / FIRST / USERNAME / LAB
+ * Upload a classList
+ * Students will be created in Users database as 'student'.
  * 
- * ** WARNING ** Uploading a labList will overwrite the previous labList 
- * in the Course object.
+ * Pre-req #1 is that HEADERS in CSV are labelled with headers below:
+ *                    HEADERS: CSID	/ SNUM / LAST	/ FIRST /	CWL / LAB
  * 
- * @param req.files as reqFiles with functional reqFiles['labList'].path
- * @param courseId string ie. '310' of the course we are adding labList too
- * @return labList object
+ * ** WARNING ** Uploading a classList will overwrite the previous classList 
+ * in the Course object. Users fields are overwritten, but original Mongo User Id
+ * property always stays the same to ensure references to are kept in ongoing course
+ * or other courses.
+ * 
+ * @param req.files as reqFiles with FS readable reqFiles['classList'].path
+ * @param courseId string ie. '310' of the course we are adding classList too
+ * @return classList object
  */
-function addLabList(reqFiles: any, courseId: string) {
-  let newlyCompiledLabSections: any = [];
-  let labSectionsSet = new Set();
-
+function updateClassList(reqFiles: any, courseId: string): Promise<ICourseDocument> {
+  const GITHUB_ENTERPRISE_URL = config.github_enterprise_url;
+  let shouldAddLabList: boolean = false;
   const options = {
     columns:          true,
     skip_empty_lines: true,
     trim:             true,
   };
-
-  let rs = fs.createReadStream(reqFiles['labList'].path);
+  let rs = fs.createReadStream(reqFiles['classList'].path);
   let courseQuery = Course.findOne({'courseId': courseId}).exec();
 
-  let parser = parse(options, (err, data) => {
+  return new Promise((fulfill, reject) => {
+    let parser = parse(options, (err, data) => {
 
-    let usersRepo = User;
-    let userQueries: any = [];
-
-    Object.keys(data).forEach((key: string) => {
-      let student = data[key];
-      let course: ICourseDocument;
-      logger.info('Parsing student into user model: ' + JSON.stringify(student));
-      userQueries.push(usersRepo.findOne({
-        csid: student.CSID,
-        snum: student.SNUM,
-      }).then((u: IUserDocument) => {
-        return u;
-      }));
-    });
-
-    courseQuery.then((course: ICourseDocument) => {
-
-      return Promise.all(userQueries)
-        .then((results: any) => {
-          console.log('THE RESULTS', results);
-          try {
-            // FIRST: Create lab sections that need to exist
-            Object.keys(data).forEach(function (key) {
-              let student: any = data[key];
-              let tentativeNewLab = String(student.LAB);
-              let labSectionExists = false;
-              for (let i = 0; i < newlyCompiledLabSections.length; i++) {
-                let compiledLabId = String(newlyCompiledLabSections[i].labId);
-                if (compiledLabId === tentativeNewLab) {
-                  labSectionExists = true;
-                }
-              }
-              if (!labSectionExists) {
-                newlyCompiledLabSections.push({'labId': student.LAB, 'users': new Array()});
-              }
+      let userQueries: any = [];
+  
+      Object.keys(data).forEach((key: string) => {
+        let student = data[key];
+        let course: ICourseDocument;
+        console.log('HEREHERE', data[key]);
+        if (typeof student.LAB !== 'undefined') {
+          shouldAddLabList = true;
+        }
+  
+        logger.info('Parsing student into user model: ' + JSON.stringify(student));
+        userQueries.push(User.findOne({
+          csid: student.CSID,
+          snum: student.SNUM,
+        }).then((u: IUserDocument) => {
+          // If User already exists, return the user, or create the user and then return it
+          // NOTE: We DO NOT want to overwrite already created user._id properties that are referenced
+          // in other classes.
+          if (u) {
+            return u;
+          } else {
+            return User.create({
+              csid:     student.CSID,
+              snum:     student.SNUM,
+              lname:    student.LAST,
+              fname:    student.FIRST,
+              username: student.CWL,
+              profileUrl: GITHUB_ENTERPRISE_URL + '/' + student.CWL,
+            }).then((u: IUserDocument) => {
+              return u;
             });
           }
-          catch (err) {
-            logger.error(`CourseController:: Create lab sections ERROR ${err}`);
-          }
-
-          try {
-            // SECOND: Add student to correct lab section
-            Object.keys(data).forEach(function (key) {
-              console.log('data', data[key]);
-              let parsedSNUM: string = String(data[key].SNUM);
-              let parsedLAB: string = String(data[key].LAB);
-
-              Object.keys(results).forEach(function (resultKey) {
-                console.log('results', results[resultKey]);
-                let dbStudent: IUserDocument = results[resultKey];
-                let dbStudentSNUM: string = results[resultKey].snum;
-
-                // IF student matches CSID and SNUM, add to section of parsed LabId
-
-                if (dbStudentSNUM === parsedSNUM) {
-
-                  for (let i = 0; i < newlyCompiledLabSections.length; i++) {
-                    let labIdSection: string = String(newlyCompiledLabSections[i].labId);
-
-                    if (labIdSection === parsedLAB) {
-                      newlyCompiledLabSections[i].users.push(dbStudent._id);
-                    }
-                  }
-                }
-
+        }));
+      });
+  
+      courseQuery.then((course: ICourseDocument) => {
+  
+        return Promise.all(userQueries)
+          .then((results: any) => {
+            console.log('CourseController::created/found User results based on classList upload =>', results);
+  
+            try {
+              // FIRST: ADD USERS to Course.classList property
+              let classList: string[] = [];
+              Object.keys(results).forEach(function(key) {
+                classList.push(results[key]._id);
               });
-            });
-          } catch (err) {
-            logger.error(`CourseController:: Add student to correct lab section ERROR ${err}`);
-          }
-
-          course.labSections = newlyCompiledLabSections;
-          course.save();
-        });
+              course.classList = classList;
+            } catch (err) {
+              logger.error(`CourseController:: updateClassList() Create classList ERROR ${err}`);
+            }
+  
+            // SECOND: CREATE labSections array for Course.labSections property 
+            if (shouldAddLabList) {
+              course.labSections = createLabList(data, results);
+            } else {
+              // clear any previous list
+              course.labSections = new Array();
+              console.log(course.labSections);
+            }
+            course.save()
+              .then(() => {
+                return Course.findOne({courseId})
+                  .populate({path: 'labSections.users classList'})
+                  .then((updatedCourse: ICourseDocument) => {
+                    fulfill(updatedCourse);
+                  });
+              });
+          });
+      });
+  
+      if (err) {
+        reject(err);
+      }
     });
-
-    if (err) {
-      throw Error(err);
-    }
+  
+    rs.pipe(parser);
   });
+}
 
-  rs.pipe(parser);
+/**
+ * Creates a lab sections array that is returned and placed into the Course.labSections
+ * property in the updateClassList() method. 
+ * 
+ * @param parsedData Creates a Lab list based on a course and a classList Data block upload
+ * @return Course.labSections data item
+ */
+function createLabList(data: any, results: any) {
+  let newlyCompiledLabSections: any = [];
+  let labSectionsSet = new Set();
 
-  return Course.findOne({courseId})
-    .populate({path: 'labSections.courses'})
-    .exec()
-    .then((course: ICourseDocument) => {
-      return course;
-    })
-    .catch(err => {
-      logger.error(`CourseController::addLabList ERROR ${err}`);
+  try {            
+    // SECOND: ADD LAB LIST
+    Object.keys(data).forEach(function (key) {
+      let student: any = data[key];
+      let tentativeNewLab = String(student.LAB);
+      let labSectionExists = false;
+      for (let i = 0; i < newlyCompiledLabSections.length; i++) {
+        let compiledLabId = String(newlyCompiledLabSections[i].labId);
+        if (compiledLabId === tentativeNewLab) {
+          labSectionExists = true;
+        }
+      }
+      if (!labSectionExists) {
+        newlyCompiledLabSections.push({'labId': student.LAB, 'users': new Array()});
+      }
     });
+  }
+  catch (err) {
+    logger.error(`CourseController:: Create lab sections ERROR ${err}`);
+  }
+
+  try {
+    // THIRD: Add student to correct lab section
+    Object.keys(data).forEach(function (key) {
+      let parsedSNUM: string = String(data[key].SNUM);
+      let parsedLAB: string = String(data[key].LAB);
+
+      Object.keys(results).forEach(function (resultKey) {
+        let dbStudent: IUserDocument = results[resultKey];
+        let dbStudentSNUM: string = results[resultKey].snum;
+
+        // ONLY IF student matches CSID and SNUM, add to section of parsed LabId
+
+        if (dbStudentSNUM === parsedSNUM) {
+
+          for (let i = 0; i < newlyCompiledLabSections.length; i++) {
+            let labIdSection: string = String(newlyCompiledLabSections[i].labId);
+
+            if (labIdSection === parsedLAB) {
+              newlyCompiledLabSections[i].users.push(dbStudent._id);
+              console.log('CourseController:: updateClassList() Adding Student ' + dbStudent.snum + 
+                ', ' + dbStudent.csid + ', ' + dbStudent.fname + ', ' + dbStudent.lname + ' to Lab Section' 
+                + labIdSection);
+            }
+          }
+        }
+
+      });
+    });
+    return newlyCompiledLabSections;
+  } catch (err) {
+    logger.error(`CourseController:: Add student to correct lab section ERROR ${err}`);
+  }
+
 }
 
 
@@ -369,92 +424,6 @@ function getCourseLabSectionList(req: any): Promise<object> {
     .exec()
     .then((course: ICourseDocument) => {
       return course;
-    });
-}
-
-/**
- * Upload a classList
- * Students will be created in Users database as 'student'.
- * 
- * Pre-req #1 is that HEADERS in CSV are labelled with headers below:
- *                    HEADERS: CSID	/ SNUM / LAST	/ FIRST /	CWL / LAB
- * 
- * ** WARNING ** Uploading a classList will overwrite the previous classList 
- * in the Course object. Users fields are overwritten, but original Mongo User Id
- * property always stays the same to ensure references to are kept in ongoing course
- * or other courses.
- * 
- * @param req.files as reqFiles with FS readable reqFiles['classList'].path
- * @param courseId string ie. '310' of the course we are adding classList too
- * @return classList object
- */
-function updateClassList(reqFiles: any, courseId: string) {
-  const GITHUB_ENTERPRISE_URL = config.github_enterprise_url;
-
-  console.log(reqFiles['classList']);
-  const options = {
-    columns:          true,
-    skip_empty_lines: true,
-    trim:             true,
-  };
-
-  let rs = fs.createReadStream(reqFiles['classList'].path);
-  let parser = parse(options, (err, data) => {
-
-    let courseQuery = Course.findOne({'courseId': courseId});
-    let lastCourseNum = null;
-    let course = null;
-    let newClassList = new Array<object>();
-    let usersRepo = User;
-
-    for (let key in data) {
-      let student = data[key];
-      logger.info('CourseController:: updateClassList() INFO Parsing student into user model: ' + JSON.stringify(student));
-      usersRepo.findOrCreate({
-        csid:     student.CSID,
-        snum:     student.SNUM,
-        lname:    student.LAST,
-        fname:    student.FIRST,
-        username: student.CWL,
-        profileUrl: GITHUB_ENTERPRISE_URL + '/' + student.CWL,
-      })
-        .then(user => {
-          newClassList.push(user._id);
-          courseQuery
-            .then(c => {
-              // add new Course information to User object
-              return addCourseDataToUser(user, c);
-            })
-            .then(() => {
-              courseQuery
-                .exec()
-                .then(c => {
-                  c.classList = newClassList;
-                  c.save();
-                  return c;
-                });
-            });
-        })
-        .catch((err) => {
-          logger.error(`CourseController::updateClassList ERROR ${err}`);
-        });
-    }
-
-    if (err) {
-      throw Error(err);
-    }
-  });
-
-  rs.pipe(parser);
-
-  return Course.findOne({'courseId': courseId})
-  .populate('classList')
-    .then(c => {
-      if (c) {
-        return Promise.resolve(c.classList);
-      }
-      return Promise.reject(Error('Course #' + courseId + ' does not exist. ' +
-        'Cannot add class list to course that does not exist.'));
     });
 }
 
@@ -624,7 +593,7 @@ function remove(req: restify.Request, res: restify.Response, next: restify.Next)
 }
 
 export {
-  getAllCourses, create, update, updateClassList, remove, addLabList, getClassList, getStudentNamesFromCourse,
+  getAllCourses, create, update, remove, updateClassList, getClassList, getStudentNamesFromCourse,
   getAllAdmins, getMyCourses, getCourseSettings, getLabSectionsFromCourse,
   getCourseLabSectionList, getCourse, isStaffOrAdmin, addAdminList, addStaffList, getAllStaff
 };
