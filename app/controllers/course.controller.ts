@@ -344,8 +344,10 @@ function updateClassList(reqFiles: any, courseId: string): Promise<ICourseDocume
  * Creates a lab sections array that is returned and placed into the Course.labSections
  * property in the updateClassList() method. 
  * 
- * @param parsedData Creates a Lab list based on a course and a classList Data block upload
- * @return Course.labSections data item
+ * @param data raw parsed data object from the updateClassList() read stream;
+ * @param results IUserDocument list of student objects that have been queried or created on 
+ * the basis of the uploaded classList file in updateClassList()
+ * @return labSections LabSection[] Course.labSections property that contains labSections info
  */
 function createLabList(data: any, results: any) {
   let newlyCompiledLabSections: any = [];
