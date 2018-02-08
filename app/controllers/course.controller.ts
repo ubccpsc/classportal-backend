@@ -8,27 +8,6 @@ import {config} from '../../config/env';
 import * as request from '../helpers/request';
 import {log} from 'util';
 
-let updateUserrole = function (u: IUserDocument, c: ICourseDocument, userrole: string) {
-  for (let i = 0; i < u.courses.length; i++) {
-    if (u.courses[i].courseId == c._id) {
-      u.courses[i].role = userrole;
-    }
-  }
-  return u.save();
-};
-
-// checks to see if course already on user. If not, then adds Course reference under User object.
-let addCourseDataToUser = function (user: IUserDocument, course: ICourseDocument): Promise<ICourseDocument> {
-  let courseAlreadyInUser: boolean;
-  courseAlreadyInUser = user.courses.indexOf(course._id) >= 0 ? true : false;
-
-  if (!courseAlreadyInUser) {
-    user.courses.push(course._id);
-  }
-  return user.save().then(() => {
-    return course;
-  });
-};
 
 /**
  * Gets a list of users who are Admins underneath a particular course
@@ -585,17 +564,9 @@ function getCourseSettings(req: restify.Request): Promise<object> {
     });
 }
 
-/**
- * Create a team
- */
-function remove(req: restify.Request, res: restify.Response, next: restify.Next) {
-  logger.info('remove() in Courses Controller');
-  res.json(200, 'remove team');
-  return next();
-}
 
 export {
-  getAllCourses, create, update, remove, updateClassList, getClassList, getStudentNamesFromCourse,
+  getAllCourses, create, update, updateClassList, getClassList, getStudentNamesFromCourse,
   getAllAdmins, getMyCourses, getCourseSettings, getLabSectionsFromCourse,
   getCourseLabSectionList, getCourse, isStaffOrAdmin, addAdminList, addStaffList, getAllStaff
 };
