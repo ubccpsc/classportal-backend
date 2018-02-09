@@ -8,6 +8,7 @@ import {config} from '../../config/env';
 import * as request from '../helpers/request';
 import {log} from 'util';
 import {LabSection, StudentWithLab} from '../models/course.model';
+import {ENOLCK} from 'constants';
 
 
 /**
@@ -222,13 +223,23 @@ function addStaffList(reqFiles: any, courseId: string) {
  * property always stays the same to ensure references to are kept in ongoing course
  * or other courses.
  * 
+ * ** SUPER IMPORTANT ** Team creation requires that students are seen as in the same lab
+ * or not. Instead of writing two sets of code, we add students who are not in a lab as the "NOLAB" 
+ * section. To clarify, as "NOLAB" is a string like any other lab string, and "NOLAB" is added to users
+ * without a lab by default, "NOLAB" is considered as the same lab. Therefore, these students can enter
+ * a team from within the same lab.
+ * 
+ * If students are in different Class Sections and are not in a Lab, substitute the Lab Section with a 
+ * Section ID/Number when performing the classList update. They will then be able to join teams from 
+ * within their own Class Sections.
+ * 
  * @param req.files as reqFiles with FS readable reqFiles['classList'].path
  * @param courseId string ie. '310' of the course we are adding classList too
  * @return classList object
  */
 function updateClassList(reqFiles: any, courseId: string): Promise<StudentWithLab[]> {
+  const NO_LAB_SECTION = 'NOLAB';
   const GITHUB_ENTERPRISE_URL = config.github_enterprise_url;
-  let shouldAddLabList: boolean = false;
   const options = {
     columns:          true,
     skip_empty_lines: true,
@@ -245,9 +256,8 @@ function updateClassList(reqFiles: any, courseId: string): Promise<StudentWithLa
       Object.keys(data).forEach((key: string) => {
         let student = data[key];
         let course: ICourseDocument;
-        console.log('HEREHERE', data[key]);
-        if (typeof student.LAB !== 'undefined') {
-          shouldAddLabList = true;
+        if (typeof student.LAB === 'undefined' || student.LAB === '') {
+          student.LAB = NO_LAB_SECTION; // Added to users with no lab section for Team selection feature
         }
   
         logger.info('Parsing student into user model: ' + JSON.stringify(student));
@@ -293,13 +303,8 @@ function updateClassList(reqFiles: any, courseId: string): Promise<StudentWithLa
             }
   
             // SECOND: CREATE labSections array for Course.labSections property 
-            if (shouldAddLabList) {
-              course.labSections = createLabList(data, results);
-            } else {
-              // clear any previous list
-              course.labSections = new Array();
-              console.log(course.labSections);
-            }
+            course.labSections = createLabList(data, results);
+
             return course.save()
               .then(() => {
                 return Course.findOne({courseId})
@@ -375,7 +380,7 @@ function createLabList(data: any, results: any) {
             if (labIdSection === parsedLAB) {
               newlyCompiledLabSections[i].users.push(dbStudent._id);
               console.log('CourseController:: updateClassList() Adding Student ' + dbStudent.snum + 
-                ', ' + dbStudent.csid + ', ' + dbStudent.fname + ', ' + dbStudent.lname + ' to Lab Section' 
+                ', ' + dbStudent.csid + ', ' + dbStudent.fname + ', ' + dbStudent.lname + ' to Lab Section ' 
                 + labIdSection);
             }
           }
@@ -424,8 +429,6 @@ function getClassList(courseId: string): Promise<StudentWithLab[]> {
     })
     .exec()
     .then(course => {
-      console.log('classList', course.classList);
-      console.log('labSections', course.labSections[0].users);
       if (!course) {
         // if course does not exist, return null
         return null;
@@ -442,23 +445,38 @@ function addLabSectionToClassList(classList: IUserDocument[], labSections: LabSe
 
   // Map the lab section to the Student to create a ClassList object
   classList.map((clUser: IUserDocument) => {
+    
     let inLab: boolean = false;
     let labId: string;
 
-    labSections.map((labSection: LabSection) => {
-      labSection.users.map((user) => {
-        if (String(user._id).indexOf(clUser._id) > -1) {
-          inLab = true;
-          labId = labSection.labId;
-        }
+    // First create the studentWithLab type without Labs, as this is still returned for a class list even if
+    // the students in a course do not have labs.
+
+    if (labSections.length > 0) {
+      labSections.map((labSection: LabSection) => {
+        labSection.users.map((user) => {
+          if (String(user._id).indexOf(clUser._id) > -1) {
+            inLab = true;
+            labId = labSection.labId;
+          }
+        });
       });
-    });
+    }
 
     if (inLab) {
       let studentWithLab: StudentWithLab = {
         fname: clUser.fname,
         lname: clUser.lname,
         labSection: labId,
+        csid: clUser.csid,
+        snum: clUser.snum
+      };
+      studentsWithLab.push(studentWithLab);
+    } else {
+      let studentWithLab: StudentWithLab = {
+        fname: clUser.fname,
+        lname: clUser.lname,
+        labSection: undefined,
         csid: clUser.csid,
         snum: clUser.snum
       };
