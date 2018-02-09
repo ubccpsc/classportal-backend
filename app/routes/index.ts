@@ -26,7 +26,6 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/students/withoutTeam', isAuthenticated, routeHandler.getUsersNotOnTeam);
   server.put('/:courseId/team', routeHandler.createTeam);
   server.put('/:courseId/admin/customTeam', adminAuthenticated, routeHandler.createCustomTeam);
-  server.get('/:courseId/students', isAuthenticated, routeHandler.getStudentNamesFromCourse);
   server.put('/:courseId/students/customTeam', isAuthenticated, routeHandler.createCustomTeam);
   // OAuth routes by logged-in users only
   server.post('/logout', auth.loadUser, routeHandler.logout);

@@ -7,6 +7,7 @@ import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
 import * as request from '../helpers/request';
 import {log} from 'util';
+import {LabSection, StudentWithLab} from '../models/course.model';
 
 
 /**
@@ -225,7 +226,7 @@ function addStaffList(reqFiles: any, courseId: string) {
  * @param courseId string ie. '310' of the course we are adding classList too
  * @return classList object
  */
-function updateClassList(reqFiles: any, courseId: string): Promise<ICourseDocument> {
+function updateClassList(reqFiles: any, courseId: string): Promise<StudentWithLab[]> {
   const GITHUB_ENTERPRISE_URL = config.github_enterprise_url;
   let shouldAddLabList: boolean = false;
   const options = {
@@ -299,12 +300,13 @@ function updateClassList(reqFiles: any, courseId: string): Promise<ICourseDocume
               course.labSections = new Array();
               console.log(course.labSections);
             }
-            course.save()
+            return course.save()
               .then(() => {
                 return Course.findOne({courseId})
                   .populate({path: 'labSections.users classList'})
                   .then((updatedCourse: ICourseDocument) => {
-                    fulfill(updatedCourse);
+                    let studentsWithLab: StudentWithLab[] = addLabSectionToClassList(updatedCourse.classList as IUserDocument[], updatedCourse.labSections);
+                    fulfill(studentsWithLab);
                   });
               });
           });
@@ -409,24 +411,61 @@ function getCourseLabSectionList(req: any): Promise<object> {
 }
 
 /**
+ * Retrieves a StudentWithLab[] list for the front-end
+ * 
  * @param courseId string ie. '310'
- * @return object[] class list of users in course
+ * @return StudentWithLab[] class list of users in course
  */
-function getClassList(courseId: string) {
+function getClassList(courseId: string): Promise<StudentWithLab[]> {
+  let that = this;
   return Course.findOne({'courseId': courseId})
     .populate({
-      path:   'classList',
-      select: 'snum csid fname lname username userrole id courses'
+      path: 'classList labSections.users',
     })
     .exec()
     .then(course => {
+      console.log('classList', course.classList);
+      console.log('labSections', course.labSections[0].users);
       if (!course) {
-        console.log(course);
-        return Promise.reject(Error('Course #' + courseId + ' does not exist.'));
+        // if course does not exist, return null
+        return null;
       } else {
-        return Promise.resolve(course.classList);
+        let classListWithLabSections = addLabSectionToClassList(course.classList as IUserDocument[], course.labSections);
+        return classListWithLabSections;
       }
     });
+}
+
+function addLabSectionToClassList(classList: IUserDocument[], labSections: LabSection[]): StudentWithLab[] {
+
+  let studentsWithLab: StudentWithLab[] = [];
+
+  // Map the lab section to the Student to create a ClassList object
+  classList.map((clUser: IUserDocument) => {
+    let inLab: boolean = false;
+    let labId: string;
+
+    labSections.map((labSection: LabSection) => {
+      labSection.users.map((user) => {
+        if (String(user._id).indexOf(clUser._id) > -1) {
+          inLab = true;
+          labId = labSection.labId;
+        }
+      });
+    });
+
+    if (inLab) {
+      let studentWithLab: StudentWithLab = {
+        fname: clUser.fname,
+        lname: clUser.lname,
+        labSection: labId,
+        csid: clUser.csid,
+        snum: clUser.snum
+      };
+      studentsWithLab.push(studentWithLab);
+    }
+  });
+  return studentsWithLab;
 }
 
 function getStudentNamesFromCourse(courseId: string) {

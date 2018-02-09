@@ -11,7 +11,7 @@ import * as projectCtrl from '../controllers/project.controller';
 import * as githubCtrl from '../controllers/github.controller';
 import {TeamPayloadContainer, TeamPayload, TeamRow, Student} from '../interfaces/ui/team.interface';
 import {logger} from '../../utils/logger';
-import {Course, ICourseDocument} from '../models/course.model';
+import {Course, ICourseDocument, StudentWithLab} from '../models/course.model';
 import {Grade, IGradeDocument} from '../models/grade.model';
 import {User, IUserDocument} from '../models/user.model';
 import {Project, IProjectDocument} from '../models/project.model';
@@ -56,19 +56,13 @@ const getCourseLabSectionList = (req: restify.Request, res: restify.Response) =>
 
 const updateClassList = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.updateClassList(req.files, req.params.courseId)
-    .then((c: ICourseDocument) => res.json(200, {response: 
-      {
-        classList: c.classList,
-        labSections: c.labSections
-      }
-    }
-    ))
+    .then((c: StudentWithLab[]) => res.json(200, {response: c}))
     .catch((err: Error) => res.json(500, {'err': err.message}));
 };
 
 const getClassList = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.getClassList(req.params.courseId)
-    .then((classList) => res.json(200, {response: classList}))
+    .then((classListWithLab) => res.json(200, {response: classListWithLab}))
     .catch((err: Error) => res.json(500, {err: err.message}));
 };
 

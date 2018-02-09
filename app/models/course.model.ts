@@ -17,10 +17,25 @@ interface ICourseDocument extends mongoose.Document {
   settings: CourseSettings;
 }
 
+// Interface helps with the front-end Class List View
+export interface StudentWithLab {
+  fname: string;
+  lname: string;
+  snum: string;
+  csid: string;
+  labSection: string;
+}
+
+export interface ClassListAndLab {
+  labSections: LabSection[];
+  classList: IUserDocument[];
+}
+
 export interface LabSection {
   labId: string;
-  users: [IUserDocument];
+  users: IUserDocument[];
 }
+
 
 export interface CourseSettings {
   bootstrapImage: string;
