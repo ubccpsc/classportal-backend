@@ -83,9 +83,7 @@ $ yarn run cover
 ```
 
 ### Run
-
-Development build; this will start the app server on `localhost:5000`.
-
+Development build; this will start the app server on `localhost:5000`:
 ```sh
 yarn run dev
 ```
@@ -95,6 +93,10 @@ Production build:
 yarn run start:prod
 ```
 
+You will need to open an SSH tunnel to the hosted server if you want to connect to the database (only do this if you are not working on dataloss operations!):
+```sh
+ssh USERNAME@portal.cs.ubc.ca -L 27017:127.0.0.1:27017
+```
 
 ## Contribute
 
