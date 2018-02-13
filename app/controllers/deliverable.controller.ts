@@ -113,7 +113,7 @@ function updateDeliverable(payload: any): Promise<IDeliverableDocument> {
  * course information.
  * 
  * The default deliverable is the open deliverable at the time. If more than 1
- * deliverable is open, then latest timestamp creation date is the default deliverable.
+ * deliverable is open, then the latest timestamp creation date is the default deliverable.
  * 
  * @param payload.courseId string ie. '310'
  * @return <string || null> ie. 'd1' or null
@@ -154,16 +154,11 @@ function getDefaultDeliv(payload: any): Promise<string> {
 
       let latestDatedDeliv: IDeliverableDocument;
 
-      openDelivs.map((deliv: IDeliverableDocument) => {
-        if (typeof latestDatedDeliv === 'undefined') {
-          latestDatedDeliv = deliv;
-        } else {
-          if (latestDatedDeliv._id > deliv._id) {
-            latestDatedDeliv = deliv;
-          }
-        }
+      let sortedOpenDelivs = openDelivs.sort((a: IDeliverableDocument, b: IDeliverableDocument) => {
+        return a._id - b._id;
       });
-      return latestDatedDeliv.name;
+
+      return sortedOpenDelivs[sortedOpenDelivs.length - 1].name;
     })
     .catch((err) => {
       logger.error('DeliverableController:: getDefaultDeliv() ERROR ' + err);
