@@ -13,6 +13,7 @@ export interface ContainerInfo {
   dockerImage: string;
   dockerBuild: string;
   testDelay: number;
+  regressionTest: boolean;
   regressionDelivNames: string[];
 }
 
@@ -79,6 +80,7 @@ function getContainerInfo(payload: any): Promise<ContainerInfo> {
               dockerImage: deliv.dockerImage,
               dockerBuild: deliv.dockerBuild,
               testDelay: Math.floor(deliv.rate / 1000),
+              regressionTest: deliv.regressionTest,
               regressionDelivNames: deliv.regressionTests.split(' ')
             };
             return containerInfo;
