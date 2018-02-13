@@ -11,6 +11,7 @@ import * as projectCtrl from '../controllers/project.controller';
 import * as githubCtrl from '../controllers/github.controller';
 import {TeamPayloadContainer, TeamPayload, TeamRow, Student} from '../interfaces/ui/team.interface';
 import {logger} from '../../utils/logger';
+import {ContainerInfo} from '../controllers/deliverable.controller';
 import {Course, ICourseDocument, StudentWithLab} from '../models/course.model';
 import {Grade, IGradeDocument} from '../models/grade.model';
 import {User, IUserDocument} from '../models/user.model';
@@ -94,6 +95,12 @@ const oauthCallback = (req: restify.Request, res: restify.Response, next: restif
 const updateDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return delivCtrl.updateDeliverable(req.params)
     .then((updatedDeliv: IDeliverableDocument) => res.json(200, {response: updatedDeliv}))
+    .catch((err: any) => res.json(500, {err: err}));
+};
+
+const getContainerInfo = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return delivCtrl.getContainerInfo(req.params)
+    .then((containerInfo: ContainerInfo) => res.json(200, {response: containerInfo}))
     .catch((err: any) => res.json(500, {err: err}));
 };
 
@@ -378,7 +385,7 @@ export {
   addAdminList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
   deleteRepos, getCurrentUser, isAuthenticated, getMyCourses,
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
-  addDeliverable, randomlyGenerateTeamsPerCourse, getTestDelay,
+  addDeliverable, randomlyGenerateTeamsPerCourse, getTestDelay, getContainerInfo,
   getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamInfo, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,

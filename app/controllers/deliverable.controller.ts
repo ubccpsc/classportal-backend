@@ -9,6 +9,13 @@ import {DeliverablePayload} from '../interfaces/ui/deliverable.interface';
 import {isAdmin} from '../middleware/auth.middleware';
 import {TEAM_ADMINS} from '../../test/assets/mockDataObjects';
 
+export interface ContainerInfo {
+  dockerImage: string;
+  dockerBuild: string;
+  testDelay: number;
+  regressionDelivNames: string[];
+}
+
 /**
  * Checks to see if the Deliverable being added or edited has valid fields
  * Validation should remain consistent with front-end checks.
@@ -47,6 +54,40 @@ function isDeliverableValid(deliv: IDeliverableDocument): boolean {
   }
 
   return true;
+}
+
+/**
+ * Gets the container info for a Deliverable. Includes regression tests, test delay, and 
+ * dockerImage tag names.
+ * 
+ * Retrieves container Deliverable tag name if Docker override is enabled. Otherwise 
+ * retrieves the Course tag name.
+ * @param payload.courseId string name of course ie. '310'
+ * @param payload.deliverableName string name ie. 'd1'
+ * @return ContainerInfo name on Deliv default Course tag name.
+ */
+function getContainerInfo(payload: any): Promise<ContainerInfo> {
+  logger.info('DeliverablesController::getContainerInfo() in Deliverable Controller');
+  console.log(payload);
+  return Course.findOne({courseId: payload.courseId})
+    .then((course: ICourseDocument) => {
+      if (course) {
+        return Deliverable.findOne({courseId: course._id, name: payload.deliverableName})
+        .then((deliv: IDeliverableDocument) => {
+          if (deliv) {
+            let containerInfo: ContainerInfo = {
+              dockerImage: deliv.dockerImage,
+              dockerBuild: deliv.dockerBuild,
+              testDelay: Math.floor(deliv.rate / 1000),
+              regressionDelivNames: deliv.regressionTests.split(' ')
+            };
+            return containerInfo;
+          }
+          throw `Cannot find Deliverable under ${payload.courseId} and ${payload.deliverableName}`;
+        });
+      }
+      throw `Cannot find Course under ${payload.courseId}`;
+    });
 }
 
 /**
@@ -312,4 +353,4 @@ function getDeliverablesByCourse(payload: any) {
 }
 
 export {getDeliverablesByCourse, addDeliverable, updateDeliverable, getTestDelay,
-        getDefaultDeliv};
+        getDefaultDeliv, getContainerInfo};
