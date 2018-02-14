@@ -1056,7 +1056,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
             for (let labSection of course.labSections) {
               let labSectionUsers: any = [];
               for (let user of filteredUsers) {
-                if (labSection.users.indexOf(user) > 0) {
+                if (labSection.users.indexOf(user) > -1) {
                   labSectionUsers.push(user);
                 }
               }
@@ -1175,11 +1175,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
     let sorted: any = {teams: new Array()};
 
     try {
-
-      // THIS IS WHERE I WANT TO ADD IN THE LAB SWITCH. 
-      // FIRST: FILTER STUDENTS INTO LAB SECTIONS
-      // SECOND: BASED ON THE NUMBER OF LABS, MATH.CEIL EACH LAB SECTION AND PERFORM LOGIC BELOW:
-
+      
       // divides number of teams needed and rounds up
       let teamSize = typeof payload.teamSize === 'undefined' ? deliverable.maxTeamSize : payload.teamSize;
       const numberOfTeams = Math.ceil(usersList.length / teamSize);
