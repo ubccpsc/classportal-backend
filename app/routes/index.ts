@@ -51,6 +51,7 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/admin/teams/:deliverable/overview', adminAuthenticated, routeHandler.getTeamProvisionOverview);  
   server.get('/admin/files/:deliverable/:username/:commit/:filename', adminAuthenticated,
     routeHandler.getFileFromResultRecord);
+  server.get('/:courseId/:deliverableName/container', routeHandler.getContainerInfo);
   server.get('/admin/files/:stdioRef/stdio.txt', adminAuthenticated, routeHandler.getStdioFile);
   server.get('/:courseId/admin/teams/info/:deliverableName', adminAuthenticated, routeHandler.getCourseTeamInfo);
   server.get('/:courseId/admin/courseSettings', adminAuthenticated, routeHandler.getCourseSettings);
@@ -73,7 +74,6 @@ const routes = (server: restify.Server) => {
   server.post('/:courseId/admin/grades/:delivId', adminAuthenticated, routeHandler.addGradesCSV);
   server.post('/:courseId/admin/deliverable', adminAuthenticated, routeHandler.updateDeliverable);
   server.put('/:courseId/admin/deliverable', adminAuthenticated, routeHandler.addDeliverable);
-  server.get('/:courseId/:deliverableName/container', adminAuthenticated, routeHandler.getContainerInfo);
   server.get('/settings', isAuthenticated, isAuthenticated, routeHandler.getCurrentUserInfo);
   server.get('/logout', isAuthenticated, routeHandler.logout);
 
