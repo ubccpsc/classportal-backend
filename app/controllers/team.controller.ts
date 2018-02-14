@@ -991,15 +991,17 @@ function createCustomTeam(req: any, payload: any) {
 }
 
 /**
- * Creates a random team compilations with the number of team members specified. The last team 
- * that is randomly generated may have a lesser number than specified based on the remainder of
- * the division of all team member numbers by the team size requested.
+ * Creates a random team compilations with the number of max team size specified. The last team 
+ * that is randomly generated may have a team size less than, if there is a remainder in the 
+ * division of the max team size by the number of students.
  * 
  * *** IMPORTANT *** This method is used to generate Teams of 1 for Github Repos that only have 
  * one team member. ie. Pcar's '210' class logic.
  * 
  * @param payload.teamSize: The max team size we will create
- * @param payload.inSameLab: boolean: Ensures that team members are in same lab. // UNIMPLEMENTED
+ * @param payload.inSameLab: boolean: Ensures that team members are in same lab. 
+ * // inSameLab unimplemented on front end and can be deprecated if wanted.
+ * 
  * @param payload.deliverableName: ie. "d1", etc.
  * @param payload.courseId - ie. 310
  */
@@ -1037,7 +1039,31 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       return Team.find({courseId: course.id, deliverableIds: deliverable._id})
         .then((teams: ITeamDocument[]) => {
           let filteredUsers: any = filterUsersAlreadyInTeam(teams);
-          return splitUsersIntoArrays(filteredUsers);
+
+          // ## IMPORTANT ##
+          // If the students need to be in the same lab, create a team list based on 
+          // their lab section, max team size, and if they exist in the filteredUsers list.
+          if (payload.inSameLab || deliverable.teamsInSameLab) {
+            // 1. Get team members that exist on filteredList and create a team based on 
+            // their lab section.
+            // 2. Merge lab section teams in an array and send them off to next function.
+
+            let compiledLabSectionTeams: Object[] = [];
+
+            for (let labSection of course.labSections) {
+              let labSectionUsers: any = [];
+              for (let user of filteredUsers) {
+                if (labSection.users.indexOf(user) > 0) {
+                  console.log('team controller > 0', labSection.users.indexOf(user) > 0);
+                  labSectionUsers.push(user);
+                }
+              }
+              compiledLabSectionTeams = compiledLabSectionTeams.concat(splitUsersIntoArrays(labSectionUsers));
+            }
+            return compiledLabSectionTeams;
+          } else { // ELSE Just split users into arrays of groups for all of the students regardless of lab sections
+            return splitUsersIntoArrays(filteredUsers);
+          }
         })
         .catch(err => {
           logger.error(`TeamController::getDeliverables() filterByTeams() singleDeliv ERROR ${err}`);
@@ -1050,12 +1076,12 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       logger.error(`TeamController::randomlyGenerateTeamsPerCourse ERROR ${err}`);
     });
 
-  function createTeamForEachTeamList(sortedTeamIdList: string[][]) {
-    let bulkInsertArray: any;
-      return createTeamObjects()
-        .then((_teams: any) => {
-          return insertTeamDocuments(_teams);
-        });
+    function createTeamForEachTeamList(sortedTeamIdList: string[][]) {
+      let bulkInsertArray: any;
+        return createTeamObjects()
+          .then((_teams: any) => {
+            return insertTeamDocuments(_teams);
+          });
 
     function createTeamObjects() {
       let teams: ITeamDocument[];
@@ -1144,7 +1170,12 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
 
   function splitUsersIntoArrays(usersList: any): Object[] {
     let sorted: any = {teams: new Array()};
+
     try {
+
+      // THIS IS WHERE I WANT TO ADD IN THE LAB SWITCH. 
+      // FIRST: FILTER STUDENTS INTO LAB SECTIONS
+      // SECOND: BASED ON THE NUMBER OF LABS, MATH.CEIL EACH LAB SECTION AND PERFORM LOGIC BELOW:
 
       // divides number of teams needed and rounds up
       let teamSize = typeof payload.teamSize === 'undefined' ? deliverable.maxTeamSize : payload.teamSize;
