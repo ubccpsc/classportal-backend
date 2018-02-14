@@ -995,6 +995,9 @@ function createCustomTeam(req: any, payload: any) {
  * that is randomly generated may have a team size less than, if there is a remainder in the 
  * division of the max team size by the number of students.
  * 
+ * Also can group Teams together based on their Lab Section. Lots of remainder little groups are
+ * possible.
+ * 
  * *** IMPORTANT *** This method is used to generate Teams of 1 for Github Repos that only have 
  * one team member. ie. Pcar's '210' class logic.
  * 
@@ -1054,14 +1057,14 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
               let labSectionUsers: any = [];
               for (let user of filteredUsers) {
                 if (labSection.users.indexOf(user) > 0) {
-                  console.log('team controller > 0', labSection.users.indexOf(user) > 0);
                   labSectionUsers.push(user);
                 }
               }
               compiledLabSectionTeams = compiledLabSectionTeams.concat(splitUsersIntoArrays(labSectionUsers));
             }
             return compiledLabSectionTeams;
-          } else { // ELSE Just split users into arrays of groups for all of the students regardless of lab sections
+          } else { 
+            // OR ELSE Just split users into arrays of groups for all of the students regardless of lab sections
             return splitUsersIntoArrays(filteredUsers);
           }
         })
