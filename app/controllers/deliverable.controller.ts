@@ -81,7 +81,7 @@ function getContainerInfo(payload: any): Promise<ContainerInfo> {
               dockerBuild: deliv.dockerBuild,
               testDelay: Math.floor(deliv.rate / 1000),
               regressionTest: deliv.regressionTest,
-              regressionDelivNames: deliv.regressionTests.split(' ')
+              regressionDelivNames: deliv.regressionTests.match(/[^ ]+/g) || []
             };
             return containerInfo;
           }
