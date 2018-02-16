@@ -378,12 +378,15 @@ const getDefaultDeliv = (req: restify.Request, res: restify.Response, next: rest
     .catch((err: any) => res.json(500, {err: err}));
 };
 
+const removeRepoFromTeams = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return githubCtrl.removeReposFromTeams(req.params)
+    .then((defaultDeliv: any) => res.json(200, {response: defaultDeliv}))
+    .catch((err: any) => res.json(500, {err: err}));
+};
+
 const testJwt = (req: restify.Request, res: any, next: restify.Next) => {
-  return new Promise((fulfill, reject) => {
-    res.setCookie('jsonWebToken1', 'WHAT');
-    res.setHeader('jsonwebtoken2', 'what2');
-    return res.json(200, {response: 'success'});
-  });
+  res.setCookie('thiscookie', 'testS', {path: '/', maxAge: 60, secure: true});
+  return res.json(200, {response: 'response'});
 };
 
 export {
@@ -397,5 +400,5 @@ export {
   getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamInfo, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
-  getStdioFile, addStaffList, getAllStaff, getDefaultDeliv, testJwt
+  getStdioFile, addStaffList, getAllStaff, getDefaultDeliv, removeRepoFromTeams, testJwt
 };

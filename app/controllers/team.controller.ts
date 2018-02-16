@@ -1204,10 +1204,6 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
   }
 }
 
-function randomlyGenerateTeamsPerLab() {
-
-}
-
 function checkForDuplicateTeamMembers(existingTeams: ITeamDocument[], newTeamMembers: [Object]) {
   let duplicateEntry: boolean;
   let duplicatedMember: boolean;

@@ -60,7 +60,7 @@ app.use(CookieParser.parse);
 app.use(session({
   keys:   ['key1', 'key2'],
   maxAge: 48 * 3600 /*hours*/ * 1000, /*in milliseconds*/
-  secure: false, // if you do SSL outside of node
+  secure: true, // if you do SSL outside of node
 }));
 app.use(passport.initialize());
 app.use(passport.session());

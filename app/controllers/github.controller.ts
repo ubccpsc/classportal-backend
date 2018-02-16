@@ -5,6 +5,7 @@ import {ICourseDocument, Course} from '../models/course.model';
 import {IProjectDocument, Project} from '../models/project.model';
 import {IUserDocument, User} from '../models/user.model';
 import {IDeliverableDocument, Deliverable} from '../models/deliverable.model';
+import db from '../db/MongoDBClient';
 import GitHubManager, {GroupRepoDescription} from '../github/githubManager';
 import * as auth from '../middleware/auth.middleware';
 // const ORG_NAME = 'CS310-2016Fall';
@@ -38,7 +39,6 @@ function getProjectHealthReport(payload: any) {
   let reposUnderDeliv: any = [];
 
   const DELIVERABLE_NAME = payload.deliverableName.toString();
-
 
     return Course.findOne({courseId: payload.courseId})
       .then((_course: ICourseDocument) => {
@@ -340,6 +340,45 @@ function createGithubReposForTeams(payload: any): Promise<any> {
   }
 }
 
+/**
+ * Removes the Github Repo information that is placed in a Team object on the basis of a Deliverable.
+ * This allows one to delete repos manually in Github and then re-provision the Repos without needing 
+ * to re-create the Teams.
+ * 
+ * @param payload.courseId string course id ie. '310'
+ * @param deliverableName string ie. 'd1', 'project6'
+ */
+function removeReposFromTeams(payload: any): Promise<object> {
+  let course: ICourseDocument;
+  let deliv: IDeliverableDocument;
+  const TEAMS_COLLECTION = 'teams';
+
+  return Course.findOne({courseId: payload.courseId})
+    .then((_course: ICourseDocument) => {
+      if (_course) {
+        course = _course;
+        return course;
+      }
+      throw `Cannot find Course under ${payload.courseId}`;
+    })
+    .then((course: ICourseDocument) => {
+      return Deliverable.findOne({courseId: course._id, name: payload.deliverableName})
+        .then((_deliv: IDeliverableDocument) => {
+          if (_deliv) {
+            deliv = _deliv;
+            return deliv;
+          }
+          throw `Cannot find Deliverable under ${payload.courseId} and ${payload.deliverableName}`;
+        });
+    })
+    .then((deliv: IDeliverableDocument) => {
+      return db.updateMany(TEAMS_COLLECTION, {deliverableIds: deliv._id}, {$set: {'githubState.repo.url': ''}})
+        .then((result: object) => {
+          return result;
+        });
+    });
+}
+
 function getTeams(payload: any) {
   return Course.findOne({courseId: payload.courseId})
     .exec()
@@ -363,6 +402,6 @@ function getTeams(payload: any) {
 }
 
 export {
-  getTeams, createGithubTeam, createGithubReposForTeams,
+  getTeams, createGithubTeam, createGithubReposForTeams, removeReposFromTeams,
   getRepos, deleteRepos, getProjectHealthReport, repairGithubReposForTeams
 };
