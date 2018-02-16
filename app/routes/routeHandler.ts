@@ -378,6 +378,14 @@ const getDefaultDeliv = (req: restify.Request, res: restify.Response, next: rest
     .catch((err: any) => res.json(500, {err: err}));
 };
 
+const testJwt = (req: restify.Request, res: any, next: restify.Next) => {
+  return new Promise((fulfill, reject) => {
+    res.setCookie('jsonWebToken1', 'WHAT');
+    res.setHeader('jsonwebtoken2', 'what2');
+    return res.json(200, {response: 'success'});
+  });
+};
+
 export {
   pong, createCourse, getAllCourses, logout, updateClassList, getClassList,
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaffOrAdmin,
@@ -389,5 +397,5 @@ export {
   getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamInfo, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
-  getStdioFile, addStaffList, getAllStaff, getDefaultDeliv
+  getStdioFile, addStaffList, getAllStaff, getDefaultDeliv, testJwt
 };

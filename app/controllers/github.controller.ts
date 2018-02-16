@@ -184,11 +184,12 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
   let course: ICourseDocument;
   let teams: ITeamDocument[];
   let deliverable: IDeliverableDocument;
-  let githubManager = new GitHubManager(payload.githubOrg);
+  let githubManager: GitHubManager;
   return Course.findOne({courseId: payload.courseId})
     .then((_course: ICourseDocument) => {
       course = _course;
       if (course) {
+        githubManager = new GitHubManager(course.githubOrg);
         return _course;
       } else {
         throw `Could not find course ${payload.courseId}`;
@@ -235,7 +236,7 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
  */
 function createGithubReposForTeams(payload: any): Promise<any> {
 
-  let githubManager = new GitHubManager(payload.githubOrg);
+  let githubManager: GitHubManager;
   let course: ICourseDocument;
   let courseSettings: any;
   let teams: ITeamDocument[];
@@ -251,6 +252,7 @@ function createGithubReposForTeams(payload: any): Promise<any> {
   return Course.findOne({courseId: payload.courseId}).exec()
     .then((_course: ICourseDocument) => {
       if (_course) {
+        githubManager = new GitHubManager(course.githubOrg);
         course = _course;
         courseSettings = _course.settings;
       } else {
