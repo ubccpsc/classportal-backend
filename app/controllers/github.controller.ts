@@ -39,23 +39,21 @@ function getProjectHealthReport(payload: any) {
 
   const DELIVERABLE_NAME = payload.deliverableName.toString();
 
-  return getRepos(payload.githubOrg)
-    .then((_reposInOrg: [Object]) => {
-      reposInOrg = _reposInOrg;
-      return _reposInOrg;
+
+    return Course.findOne({courseId: payload.courseId})
+      .then((_course: ICourseDocument) => {
+        if (_course) {
+          course = _course;
+          return _course;
+        }
+        throw `Course not found`;
     })
-    .then(() => {
-      return Course.findOne({courseId: payload.courseId})
-        .then((_course: ICourseDocument) => {
-          if (_course) {
-            course = _course;
-            return _course;
-          }
-          throw `Course not found`;
-        })
-        .catch(err => {
-          logger.error(`GithubController:fixGithubReposForProjects ERROR ${err}`);
-        });
+    .then((course: ICourseDocument) => {
+      return getRepos(course.githubOrg)
+      .then((_reposInOrg: [Object]) => {
+        reposInOrg = _reposInOrg;
+        return _reposInOrg;
+      });
     })
     .then(() => {
       return Deliverable.findOne({courseId: course._id, name: payload.deliverableName})
@@ -252,7 +250,7 @@ function createGithubReposForTeams(payload: any): Promise<any> {
   return Course.findOne({courseId: payload.courseId}).exec()
     .then((_course: ICourseDocument) => {
       if (_course) {
-        githubManager = new GitHubManager(course.githubOrg);
+        githubManager = new GitHubManager(_course.githubOrg);
         course = _course;
         courseSettings = _course.settings;
       } else {
