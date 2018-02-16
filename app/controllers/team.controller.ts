@@ -657,7 +657,7 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
   teams: ITeamDocument[]): Promise<ProvisionHealthCheck> {
     
     const STUDENTS_MAKE_TEAMS = deliverable.studentsMakeTeams;
-    const TEAMS_BY_LAB = deliverable.teamsInSameLab;
+    const TEAMS_IN_SAME_LAB = deliverable.teamsInSameLab;
     const CLASS_SIZE = course.classList.length;
     let studentsTeamStatus: StudentTeamStatusContainer;
     let buildStats: object;
@@ -749,6 +749,7 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
     return getStudentsTeamStatus().then(() => {
       let healthCheckObj: ProvisionHealthCheck = { 
         classSize: CLASS_SIZE,
+        teamsInSameLab: TEAMS_IN_SAME_LAB,
         studentsMakeTeams: STUDENTS_MAKE_TEAMS,
         numOfTeams: getNumberOfTeams(),
         numOfTeamsWithRepo: getTeamsWithRepo(),
@@ -1001,8 +1002,8 @@ function createCustomTeam(req: any, payload: any) {
  * *** IMPORTANT *** This method is used to generate Teams of 1 for Github Repos that only have 
  * one team member. ie. Pcar's '210' class logic.
  * 
- * @param payload.teamSize: The max team size we will create
- * @param payload.inSameLab: boolean: Ensures that team members are in same lab. 
+ * @param payload.maxTeamSize: The max team size we will create
+ * @param payload.teamsInSameLab: boolean: Ensures that team members are in same lab. 
  * // inSameLab unimplemented on front end and can be deprecated if wanted.
  * 
  * @param payload.deliverableName: ie. "d1", etc.
@@ -1046,7 +1047,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
           // ## IMPORTANT ##
           // If the students need to be in the same lab, create a team list based on 
           // their lab section, max team size, and if they exist in the filteredUsers list.
-          if (payload.inSameLab || deliverable.teamsInSameLab) {
+          if (payload.teamsInSameLab) {
             // 1. Get team members that exist on filteredList and create a team based on 
             // their lab section.
             // 2. Merge lab section teams in an array and send them off to next function.
@@ -1175,9 +1176,9 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
     let sorted: any = {teams: new Array()};
 
     try {
-      
+
       // divides number of teams needed and rounds up
-      let teamSize = typeof payload.teamSize === 'undefined' ? deliverable.maxTeamSize : payload.teamSize;
+      let teamSize = typeof payload.maxTeamSize === 'undefined' ? deliverable.maxTeamSize : payload.maxTeamSize;
       const numberOfTeams = Math.ceil(usersList.length / teamSize);
       // creates arrays for each Team
       for (let i = 0; i < numberOfTeams; i++) {

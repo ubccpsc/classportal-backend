@@ -28,6 +28,7 @@
     "dotenv": "^4.0.0",
     "faker": "^4.1.0",
     "forever": "^0.15.3",
+    "jsonwebtoken": "^8.1.1",
     "mime-types": "^2.1.17",
     "mongodb": "^2.2.30",
     "mongoose": "^4.8.2",

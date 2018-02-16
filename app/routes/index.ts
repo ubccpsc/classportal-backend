@@ -76,6 +76,11 @@ const routes = (server: restify.Server) => {
   server.put('/:courseId/admin/deliverable', adminAuthenticated, routeHandler.addDeliverable);
   server.get('/settings', isAuthenticated, isAuthenticated, routeHandler.getCurrentUserInfo);
   server.get('/logout', isAuthenticated, routeHandler.logout);
+  server.get('/test/jwt', isAuthenticated, (req: any, res: any, next: restify.Next) => {
+    console.log(res.session);
+    res.setCookie('test', 'WHAT');
+    next();
+  });
 
   // dashboard
   server.get('/:courseId/admin/dashboard/:orgName/:delivId', adminAuthenticated, routeHandler.getDashForDeliverable);

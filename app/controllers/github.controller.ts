@@ -26,7 +26,7 @@ const CLEAN = false;
  * 
  * @param payload.courseId string number on Course object ie. '310'
  * @param payload.deliverableName string name on Deliverable object ie.'d1'
- * @param payload.githubOrg string name on Course object ie. 'CPSC210-2017W-T2'
+ * @param payload.githubOrg string nae on Course object ie. 'CPSC210-2017W-T2'
  * @return void
  */
 function getProjectHealthReport(payload: any) {
@@ -228,6 +228,11 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
     });
 }
 
+/**
+ * @param payload.courseId course id ie. '310'
+ * @param payload.deliverableName The name of the Deliverable ie. 'd1', 'pn2'
+ * @return string "Succesfully created 200 message"
+ */
 function createGithubReposForTeams(payload: any): Promise<any> {
 
   let githubManager = new GitHubManager(payload.githubOrg);

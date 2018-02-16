@@ -14,6 +14,8 @@ const app = restify.createServer({
   ca:          fs.readFileSync(config.ssl_int_cert_path).toString(),
 });
 
+const io = require('socket.io').listen(app);
+
 restify.CORS.ALLOW_HEADERS.push('Accept-Encoding');
 restify.CORS.ALLOW_HEADERS.push('Accept-Language');
 

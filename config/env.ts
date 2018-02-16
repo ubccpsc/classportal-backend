@@ -25,6 +25,7 @@ const config: any = {
   github_user_name:     process.env.GITHUB_USER_NAME,
   github_api_path:      process.env.GITHUB_API_PATH,
   github_enterprise_url: process.env.GITHUB_ENTERPRISE_URL,
+  jwt_secret_key:       process.env.JWT_SECRET_KEY
 };
 
 // specific to test config

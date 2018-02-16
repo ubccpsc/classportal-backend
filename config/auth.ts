@@ -3,10 +3,11 @@ import {config} from '../config/env';
 import {User, IUserDocument} from '../app/models/user.model';
 import {logger} from '../utils/logger';
 
-let passport = require('passport-restify');
-let session = require('cookie-session');
-let CookieParser = require('restify-cookies');
-// must update links in 'passport-github' package to Github Enterprise
+const passport = require('passport-restify');
+const session = require('cookie-session');
+const CookieParser = require('restify-cookies');
+const jwt = require('jsonwebtoken');
+// must update links in 'passport-github' package to Github Enterprise URIs
 let Strategy = require('passport-github').Strategy;
 
 passport.use(new Strategy({
@@ -33,8 +34,11 @@ passport.use(new Strategy({
         }
         // If user is a student/admin role and found in the DB
         else {
+          // append JSON Web Token with userrole information used by Socket IO permissions
+          const token = jwt.sign({username: user.username, userrole: user.userrole}, new Buffer(config.jwt_secret_key));
           console.log('debug in else statement');
-          console.log(user);
+          user.userrole = token;
+          console.log('with JSON web token userrole', user);
           return cb(err, user);
         }
       } catch (err) {
