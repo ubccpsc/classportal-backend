@@ -205,7 +205,8 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
         });
     })
     .then(() => {
-      return Team.find({courseId: course._id, deliverableIds: deliverable._id}).populate({path: 'members'}).then((_teams: ITeamDocument[]) => {
+      // deliverableIds.0 ensures that it is a Deliverable and not a regression test
+      return Team.find({courseId: course._id, 'deliverableIds.0': deliverable._id}).populate({path: 'members'}).then((_teams: ITeamDocument[]) => {
         for (let i = 0; i < _teams.length; i++) {
           let inputGroup = {
             teamName:    'name',
@@ -323,7 +324,8 @@ function createGithubReposForTeams(payload: any): Promise<any> {
   }
 
   function getTeamsToBuildForSelectedDeliv(course: ICourseDocument, deliv: IDeliverableDocument) {
-    return Team.find({courseId: course._id, deliverableIds: deliv._id, 
+    // deliverable.0 ensures that it is the Deliverable and not a Regression Test
+    return Team.find({courseId: course._id, 'deliverableIds.0': deliv._id, 
       $where: 'this.disbanded !== true', 'githubState.repo.url': ''})
       .populate({path: 'members deliverableId'})
       .exec()

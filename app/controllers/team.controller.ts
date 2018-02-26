@@ -431,9 +431,10 @@ function getCourseTeamInfo(payload: any): Promise<TeamPayload> {
       });
   })
   .then(() => {
+    // Hack: deliverableIds.0 is always the original Deliverable, and the rest of array are Regression Test Delivs
     return Team.find({
       courseId: course._id,
-      deliverableIds: deliverable._id,
+      'deliverableIds.0': deliverable._id,
       $where:   'this.disbanded !== true'
     })
       .populate({path: 'members classList', select: 'fname lname username profileUrl'})
@@ -624,7 +625,7 @@ function getTeamProvisionOverview(payload: any): Promise<ProvisionHealthCheck> {
     })
     .then(() => {
       // 'or' in query can be deprecated as soon as deliverableIds (pl.) after deliverableId (sing.) is deprecated.
-      return Team.find({$or: [{deliverableIds: deliverable._id}, {deliverableId: deliverable._id}]})
+      return Team.find({$or: [{'deliverableIds.0': deliverable._id}]})
         .populate({path: 'courseId', select: 'name courseId'})
         .populate({path: 'members', select: 'fname lname username csid snum _id'})
         .populate({path: 'deliverableIds', select: 'name'})
@@ -973,7 +974,7 @@ function createCustomTeam(req: any, payload: any) {
           members: {$in: userIds},
           courseId: course.id,
           disbanded: false,
-          deliverableIds: deliverable._id
+          'deliverableIds.0': deliverable._id
         })
         .then((teams: any[]) => {
           console.log('the teams that match', teams);
@@ -1012,6 +1013,7 @@ function createCustomTeam(req: any, payload: any) {
 function randomlyGenerateTeamsPerCourse(payload: any) {
   let course_id: string;
   let course: ICourseDocument;
+  let regressTestDelivs: IDeliverableDocument[];
   let deliverable: IDeliverableDocument;
   let teams: ITeamDocument[];
 
@@ -1038,9 +1040,27 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
           logger.error(`TeamController::Deliverable.findOne() ERROR ${err}`);
         });
     })
-    .then((_deliv: IDeliverableDocument) => {
+    .then(() => {
+      let regressionTestNames = deliverable.regressionTests.split(' ');
+      // NOTE: Make sure Deliverable is not also in Regression Tests
+      let index = regressionTestNames.indexOf(deliverable.name);
+      if (index > -1) {
+        regressionTestNames.splice(index, 1);
+      }
+
+      return Deliverable.find({courseId: course._id, name: regressionTestNames})
+        .then((_regressTestDelivs: IDeliverableDocument[]) => {
+          regressTestDelivs = _regressTestDelivs;
+
+          return regressTestDelivs;
+        })
+        .catch((err) => {
+          logger.error('There was an error retrieving the regressionTest Delvierables: ' + err);
+        });
+    })
+    .then(() => {
       // checks that user is not already on team with deliverable
-      return Team.find({courseId: course.id, deliverableIds: deliverable._id})
+      return Team.find({courseId: course.id, 'deliverableIds.0': deliverable._id})
         .then((teams: ITeamDocument[]) => {
           let filteredUsers: any = filterUsersAlreadyInTeam(teams);
 
@@ -1091,7 +1111,7 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
       let teams: ITeamDocument[];
       return getDeliverable(payload.deliverableName, course)
         .then((deliv: IDeliverableDocument) => {
-          return Team.find({courseId: course._id, deliverableIds: deliv._id})
+          return Team.find({courseId: course._id, 'deliverableIds.0': deliv._id})
             .then((_teams: ITeamDocument[]) => {
               teams = _teams;
               return false;
@@ -1104,10 +1124,15 @@ function randomlyGenerateTeamsPerCourse(payload: any) {
                   for (let i = 0; i < sortedTeamIdList.length; i++) {
                     let teamObject = {
                       courseId:      course_id,
-                      deliverableIds: deliv._id,
+                      deliverableIds: [deliv._id],
                       members:       sortedTeamIdList[i],
                       githubState:   defaultGithubState,
                     };
+                    // add in Regression Test Ids to deliverableIds
+                    // original deliv Id must remain in index 0
+                    regressTestDelivs.map((deliv) => {
+                      teamObject.deliverableIds.push(deliv._id);
+                    });
                     bulkInsertArray.push(teamObject);
                   }
                 } else {

@@ -8,6 +8,8 @@ import {logger} from '../../utils/logger';
 import {DeliverablePayload} from '../interfaces/ui/deliverable.interface';
 import {isAdmin} from '../middleware/auth.middleware';
 import {TEAM_ADMINS} from '../../test/assets/mockDataObjects';
+import {MongoClient, ObjectId} from 'mongodb';
+import db from '../db/MongoDBClient';
 
 export interface ContainerInfo {
   dockerImage: string;
@@ -94,17 +96,24 @@ function getContainerInfo(payload: any): Promise<ContainerInfo> {
 
 /**
  * Updates a deliverable that matches the deliverable MongoDB _id in deliverable object
+ * 
+ * ** NOTE ** If adding a Regression Test, adds Deliverable Id to any Teams that exist for Id 
+ * so that the front-end can join the regression test with the Team informationa to group grades
+ * based on the team. 
+ * 
  * @param deliverable object new fields with MongoDB _id
  * @return IDeliverableDocument updated deliverable
  */
 function updateDeliverable(payload: any): Promise<IDeliverableDocument> {
   logger.info('DeliverablesController::updateDeliverables() in Deliverable Controller');
-  console.log(payload);
+  const TEAMS_COLLECTION = 'teams';
+  console.log('updateDeliverable() payload received', payload);
   let searchParams = {_id: payload.deliverable._id};
   let deliv: IDeliverableDocument = payload.deliverable as IDeliverableDocument;
   return Deliverable.findOne(searchParams)
     .exec()
     .then((d: IDeliverableDocument) => {
+      // #1: Update deliverable properties
       if (d && isDeliverableValid(deliv)) {
         d._id = deliv._id;
         d.open = deliv.open;
@@ -130,23 +139,128 @@ function updateDeliverable(payload: any): Promise<IDeliverableDocument> {
         d.deliverableKey = deliv.deliverableKey;
         d.custom = deliv.custom;
         d.customHtml = deliv.customHtml;
-        if (isAdmin) {
-          // only admins can change name (though not enabled on front-end)
-          d.name = String(deliv.name).toLowerCase();
-        }
-        // name changes to id on the front-end
-        return d.save()
-          .then((d: IDeliverableDocument) => {
-            logger.info(`DeliverableController::updateDeliverable() Successfully saved Deliverable`);
-            return d;
-          });
+        return d;
       }
       throw `DeliverableController::queryAndUpdateDeliverable() ERROR Could not update ${deliv.name}.`;
     })
-    .catch((err) => {
+    .then((d: IDeliverableDocument) => {
+      // #2: IF admin, update Deliverable name.
+      if (isAdmin) {
+        // only admins can change name (though not enabled on front-end)
+        d.name = String(deliv.name).toLowerCase();
+      }
+      return d;
+    })
+    .then((d: IDeliverableDocument) => {
+      const WHITESPACE_DELIN = /\S+/g;
+      let regressionTests: string[] = [];
+      // #3: Ensure regress test Deliverable Ids in Teams.deliverableIds
+      // so that the front-end can group teams together for grades.
+
+      let regressDelivIds: any[] = [];
+
+      if (deliv.regressionTests !== 'undefined' && deliv.regressionTests.length > 0) {
+        regressionTests = deliv.regressionTests.match(WHITESPACE_DELIN);
+      }
+
+      if (isAdmin) {
+        addRegressionIdsToDeliv(d, payload.courseId);
+        return d;
+      } else {
+        return d;
+      }
+    })
+    .then((d: IDeliverableDocument) => {
+      // name changes to id on the front-end
+      return d.save()
+      .then((d: IDeliverableDocument) => {
+        logger.info(`DeliverableController::updateDeliverable() Successfully saved Deliverable`);
+        return d;
+      });
+    })
+    .catch((err: any) => {
       logger.error('DeliverableController::updateDeliverable() ERROR ' + err);
       return Promise.reject(err);
     });
+}
+
+
+  /**
+   * Ensures that regression test Deliverable Ids in Teams.deliverableIds so that the front-end can group teams together for grades.
+   * 
+   * Regression Tests are part of 310's business logic, which requires grades are grouped by a Team. Must be able to join
+   * a Deliverable name with regression tests where no repositories exist for regression tests. Regression tests are
+   * based off of a Deliverable. A Deliverable must exist for a regression test to work.
+   * 
+   * @param deliv IDeliverableDocument of the Deliverable that hold the space-dilinated regressionTests to update/created
+   * @param courseId The Course where regressionTest names should be fetched from.
+   * @return boolean true if the regression Ids were successfully added to the relevant Team objects
+   */
+function addRegressionIdsToDeliv(deliv: IDeliverableDocument, courseId: string): Promise<boolean> {
+  const TEAMS_COLLECTION = 'teams';
+  const WHITESPACE_DELIN = /\S+/g;
+  let regressionTests: string[] = [];
+  let regressDelivIds: any[] = [];
+
+  if (deliv.regressionTests !== 'undefined' && deliv.regressionTests.length > 0) {
+    regressionTests = deliv.regressionTests.match(WHITESPACE_DELIN);
+  }
+
+  if (isAdmin) {
+
+    return Course.findOne({courseId: courseId})
+      .then((course: ICourseDocument) => {
+        if (course) {
+          return course;
+        }
+        throw `Could not find Course ${courseId}`;
+      })
+      .then((course: ICourseDocument) => {
+        // remove itself, as it already exists in Team.deliverableIds and you do not want 
+        // it to run in AutoTest twice.
+        let index = regressionTests.indexOf(deliv.name);
+        if (index > -1) {
+          regressionTests.splice(index, 1);
+        }
+
+        return Deliverable.find({courseId: course._id, name: {$in: regressionTests}})
+          .then((delivs: IDeliverableDocument[]) => {
+            if (delivs) {
+
+              // IMPORTANT: The first array element is the original team deliverable. 
+              // All further properties are regression test Deliverable Id elements.
+              regressDelivIds.push(new ObjectId(deliv._id));
+
+              delivs.map((_deliv) => {
+                regressionTests.map((regressionTest) => {
+                  // want to add the regression Test deliverable Ids but avoid an infinite loop in AutoTest
+                  // if someone accidentally adds the original deliv to the regression tests list
+                  if (regressionTest === _deliv.name && regressionTest !== deliv.name) {
+                    console.log('deliv id', _deliv._id);
+                    regressDelivIds.push(_deliv._id);
+                  }
+                });
+              });
+
+              console.log('1', {'deliverableIds.0': new ObjectId(deliv._id)});
+              console.log('2', {$set: {'deliverableIds': regressDelivIds}});
+              db.updateMany(TEAMS_COLLECTION, {'deliverableIds.0': new ObjectId(deliv._id)}, {$set: {'deliverableIds': regressDelivIds}})
+                .then((updateResponse) => {
+                  console.log('DeliverableController:: update regression test Ids: ', updateResponse);
+                  return true;
+                })
+                .catch((err) => {
+                  console.log('DeliverableController:: update regression test Ids ERRPR: ' + err);
+                  return deliv;
+                });
+            }
+            return true;
+          });
+      });
+  } else {
+    return Promise.resolve(false);
+  }
+
 }
 
 /**
@@ -245,7 +359,7 @@ function getTestDelay(payload: any): Promise<number> {
 
 /**
  * Creates a new Deliverable if it passes validation. Ensures that Deliverable
- * 'name' is all lowercase.
+ * 'name' is all lowercase server-side.
  * 
  * @param payload.deliverable IDeliverableDocument
  * @return IDeliverableDocument returned on successful creation
@@ -282,6 +396,7 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
     .then(() => {
       return Deliverable.create(newDeliverable)
         .then((deliv: IDeliverableDocument) => {
+          addRegressionIdsToDeliv(deliv, payload.courseId);
           return deliv;
         });
     });
