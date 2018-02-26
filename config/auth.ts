@@ -14,6 +14,9 @@ passport.use(new Strategy({
     clientID:     config.github_client_id,
     clientSecret: config.github_client_secret,
     callbackURL:  config.github_callback_url,
+    authorizationURL: config.github_enterprise_url + '/login/oauth/authorize',
+    tokenURL:         config.github_enterprise_url + '/login/oauth/access_token',
+    userProfileURL:   config.github_api_path + '/user',
   },
   function (accessToken: any, refreshToken: any, profile: any, cb: any) {
 
