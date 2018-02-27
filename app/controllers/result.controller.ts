@@ -28,6 +28,355 @@ export class Results {
    * @param deliverableName string name of deliverable ie. 'd2'
    * @return ResultPayload
    */
+  public NEWNOTWORKINGgetResultsByCourse(payload: any) {
+
+    logger.info(`ResultController::getGradesfromResults() - start`);
+    const REPORT_FAILED_FLAG: string = 'REPORT_FAILED';
+    const CSV_FORMAT_FLAG = 'csv';
+
+    let teams: ITeamDocument[];
+    let projects: IProjectDocument[];
+    let course: ICourseDocument;
+    let deliverables: IDeliverableDocument[];
+    let deliverable: IDeliverableDocument;
+    let deliverableNames: string[];
+    let timestamp: number;
+    let singleDelivResults: any[];
+    let allDelivResults: any[];
+
+    const courseId = payload.courseId;
+    const delivId = payload.deliverableName;
+
+    let that = this;
+
+    that.getDeliverableRows(courseId, delivId).then(function (executions) {
+      logger.info("resultController:getResultsByCourse - executions retrieved");
+
+
+      // TODO: get the students
+      return that.getStudentRows(courseId).then(function (students: any) {
+        logger.info("resultController:getResultsByCourse - students retrieved");
+
+
+        // update student projectUrl rows
+
+
+        // TODO: none of this working
+        // let students: any = {};
+        let mappedResults: any = {};
+
+        let resultPayload: ResultPayloadInternal = {
+          students: students,
+          records:  mappedResults,
+        };
+
+        let newFormat = this.convertResultFormat(resultPayload, payload.deliverableName);
+        // return resultPayload;
+        return newFormat;
+      });
+
+
+    }).catch(function (err) {
+      logger.error("resultController:getResultsByCourse - ERROR: " + err);
+      return {error: err};
+    });
+
+  }
+
+
+  private getStudentRows(courseId: string): Promise<{}> {
+    logger.info('result.controller::getStudentRows(..) - start; course: ' + courseId);
+    let that = this;
+
+    const url = config.db;
+    // FOR LOCAL DEBUGGING:
+    // const url = <PROD_DB_VALUE_FROM_ENV_FILE>
+    return new Promise(function (resolve, reject) {
+      MongoClient.connect(url).then(function (db) {
+        logger.info(`result.controller::getStudentRows(..) - Returning DB Connection: ${url}`);
+
+        // const ORG = orgName; // 'CPSC210-2017W-T1'; //'CPSC310-2017W-T1'; // 'CPSC310-2017W-T2'
+        // const DELIV = delivId; // 'd0';
+
+        const start = new Date().getTime();
+        // let resultsArr: any[] = [];
+        // let latestResultPerProjectArr: any[] = [];
+        // let rowRetriever =
+
+        let query = {
+          courseId: courseId // NOTE: not a number in this table
+        };
+
+        let projection = {
+          _id:  true,
+          name: true // really just for debugging
+        };
+
+        // logger.info('query: ' + JSON.stringify(query));
+        // logger.info('projection: ' + JSON.stringify(projection));
+
+        db.collection('courses').find(query, projection).toArray().then(function (courses) {
+          console.log('result.controller::getStudentRows(..) - retrieving courses: ' + courses.length);
+          let courseIDref = courses[0]._id;
+
+          db.collection('users').find({
+            "courses":
+              {
+                $in: [courseIDref]
+              }
+          }).toArray().then(function (students: any) {
+            console.log('result.controller::getStudentRows(..) - retrieving students: ' + students.length);
+
+
+            let studentList: StudentResult[] = [];
+            for (const student of students) {
+
+              let s: StudentResult = <StudentResult>{ // CAST because _id is not allowed
+                _id:        student._id,
+                userName:   student.username,
+                userUrl:    student.profileUrl,
+                fName:      student.fname,
+                lName:      student.lname,
+                sNum:       student.snum,
+                csId:       student.csid,
+                labId:      '', // TODO: why is this not in student?
+                TA:         [''],
+                projectUrl: '' // Fill this in later
+              };
+
+              studentList.push(s);
+            }
+
+
+            /// THIS DOES NOT MAKE ANY SENSE
+
+            // I need to know what repo a student is associated with for a deliverable
+
+            // but this means using the Users._id to join with Teams._members
+            // and then using that Teams._id to join with Deliverables._id somehow to make sure the team is for the right deliverable
+
+            // I am giving up and creating an issue. This code will stay because it will be helpful when I refactor the database in the future.
+
+
+            // I NEED THE TEAM ID FOR A
+
+
+            // query = {
+
+            // }
+
+            // _id: {$in: teamArr}
+            // db.collection('users').find
+            // const took = (new Date().getTime() - start);
+            // console.log('dashboard.controller::getStudentRows(..) - retrieving data; # teams: ' + students.length + '; second search took: ' + took + ' ms');
+
+            // process records for dashboard
+            // let returnRows = that.populateRecords(res, delivId); // latestResultPerProjectArr
+
+            // resolve(returnRows);
+
+
+
+            resolve(studentList);
+          });
+
+        }).catch(function (err) {
+          console.log('dashboard.controller::getStudentRows(..) - ERROR: ' + err);
+          reject(err);
+        });
+      });
+    });
+  }
+
+
+  private getDeliverableRows(courseId: string, delivId: string): Promise<{}> {
+    logger.info('result.controller::getDeliverableRows(..) - start; course: ' + courseId + '; delivId: ' + delivId);
+    let that = this;
+
+    const url = config.db;
+    // FOR LOCAL DEBUGGING:
+    // const url = <PROD_DB_VALUE_FROM_ENV_FILE>
+    return new Promise(function (resolve, reject) {
+      MongoClient.connect(url).then(function (db) {
+        logger.info(`result.controller::getDeliverableRows(..) - Returning DB Connection: ${url}`);
+
+        // const ORG = orgName; // 'CPSC210-2017W-T1'; //'CPSC310-2017W-T1'; // 'CPSC310-2017W-T2'
+        // const DELIV = delivId; // 'd0';
+
+        const start = new Date().getTime();
+        // let resultsArr: any[] = [];
+        // let latestResultPerProjectArr: any[] = [];
+        // let rowRetriever =
+
+        let query = {
+          courseNum:   Number(courseId), // HACK: this will be problematic for non-numeric courses (e.g., edX MM)
+          deliverable: delivId
+        };
+
+        let projection = {
+          _id:        true, // would like to replace this with a more github-specific id
+          idStamp:    true,
+          team:       true,
+          report:     true,
+          project:    true,
+          user:       true,
+          url:        true,
+          // stdioRef:   true,
+          commit:     true,
+          commitUrl:  true,
+          timestamp:  true,
+          projectUrl: true
+        };
+
+        // logger.info('query: ' + JSON.stringify(query));
+        // logger.info('projection: ' + JSON.stringify(projection));
+
+        db.collection('results').find(query, projection).sort({
+          timestamp: -1
+        }).toArray().then(function (res) {
+          console.log('result.controller::getDeliverableRows(..) - retrieving rows: ' + res.length);
+
+          const took = (new Date().getTime() - start);
+          console.log('dashboard.controller::getDeliverableRows(..) - retrieving data; # teams: ' + res.length + '; second search took: ' + took + ' ms');
+
+          // process records for dashboard
+          let returnRows = that.populateRecords(res, delivId); // latestResultPerProjectArr
+
+          resolve(returnRows);
+        }).catch(function (err) {
+          console.log('dashboard.controller::getDeliverableRows(..) - ERROR: ' + err);
+          reject(err);
+        });
+      });
+    });
+  }
+
+  private populateRecords(records: any, delivId: string) {
+
+    let returnRows = [];
+    for (let rec of records) {
+      let row: any = {};
+
+      // e.g., if the test container failed
+      let missingTestDetails = typeof rec.report === 'undefined' ||
+        rec.report === null ||
+        typeof rec.report.tests === 'undefined' ||
+        rec.report.tests === null ||
+        typeof rec.report.tests.detailedResults === 'undefined';
+
+      let missingUserDetails = typeof rec.report === 'undefined' ||
+        rec.report === null ||
+        typeof rec.report.studentInfo === 'undefined' ||
+        typeof rec.report.studentInfo.projectUrl === 'undefined';
+
+      row.project = rec.team;
+      row.user = rec.user;
+      // row.stdioRef = rec.stdioRef;
+      row.commit = rec.commit;
+      row.projectUrl = rec.projectUrl;
+      row.team = rec.team;
+
+      if (typeof rec.report !== 'undefined' && rec.report !== null && typeof rec.report.scoreOverall !== 'undefined') { // TODO: should be more comprehensive
+        // jan 2018 310 container result
+        missingTestDetails = false;
+
+        if (typeof rec.projectUrl !== 'undefined') {
+          missingUserDetails = false;
+        }
+      }
+
+      row.url = 'UNKNOWN_REPORT_FAILED'; // TODO: make sure the commit URL always gets in there
+
+      if (missingUserDetails === true) {
+        row.url = rec.commitUrl;
+        // row.url = row.idStamp; // HACK it would be better if there was a rec.url
+        // TODO: make this more verbose (e.g., 5 min timeout? something else?)
+        row.error = 'Something is not right with this execution, see stdio.txt';
+      } else {
+        /*
+        let rawURL = rec.report.studentInfo.projectUrl;
+        rawURL = rawURL.replace('<token>@', ''); // HACK; would be better if there was a rec.url
+        rawURL = rawURL.replace('.git', ''); // HACK; would be better if there was a rec.url
+        rawURL = rawURL + '/commit/' + rec.report.studentInfo.projectCommit;
+        row.url = rawURL;
+        */
+        row.url = rec.commitUrl;
+        row.error = ''; // exists, but is empty
+      }
+
+      row.timestamp = Number(Number(rec.timestamp).toFixed(0)); // get rid of '.0' if it exists
+
+      if (missingTestDetails === true) {
+        // probably row.error will be set to something useful too
+        row.grade = -1;
+        // row.scoreTest = -1;
+        // row.scoreCover = -1;
+      } else {
+        let grade = -1;
+        // let scoreTest = -1;
+        // let scoreCover = -1;
+
+        if (typeof rec.report.scoreOverall !== 'undefined') {
+          // Jan 2018 containers
+          grade = rec.report.scoreOverall;
+          // scoreTest = rec.report.scoreTest;
+          // scoreCover = rec.report.scoreCover;
+
+          if (grade === null) {
+            grade = 0;
+          }
+          // if (scoreTest === null) {
+          // scoreTest = 0;
+          // }
+          // if (scoreCover === null) {
+          // scoreCover = 0;
+          // }
+
+        } else {
+          // older containers
+          grade = rec.report.tests.grade.finalGrade;
+
+          // 210
+          // if (typeof rec.report.tests.custom !== 'undefined') {
+          // if (typeof rec.report.tests.custom.testingGrade !== 'undefined') {
+          // scoreTest = rec.report.tests.custom.testingGrade;
+          // }
+          // if (typeof rec.report.tests.custom.coverageGrade !== 'undefined') {
+          //               scoreCover = rec.report.tests.custom.coverageGrade;
+          //          }
+          // }
+
+          // 310
+          // if (typeof rec.report.custom !== 'undefined') {
+          //   if (typeof rec.report.custom.testStats !== 'undefined') {
+          //     scoreTest = rec.report.custom.testStats.passPercent;
+          //   }
+          // }
+
+          // 310
+          // if (typeof rec.report.coverage !== 'undefined' && typeof rec.report.coverage.lines !== 'undefined') {
+          //  scoreCover = rec.report.coverage.lines.percentage;
+          // }
+        }
+        row.grade = grade;
+        // row.scoreTest = scoreTest;
+        // row.scoreCover = scoreCover;
+      }
+
+      returnRows.push(row);
+    }
+
+    // TODO: add more detail here to this result object
+    console.log('result.controller::getDeliverableRows(..) - returnRows ready: ' + returnRows.length);
+    return returnRows;
+  }
+
+
+  /**
+   * @param courseId courseId number of courseId ie. 310
+   * @param deliverableName string name of deliverable ie. 'd2'
+   * @return ResultPayload
+   */
   public getResultsByCourse(payload: any) {
 
     logger.info(`ResultController::getGradesfromResults() - start`);
@@ -43,6 +392,7 @@ export class Results {
     let timestamp: number;
     let singleDelivResults: any[];
     let allDelivResults: any[];
+
 
     return Course.findOne({courseId: payload.courseId})
       .populate('classList')
@@ -265,6 +615,7 @@ export class Results {
             for (let team of teams) {
               if (team.members.indexOf(student._id) > -1) {
                 // team Lab URL should be '' if repo has not yet been created
+                // TODO: this is the problematic statement for d2 (or below)
                 repoUrl = team.githubState.repo.url;
               }
             }
@@ -272,6 +623,7 @@ export class Results {
           if (projects) {
             for (let project of projects) {
               if (String(project.student) === String(student._id)) {
+                // TODO: this is the problematic statement for d2 (or above)
                 // team Lab URL should be '' if repo has not yet been created
                 repoUrl = project.githubState.repo.url;
               }
