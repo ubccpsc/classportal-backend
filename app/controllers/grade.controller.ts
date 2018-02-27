@@ -69,41 +69,6 @@ export interface GradeComponent {
  *
  */
 
-
-/**
- * Legacy grade payload interfaces
- */
-
-export interface FinalGrade {
-  finalGrade: number;
-  deliverableWeight: string;
-}
-
-export interface StudentInfo {
-  projectUrl: string;
-  projectCommit: string;
-}
-
-export interface CustomGrade210 {
-  coverageGrade: number;
-  testingGrade: number;
-  coverageWeight: number;
-  testingWeight: number;
-  coverageMethodWeight: number;
-  coverageLineWeight: number;
-  coverageBranchWeight: number;
-}
-
-export interface CustomGrade310 {
-  passPercent: number;
-  passCount: number;
-  failCount: number;
-  skipCount: number;
-  passNames: string[];
-  failNames: string[];
-  skipNames: string[];
-}
-
 // Promisify csv-stringify
 let csvGenerate = function (input: any) {
   return new Promise((resolve, reject) => {
@@ -133,14 +98,19 @@ let csvParser = function (filePath: string, options: any) {
   });
 };
 
-// addGradesCSV()
-// Steps:
-// 1) Queries Deliverable with _id in Req to retrieve Deliverable._id
-// 2) Takes CSV in Request and turns it into Array
-// 3) Iterates over array and adds each Grade to the DB linked with the Deliverable._id
-function addGradesCSV(req: any) {
+/**
+ * Grade Upload through a CSV.
+ * 
+ * IMPORTANT: Required headers: CSID, SNUM, GRADE
+ *            Optional header: COMMENTS
+ * 
+ *            - Grade will be empty string if left empty. Zeros must be explicitly assigned in grades column.
+ *            - Comments will be empty if not included.
+ */
+function addGradesCSV(req: any): Promise<any[]> {
 
-  let delivName: string;
+  let course: ICourseDocument;
+  let deliv: IDeliverableDocument;
 
   // CSV parser options
   const options = {
@@ -149,88 +119,49 @@ function addGradesCSV(req: any) {
     trim:             true,
   };
 
-  let deliverableQuery = Deliverable.findOne(({_id: req.params.delivId}))
-    .exec()
-    .then(d => {
-      if (d === null) {
-        return Promise.reject('Cannot find Deliverable ID ' + req.params.delivId + '.');
+  return Course.findOne({courseId: req.params.courseId})
+    .then((_course: ICourseDocument) => {
+      if (_course) {
+        course = _course;
+        return _course;
       }
-      return Promise.resolve(delivName = d.name);
-    });
-
-  // Updates grade if exists, creates grade if does not exist.
-  csvParser(req.files.grades.path, options).then((result: any) => {
-    for (let i = 0; i < result.length; i++) {
-      Grade.findOne({snum: result[i].snum})
-        .then(g => {
-          if (g !== null) {
-            g.details = {finalGrade: result[i].grade};
-            return g.save();
-          } else {
-            return Grade.create({
-              snum:    result[i].snum,
-              deliv:   delivName,
-              delivId: req.params.delivId,
-              details: {finalGrade: result[i].grade},
-            });
-          }
-        });
-    }
-    return Promise.reject(Error('Error reading grades. Please check that grades exist in CSV'));
-  })
-    .catch(err => {
-      logger.info(err);
-    });
-
-  return Grade.find({}).exec();
-}
-
-function create(payload: any) {
-  logger.info('create() in Grades Controller');
-  let gradesArray = new Array();
-  let getCourse = Course.findOne({courseId: payload.courseId}).populate('grades classList').exec();
-
-  // Adds Grades to Course object if they do not exist without deleting previous array contents.
-  let addGradesToCourse = function (newGrades: [any]) {
-    return getCourse.then(c => {
-      return c;
+      throw 'Could not find Course ' + req.params.courseId;
     })
-      .then(c => {
-        for (let key in newGrades) {
-          Course.findOne({'courseId': payload.courseId}).populate({
-            path:  'courses classList',
-            match: {_id: newGrades[key]._id},
+    .then((_course: ICourseDocument) => {
+      return Deliverable.findOne({name: req.params.delivName, courseId: course._id})
+        .then((_deliv: IDeliverableDocument) => {
+          if (_deliv) {
+            deliv = _deliv;
+            return _deliv;
+          }
+          throw 'Could not find Deliverable ID ' + req.params.delivName + '.';
+        });
+    })
+    .then((deliv: IDeliverableDocument) => {
+      // Updates grade if exists, creates grade if does not exist.
+      let gradePromises: any = [];
+      
+      return csvParser(req.files.grades.path, options).then((result: any) => {
+        console.log('PARSING CSV GRADES', result);
+        for (let i = 0; i < result.length; i++) {
+          let gradePromise = Grade.findOrCreate({
+            snum: result[i].SNUM, 
+            csid: result[i].CSID, 
+            deliverable: deliv.name, 
+            course: course.courseId
           })
-            .exec()
-            .then(c => {
-              let isInArray: boolean;
-              if (c !== null) {
-                isInArray = c.grades.some(function (grade: IGradeDocument) {
-                  return grade._id !== newGrades[key]._id;
-                });
-              }
-              if (c !== null && !isInArray) {
-                c.grades.push(newGrades[key]);
-              }
-              return c.save();
+            .then((grade: IGradeDocument) => {
+              grade.grade = Number(result[i].GRADE);
+              grade.comments = result[i].COMMENTS;
+              grade.save();
             });
-        }
-        return c.save();
-      });
-  };
-
-  let findOrCreateGrades = Promise.all(payload.grades.map((g: IGradeDocument) => {
-    return Grade.createOrUpdate(g)
-      .then(newOrUpdatedGrade => {
-        return newOrUpdatedGrade;
-      });
-  }))
-    .then((newGrades) => {
-      addGradesToCourse(newGrades);
+            gradePromises.push(gradePromise);
+          }
+          return Promise.all(gradePromises);
+        });
     });
-
-  return findOrCreateGrades;
 }
+
 
 function getAllGradesByCourse(req: any) {
   logger.info('getAllGradesByCourse()');
@@ -307,4 +238,4 @@ function sortArrayByLastName(csvArray: any[]) {
   return csvArray;
 }
 
-export {getAllGradesByCourse, getReleasedGradesByCourse, create, addGradesCSV};
+export {getAllGradesByCourse, getReleasedGradesByCourse, addGradesCSV};

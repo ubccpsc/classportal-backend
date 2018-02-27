@@ -1,16 +1,17 @@
 import * as mongoose from 'mongoose';
 import {logger} from '../../utils/logger';
 
-
 interface IGradeDocument extends mongoose.Document {
   snum: string;
-  deliv: string;
-  details: Object;
+  csid: string;
+  deliverable: string;
+  course: string;
+  comments: string;
+  grade: number;
 }
 
 interface IGradeModel extends mongoose.Model<IGradeDocument> {
-  findOrCreate(query: Object): Promise<IGradeDocument>;
-  createOrUpdate(course: IGradeDocument): Promise<IGradeDocument>;
+  findOrCreate(query: any): Promise<IGradeDocument>;
 }
 
 const GradeSchema = new mongoose.Schema({
@@ -18,70 +19,54 @@ const GradeSchema = new mongoose.Schema({
     type:     String,
     required: true,
   },
-  deliv:   {
+  csid:    {
+    type:     String,
+    required: true,
+  },
+  course:   {
+    type:     String,
+    required: true,
+  },
+  deliverable:   {
     required: true,
     type:     String,
   },
-  delivId: {
-    required: true,
-    type:     mongoose.Schema.Types.ObjectId, ref: 'Deliverable',
+  comments: {
+    type: String,
   },
-  details: {
-    type: Object,
-  },
+  grade: {
+    type: Number,
+  }
 });
 
 GradeSchema.static({
-
-  /**
-   * Find a Grade by object query. If doesn't exist, creates it based on object query and returns it.
-   * @param {object} search parameters
-   * @returns {Promise<IGradeDocument>} Returns a Promise of the user.
-   */
-  findOrCreate: (query: Object): Promise<IGradeDocument> => {
-    Grade.ensureIndexes(function (err) {
-      if (err) return console.log(err);
-    });
-    return Grade.findOne(query).exec()
-      .then((grade) => {
-        if (grade) {
-          return grade;
-        } else {
-          return Grade.create(query)
-            .then((grade) => {
-              return grade.save();
-            })
-            .catch((err) => {
-              logger.info(err);
-            });
-        }
-      });
-  },
 
   /**
    * Finds a Grade and updates it, or creates the Grade if it does not exist.
    * @param {ICourseDocument} search parameters
    * @returns {Promise<IGradeDocument>} Returns a Promise of the user.
    */
-  createOrUpdate: (query: IGradeDocument): Promise<IGradeDocument> => {
+  findOrCreate: (query: any): Promise<IGradeDocument> => {
     return Grade.findOne({
       snum:  query.snum,
-      deliv: query.deliv,
+      csid:  query.csid,
+      deliverable: query.deliverable,
+      course: query.course,
     })
-      .then((grade) => {
-        if (grade) {
-          grade.details = query.details;
-          return grade.save();
-        } else {
-          return Grade.create(query)
-            .then((grade) => {
-              return grade.save();
-            })
-            .catch((err) => {
-              logger.info(err);
-            });
-        }
-      });
+    .then((grade: IGradeDocument) => {
+      if (grade) {
+        return grade;
+      } 
+      return Grade.create({
+        snum: query.snum, 
+        csid: query.csid, 
+        deliverable: query.deliverable,
+        course: query.course,
+      })
+        .then((grade: IGradeDocument) => {
+          return grade;
+        });
+    });
   },
 });
 

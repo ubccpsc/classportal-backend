@@ -70,9 +70,9 @@ const routes = (server: restify.Server) => {
   server.post('/:courseId/admin/team', adminAuthenticated, routeHandler.updateTeam);
   server.get('/:courseId/admin/students', adminAuthenticated, routeHandler.getClassList);
   server.post('/:courseId/admin/classList', adminAuthenticated, routeHandler.updateClassList);
-  server.post('/:courseId/admin/grades', adminAuthenticated, routeHandler.addGrades);
+  // server.post('/:courseId/admin/grades', adminAuthenticated, routeHandler.addGrades);
   server.get('/:courseId/admin/grades', adminAuthenticated, routeHandler.getGradesAdmin);
-  server.post('/:courseId/admin/grades/:delivId', adminAuthenticated, routeHandler.addGradesCSV);
+  server.post('/:courseId/admin/grades/:delivName', adminAuthenticated, routeHandler.addGradesCSV);
   server.post('/:courseId/admin/deliverable', adminAuthenticated, routeHandler.updateDeliverable);
   server.put('/:courseId/admin/deliverable', adminAuthenticated, routeHandler.addDeliverable);
   server.get('/settings', isAuthenticated, isAuthenticated, routeHandler.getCurrentUserInfo);

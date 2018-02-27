@@ -116,11 +116,11 @@ const getDeliverables = (req: restify.Request, res: restify.Response, next: rest
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
-const addGrades = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return gradeCtrl.create(req.params)
-    .then((course: any) => res.json(200, {response: 'Successfully updated grades.'}))
-    .catch((err: any) => res.json(500, {err: err.message}));
-};
+// const addGrades = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+//   return gradeCtrl.create(req.params)
+//     .then((course: any) => res.json(200, {response: 'Successfully updated grades.'}))
+//     .catch((err: any) => res.json(500, {err: err.message}));
+// };
 
 const getGradesAdmin = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return gradeCtrl.getAllGradesByCourse(req)
@@ -186,7 +186,7 @@ const getTeams = (req: restify.Request, res: restify.Response, next: restify.Nex
 
 const addGradesCSV = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return gradeCtrl.addGradesCSV(req)
-    .then((addGrades: IGradeDocument[]) => res.json(200, {response: 'Successfully added CSV list of grades.'}))
+    .then((addGrades: any) => res.json(200, {response: 'Successfully added CSV list of grades.'}))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
@@ -392,7 +392,7 @@ const testJwt = (req: restify.Request, res: any, next: restify.Next) => {
 export {
   pong, createCourse, getAllCourses, logout, updateClassList, getClassList,
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaffOrAdmin,
-  getGradesAdmin, getGradesStudent, addGrades, createTeam, updateTeam, getStudentNamesFromCourse,
+  getGradesAdmin, getGradesStudent, createTeam, updateTeam, getStudentNamesFromCourse,
   addAdminList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
   deleteRepos, getCurrentUser, isAuthenticated, getMyCourses,
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
