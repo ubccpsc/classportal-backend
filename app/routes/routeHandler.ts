@@ -186,7 +186,7 @@ const getTeams = (req: restify.Request, res: restify.Response, next: restify.Nex
 
 const addGradesCSV = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return gradeCtrl.addGradesCSV(req)
-    .then((addGrades: any) => res.json(200, {response: 'Successfully added CSV list of grades.'}))
+    .then((updatedGrades: any) => res.json(200, {response: updatedGrades}))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 

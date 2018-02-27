@@ -103,9 +103,14 @@ let csvParser = function (filePath: string, options: any) {
  * 
  * IMPORTANT: Required headers: CSID, SNUM, GRADE
  *            Optional header: COMMENTS
+ *            CSV SENT TO 'gradesFile' path in payload.
  * 
  *            - Grade will be empty string if left empty. Zeros must be explicitly assigned in grades column.
  *            - Comments will be empty if not included.
+ * @param req.params.courseId CourseId string such as '310', '210'
+ * @param req.params.delivName deliverable.name such as 'd1', 'd2'
+ * @param req.files.gradesFile.path upload CSV location. (managed by Restify)
+ * @return IGradeDocument[] list of updated grades under the delivName and courseId
  */
 function addGradesCSV(req: any): Promise<any[]> {
 
@@ -141,7 +146,7 @@ function addGradesCSV(req: any): Promise<any[]> {
       // Updates grade if exists, creates grade if does not exist.
       let gradePromises: any = [];
       
-      return csvParser(req.files.grades.path, options).then((result: any) => {
+      return csvParser(req.files.gradesFile.path, options).then((result: any) => {
         console.log('PARSING CSV GRADES', result);
         for (let i = 0; i < result.length; i++) {
           let gradePromise = Grade.findOrCreate({
@@ -151,17 +156,23 @@ function addGradesCSV(req: any): Promise<any[]> {
             course: course.courseId
           })
             .then((grade: IGradeDocument) => {
-              grade.grade = Number(result[i].GRADE);
+              grade.grade = result[i].GRADE === "-1" || "" ? null : Number(result[i].GRADE);
               grade.comments = result[i].COMMENTS;
               grade.save();
             });
             gradePromises.push(gradePromise);
           }
-          return Promise.all(gradePromises);
+          return Promise.all(gradePromises)
+            .then(() => {
+              // Return updated grades to front-end
+              return Grade.find({course: course.courseId, deliverable: req.params.delivName})
+                .then((grades: IGradeDocument[]) => {
+                  return grades;
+                });
+            });
         });
     });
 }
-
 
 function getAllGradesByCourse(req: any) {
   logger.info('getAllGradesByCourse()');
