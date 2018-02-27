@@ -8,8 +8,10 @@ import {logger} from '../../utils/logger';
 import {DeliverablePayload} from '../interfaces/ui/deliverable.interface';
 import {isAdmin} from '../middleware/auth.middleware';
 import {TEAM_ADMINS} from '../../test/assets/mockDataObjects';
-import {MongoClient, ObjectId} from 'mongodb';
+import {MongoClient} from 'mongodb';
 import db from '../db/MongoDBClient';
+
+const ObjectId = require('mongodb').ObjectID;
 
 export interface ContainerInfo {
   dockerImage: string;
