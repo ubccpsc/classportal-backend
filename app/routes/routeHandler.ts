@@ -122,7 +122,7 @@ const getDeliverables = (req: restify.Request, res: restify.Response, next: rest
 //     .catch((err: any) => res.json(500, {err: err.message}));
 // };
 
-const getGradesAdmin = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+const getCourseGrades = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return gradeCtrl.getAllGradesByCourse(req)
     .then((grades: any) => {
       const CSV_HEAD = 'snum,grade';
@@ -139,10 +139,17 @@ const getGradesAdmin = (req: restify.Request, res: restify.Response, next: resti
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
-const getGradesStudent = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return gradeCtrl.getReleasedGradesByCourse(req)
+
+const getGradesByDeliv = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return gradeCtrl.getGradesByDeliv(req)
     .then((grades: IGradeDocument[]) => res.json(200, {response: grades}))
     .catch((err: any) => res.json(500, {err: err.message}));
+};
+
+const getGradesIfReleased = (req: any, res: restify.Response, next: restify.Next) => {
+  return gradeCtrl.getGradesIfReleased(req.params, req.user.snum, req.user.csid)
+    .then((grades: any) => res.json(200, {response: grades}))
+    .catch((err: any) => res.json(500, {err: err}));
 };
 
 const createTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
@@ -392,7 +399,7 @@ const testJwt = (req: restify.Request, res: any, next: restify.Next) => {
 export {
   pong, createCourse, getAllCourses, logout, updateClassList, getClassList,
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaffOrAdmin,
-  getGradesAdmin, getGradesStudent, createTeam, updateTeam, getStudentNamesFromCourse,
+  getCourseGrades, createTeam, updateTeam, getStudentNamesFromCourse,
   addAdminList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
   deleteRepos, getCurrentUser, isAuthenticated, getMyCourses,
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
@@ -400,5 +407,6 @@ export {
   getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamInfo, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
-  getStdioFile, addStaffList, getAllStaff, getDefaultDeliv, removeRepoFromTeams, testJwt
+  getStdioFile, addStaffList, getAllStaff, getDefaultDeliv, removeRepoFromTeams, testJwt,
+  getGradesByDeliv, getGradesIfReleased,
 };

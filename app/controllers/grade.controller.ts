@@ -105,6 +105,7 @@ let csvParser = function (filePath: string, options: any) {
  *            Optional header: COMMENTS
  *            CSV SENT TO 'gradesFile' path in payload.
  * 
+ *            - If new list is uploaded, older entries will continue to exist if they are not included in the new list.
  *            - Grade will be empty string if left empty. Zeros must be explicitly assigned in grades column.
  *            - Comments will be empty if not included.
  * @param req.params.courseId CourseId string such as '310', '210'
@@ -112,7 +113,7 @@ let csvParser = function (filePath: string, options: any) {
  * @param req.files.gradesFile.path upload CSV location. (managed by Restify)
  * @return IGradeDocument[] list of updated grades under the delivName and courseId
  */
-function addGradesCSV(req: any): Promise<any[]> {
+function addGradesCSV(req: any): Promise<IGradeDocument[]> {
 
   let course: ICourseDocument;
   let deliv: IDeliverableDocument;
@@ -145,6 +146,7 @@ function addGradesCSV(req: any): Promise<any[]> {
     .then((deliv: IDeliverableDocument) => {
       // Updates grade if exists, creates grade if does not exist.
       let gradePromises: any = [];
+      let updatedGrades: IGradeDocument[] = [];
       
       return csvParser(req.files.gradesFile.path, options).then((result: any) => {
         console.log('PARSING CSV GRADES', result);
@@ -159,16 +161,16 @@ function addGradesCSV(req: any): Promise<any[]> {
               grade.grade = result[i].GRADE === "-1" || "" ? null : Number(result[i].GRADE);
               grade.comments = result[i].COMMENTS;
               grade.save();
+              if (grade) {
+                updatedGrades.push(grade);
+              }
             });
             gradePromises.push(gradePromise);
           }
           return Promise.all(gradePromises)
             .then(() => {
               // Return updated grades to front-end
-              return Grade.find({course: course.courseId, deliverable: req.params.delivName})
-                .then((grades: IGradeDocument[]) => {
-                  return grades;
-                });
+              return updatedGrades;
             });
         });
     });
@@ -206,30 +208,81 @@ function getAllGradesByCourse(req: any) {
   return courseQuery;
 }
 
-function getReleasedGradesByCourse(req: any) {
-  logger.info('getReleasedGradesBycourse()');
-  let gradesInCourse = Course.findOne({'courseId': req.params.courseId}).populate('grades').exec();
-
-  let getReleasedDeliverables = Deliverable.find({gradesReleased: true})
-    .exec()
-    .then(deliverables => {
-      let deliverableNames = new Array();
-      for (let key in deliverables) {
-        if (deliverables[key].gradesReleased === true) {
-          deliverableNames.push(deliverables[key].name);
-        }
+/**
+ * If a Deliverable 'gradesReleased' property is true, then this endpoint returns the 
+ * grades that were requested for a particular Course and Deliverable to the student.
+ * 
+ * @param payload.courseId String name of the Course number ie. '310', '210'
+ * @return IGradeDocument[] a list of grades under a Deliverable and Course
+ */
+function getGradesIfReleased(payload: any, snum: string, csid: string): Promise<IGradeDocument[]> {
+  let course: ICourseDocument;
+  let delivs: IDeliverableDocument[];
+  let delivGradeQueries: any = [];
+  let grades: IGradeDocument[] = [];
+  
+  const SNUM: string = snum;
+  const CSID: string = csid;
+  console.log('SNUM', SNUM);
+  console.log('CSID', CSID);
+  return Course.findOne({courseId: payload.courseId})
+    .then((_course: ICourseDocument) => {
+      if (_course) {
+        course = _course;
+        return course;
       }
-      return deliverableNames;
+      throw `Could not find the Course ${payload.courseId}`;
     })
-    .catch(err => logger.info(err));
+    .then(() => {
+      return Deliverable.find({courseId: course._id})
+        .then((_delivs: IDeliverableDocument[]) => {
+          if (_delivs) {
+            delivs = _delivs;
+            return delivs;
+          }
+          throw `Could not find Deliverables ${payload.delivName} under ${payload.courseId}`;
+        });
+    })
+    .then(() => {
+      if (typeof CSID === 'undefined' || typeof SNUM === 'undefined') {
+        throw `CSID or SNUM cannot be found`;
+      }
+    })
+    .then(() => {
+      delivs.map((deliv) => {
+        if (deliv.gradesReleased) {
+          let delivGradeQuery = function () {
+            return Grade.findOne({snum: SNUM, csid: CSID, deliverable: deliv.name, course: payload.courseId})
+              .exec()
+              .then((grade: IGradeDocument) => {
+                if (grade) {
+                  grades.push(grade);
+                }
+                return grade;
+              });
+          };
+          delivGradeQueries.push(delivGradeQuery());
+        }
+      });
+      return Promise.all(delivGradeQueries)
+        .then(() => {
+          return grades;
+        });
+    });
+}
 
-  return getReleasedDeliverables.then((deliverableNames: IDeliverableDocument[]) => {
-    let snum = req.user.snum;
-    return Grade.find({
-      'snum':  snum,
-      'deliv': {$in: deliverableNames},
-    }).exec();
-  });
+/**
+ * Returns all of the Grades for a particular Deliverable and Course combination.
+ * 
+ * @param payload.delivName String name of the deliverable ie. 'd3', 'prt3'
+ * @param payload.courseId String name of the Course number ie. '310', '210'
+ * @return IGradeDocument[] a list of grades under a Deliverable and Course
+ */
+function getGradesByDeliv(payload: any): Promise<IGradeDocument[]> {
+  return Grade.find({deliverable: payload.delivName, course: payload.courseId})
+    .then((grades: IGradeDocument[]) => {
+      return grades;
+    });
 }
 
 function sortArrayByLastName(csvArray: any[]) {
@@ -249,4 +302,4 @@ function sortArrayByLastName(csvArray: any[]) {
   return csvArray;
 }
 
-export {getAllGradesByCourse, getReleasedGradesByCourse, addGradesCSV};
+export {getAllGradesByCourse, addGradesCSV, getGradesByDeliv, getGradesIfReleased};

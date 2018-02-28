@@ -20,8 +20,7 @@ const routes = (server: restify.Server) => {
   server.get('/isAuthenticated', routeHandler.isAuthenticated);
   server.get('/currentUser', isAuthenticated, routeHandler.getCurrentUser);
   server.get('/:courseId/deliverables', isAuthenticated, routeHandler.getDeliverables);
-  server.get('/:courseId/grades', isAuthenticated, routeHandler.getGradesStudent);
-  server.post('/:courseId/admin/grades/results', adminAuthenticated, routeHandler.getGradesFromResults);
+  server.get('/:courseId/grades/released', isAuthenticated, routeHandler.getGradesIfReleased);
   server.post('/:courseId/students/isInSameLab', isAuthenticated, routeHandler.isStudentInSameLab);
   server.get('/:courseId/students/withoutTeam', isAuthenticated, routeHandler.getUsersNotOnTeam);
   server.put('/:courseId/team', routeHandler.createTeam);
@@ -53,6 +52,7 @@ const routes = (server: restify.Server) => {
     routeHandler.getFileFromResultRecord);
   server.get('/:courseId/:deliverableName/container', routeHandler.getContainerInfo);
   server.get('/admin/files/:stdioRef/stdio.txt', adminAuthenticated, routeHandler.getStdioFile);
+  server.post('/:courseId/admin/grades/results', adminAuthenticated, routeHandler.getGradesFromResults);
   server.get('/:courseId/admin/teams/info/:deliverableName', adminAuthenticated, routeHandler.getCourseTeamInfo);
   server.get('/:courseId/admin/courseSettings', adminAuthenticated, routeHandler.getCourseSettings);
   server.get('/:courseId/admin/classList', adminAuthenticated, routeHandler.getClassList);
@@ -71,7 +71,8 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/admin/students', adminAuthenticated, routeHandler.getClassList);
   server.post('/:courseId/admin/classList', adminAuthenticated, routeHandler.updateClassList);
   // server.post('/:courseId/admin/grades', adminAuthenticated, routeHandler.addGrades);
-  server.get('/:courseId/admin/grades', adminAuthenticated, routeHandler.getGradesAdmin);
+  server.get('/:courseId/admin/grades', adminAuthenticated, routeHandler.getCourseGrades);
+  server.get('/:courseId/admin/grades/:delivName', adminAuthenticated, routeHandler.getGradesByDeliv);
   server.post('/:courseId/admin/grades/:delivName', adminAuthenticated, routeHandler.addGradesCSV);
   server.post('/:courseId/admin/deliverable', adminAuthenticated, routeHandler.updateDeliverable);
   server.put('/:courseId/admin/deliverable', adminAuthenticated, routeHandler.addDeliverable);
