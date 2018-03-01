@@ -5,6 +5,8 @@ interface IGradeDocument extends mongoose.Document {
   snum: string;
   csid: string;
   deliverable: string;
+  fname: string;
+  lname: string;
   course: string;
   comments: string;
   grade: number;
@@ -26,6 +28,14 @@ const GradeSchema = new mongoose.Schema({
   course:   {
     type:     String,
     required: true,
+  },
+  fname:    {
+    type:     String,
+    default:  '',
+  },
+  lname:    {
+    type:     String,
+    default:  '',
   },
   deliverable:   {
     required: true,

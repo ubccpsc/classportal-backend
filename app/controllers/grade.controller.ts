@@ -117,6 +117,7 @@ function addGradesCSV(req: any): Promise<IGradeDocument[]> {
 
   let course: ICourseDocument;
   let deliv: IDeliverableDocument;
+  let allStudentsExist: boolean = true;
 
   // CSV parser options
   const options = {
@@ -126,6 +127,7 @@ function addGradesCSV(req: any): Promise<IGradeDocument[]> {
   };
 
   return Course.findOne({courseId: req.params.courseId})
+    .populate('classList')
     .then((_course: ICourseDocument) => {
       if (_course) {
         course = _course;
@@ -147,65 +149,72 @@ function addGradesCSV(req: any): Promise<IGradeDocument[]> {
       // Updates grade if exists, creates grade if does not exist.
       let gradePromises: any = [];
       let updatedGrades: IGradeDocument[] = [];
-      
+      let user: IUserDocument;
+
       return csvParser(req.files.gradesFile.path, options).then((result: any) => {
         console.log('PARSING CSV GRADES', result);
         for (let i = 0; i < result.length; i++) {
+
+          // Identify user to join fname and lname
+          let studentExists: boolean = false;
+          course.classList.map((u: IUserDocument) => {
+            if (u.snum === result[i].SNUM || u.csid === result[i].CSID) {
+              user = u;
+              studentExists = true;
+            }
+          });
+
+          // If student does not exist, throw error before Promise.all, as we do not want grades for fake students.
+          if (!studentExists) {
+            allStudentsExist = false;
+          }
+
           let gradePromise = Grade.findOrCreate({
             snum: result[i].SNUM, 
             csid: result[i].CSID, 
             deliverable: deliv.name, 
             course: course.courseId
           })
-            .then((grade: IGradeDocument) => {
-              grade.grade = result[i].GRADE === "-1" || "" ? null : Number(result[i].GRADE);
-              grade.comments = result[i].COMMENTS || '';
-              grade.save();
-              if (grade) {
-                updatedGrades.push(grade);
-              }
-            });
-            gradePromises.push(gradePromise);
-          }
-          return Promise.all(gradePromises)
+          .then((grade: IGradeDocument) => {
+            grade.grade = result[i].GRADE === "-1" || "" ? null : Number(result[i].GRADE);
+            grade.comments = result[i].COMMENTS || '';
+            grade.fname = user.fname;
+            grade.lname = user.lname;
+            grade.save();
+            if (grade) {
+              updatedGrades.push(grade);
+            }
+          });
+          gradePromises.push(gradePromise);
+        }
+
+          if (allStudentsExist) {
+            return Promise.all(gradePromises)
             .then(() => {
               // Return updated grades to front-end
               return updatedGrades;
             });
+          } else {
+            throw `Ensure that all students exist in Class List before uploading Grades.`;
+          }
         });
     });
 }
 
-function getAllGradesByCourse(req: any) {
-  logger.info('getAllGradesByCourse()');
-  let courseQuery = Course.findOne({courseId: req.params.courseId})
-    .populate({
-      path:   'grades',
-      model:  'Grade',
-      select: '-__v -_id',
-    }).exec();
-
-  if (req.query !== null && req.query.format == 'csv') {
-    return courseQuery.then(course => {
-      let response: any;
-      let stringify = require('csv-stringify');
-      let arrayOfGradesResponse = new Array();
-      let csvColumns = ['snum', 'grade'];
-
-      arrayOfGradesResponse.push(csvColumns);
-
-      for (let i = 0; i < course.grades.length; i++) {
-        let g: any = course.grades[i];
-        let snum = g.snum;
-        let grade = g.details.finalGrade;
-        arrayOfGradesResponse.push([snum, grade]);
+/**
+ * Gets all grades for all the deliverables in a Course, even if they are not released.
+ * 
+ * @param payload.courseId string Course Id, such as '310'
+ * @return IGradeDocument[] A list of released and non-released grades.
+ */
+function getAllGrades(payload: any) {
+  return Grade.find({course: payload.courseId})
+    .then((grades: IGradeDocument[]) => {
+      if (grades) {
+        return grades;
       }
-      logger.info('getAllGradesByCourse() - returning csv');
-      return csvGenerate(arrayOfGradesResponse);
+      return [];
     });
-  }
-  logger.info('getAllGradesByCourse() - returning json');
-  return courseQuery;
 }
 
 /**
@@ -307,4 +316,4 @@ function sortArrayByLastName(csvArray: any[]) {
   return csvArray;
 }
 
-export {getAllGradesByCourse, addGradesCSV, getGradesByDeliv, getGradesIfReleased};
+export {getAllGrades, addGradesCSV, getGradesByDeliv, getGradesIfReleased};

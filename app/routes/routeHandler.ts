@@ -107,43 +107,25 @@ const getContainerInfo = (req: restify.Request, res: restify.Response, next: res
 const addDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return delivCtrl.addDeliverable(req.params)
     .then((newDeliv: IDeliverableDocument) => res.json(200, {response: newDeliv}))
-    .catch((err: any) => res.json(500, {err: err.message}));
+    .catch((err: any) => res.json(500, {err: err}));
 };
 
 const getDeliverables = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return delivCtrl.getDeliverablesByCourse(req.params)
     .then((deliverables) => res.json(200, {response: deliverables}))
-    .catch((err: any) => res.json(500, {err: err.message}));
+    .catch((err: any) => res.json(500, {err: err}));
 };
 
-// const addGrades = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-//   return gradeCtrl.create(req.params)
-//     .then((course: any) => res.json(200, {response: 'Successfully updated grades.'}))
-//     .catch((err: any) => res.json(500, {err: err.message}));
-// };
-
-const getCourseGrades = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return gradeCtrl.getAllGradesByCourse(req)
-    .then((grades: any) => {
-      const CSV_HEAD = 'snum,grade';
-      if (grades.startsWith != undefined && grades.startsWith(CSV_HEAD) && req.params.csv) {
-        res.writeHead(200, {
-          'Content-Type':        'text/csv',
-          'Content-Disposition': 'attachment; filename=Course' + req.params.courseId + 'Grades.csv',
-        });
-        res.end(grades);
-      } else {
-        res.json(200, {response: grades});
-      }
-    })
-    .catch((err: any) => res.json(500, {err: err.message}));
+const getAllGrades = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return gradeCtrl.getAllGrades(req.params)
+    .then((grades: IGradeDocument[]) => res.json(200, {response: grades}))
+    .catch((err: any) => res.json(500, {err: err}));
 };
-
 
 const getGradesByDeliv = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return gradeCtrl.getGradesByDeliv(req)
     .then((grades: IGradeDocument[]) => res.json(200, {response: grades}))
-    .catch((err: any) => res.json(500, {err: err.message}));
+    .catch((err: any) => res.json(500, {err: err}));
 };
 
 const getGradesIfReleased = (req: any, res: restify.Response, next: restify.Next) => {
@@ -194,7 +176,7 @@ const getTeams = (req: restify.Request, res: restify.Response, next: restify.Nex
 const addGradesCSV = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return gradeCtrl.addGradesCSV(req)
     .then((updatedGrades: any) => res.json(200, {response: updatedGrades}))
-    .catch((err: any) => res.json(500, {err: err.message}));
+    .catch((err: any) => res.json(500, {err: err}));
 };
 
 const createGithubTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
@@ -399,7 +381,7 @@ const testJwt = (req: restify.Request, res: any, next: restify.Next) => {
 export {
   pong, createCourse, getAllCourses, logout, updateClassList, getClassList,
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaffOrAdmin,
-  getCourseGrades, createTeam, updateTeam, getStudentNamesFromCourse,
+  getAllGrades, createTeam, updateTeam, getStudentNamesFromCourse,
   addAdminList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
   deleteRepos, getCurrentUser, isAuthenticated, getMyCourses,
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
