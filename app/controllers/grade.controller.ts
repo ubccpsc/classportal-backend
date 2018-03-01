@@ -159,7 +159,7 @@ function addGradesCSV(req: any): Promise<IGradeDocument[]> {
           })
             .then((grade: IGradeDocument) => {
               grade.grade = result[i].GRADE === "-1" || "" ? null : Number(result[i].GRADE);
-              grade.comments = result[i].COMMENTS;
+              grade.comments = result[i].COMMENTS || '';
               grade.save();
               if (grade) {
                 updatedGrades.push(grade);
@@ -223,8 +223,7 @@ function getGradesIfReleased(payload: any, snum: string, csid: string): Promise<
   
   const SNUM: string = snum;
   const CSID: string = csid;
-  console.log('SNUM', SNUM);
-  console.log('CSID', CSID);
+
   return Course.findOne({courseId: payload.courseId})
     .then((_course: ICourseDocument) => {
       if (_course) {
@@ -266,6 +265,12 @@ function getGradesIfReleased(payload: any, snum: string, csid: string): Promise<
       });
       return Promise.all(delivGradeQueries)
         .then(() => {
+          // sort by deliverable name alphabetically and then return
+          let sortedGrades: IGradeDocument[] = grades.sort(
+            function(a, b) {
+              return (a.deliverable < b.deliverable) ? -1 : (a.deliverable > b.deliverable) ? 1 : 0;
+            }
+          );
           return grades;
         });
     });
