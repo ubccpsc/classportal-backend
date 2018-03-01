@@ -123,7 +123,7 @@ const getAllGrades = (req: restify.Request, res: restify.Response, next: restify
 };
 
 const getGradesByDeliv = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return gradeCtrl.getGradesByDeliv(req)
+  return gradeCtrl.getGradesByDeliv(req.params)
     .then((grades: IGradeDocument[]) => res.json(200, {response: grades}))
     .catch((err: any) => res.json(500, {err: err}));
 };
