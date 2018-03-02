@@ -149,11 +149,11 @@ function addGradesCSV(req: any): Promise<IGradeDocument[]> {
       // Updates grade if exists, creates grade if does not exist.
       let gradePromises: any = [];
       let updatedGrades: IGradeDocument[] = [];
-      let user: IUserDocument;
 
       return csvParser(req.files.gradesFile.path, options).then((result: any) => {
         console.log('PARSING CSV GRADES', result);
         for (let i = 0; i < result.length; i++) {
+          let user: IUserDocument;
 
           // Identify user to join fname and lname
           let studentExists: boolean = false;
@@ -180,6 +180,7 @@ function addGradesCSV(req: any): Promise<IGradeDocument[]> {
             grade.comments = result[i].COMMENTS || '';
             grade.fname = user.fname;
             grade.lname = user.lname;
+            grade.username = user.username;
             grade.save();
             if (grade) {
               updatedGrades.push(grade);
