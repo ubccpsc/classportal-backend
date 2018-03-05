@@ -1630,7 +1630,6 @@ export default class GitHubManager {
           logger.error("******");
 
           console.log('error object output', err);
-          inputGroup.url = "";
           reject(err);
         });
     });

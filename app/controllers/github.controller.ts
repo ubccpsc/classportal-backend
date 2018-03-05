@@ -228,7 +228,16 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
             _team:       _teams[i],
             orgName:     course.githubOrg
           };
-          githubManager.reAddUsersToTeam(inputGroup, inputGroup.projectName, STAFF_TEAM, '');
+          githubManager.reAddUsersToTeam(inputGroup, inputGroup.projectName, STAFF_TEAM, '')
+            .then(() => {
+              // if successful, remove any previous error state: 
+              inputGroup._team.githubState.creationRecord.error = {};
+              return inputGroup._team.save();
+            })
+            .catch((err) => {
+              inputGroup._team.githubState.creationRecord.error = err;
+              return inputGroup._team.save();
+            });
         }
         return _teams;
       });
