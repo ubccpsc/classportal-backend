@@ -7,8 +7,8 @@ import * as gradeCtrl from '../controllers/grade.controller';
 import * as teamCtrl from '../controllers/team.controller';
 import * as testCtrl from '../controllers/test.controller';
 import * as fileCtrl from '../controllers/file.controller';
-import * as projectCtrl from '../controllers/project.controller';
 import * as githubCtrl from '../controllers/github.controller';
+import * as dockerCtrl from '../controllers/docker.controller';
 import {TeamPayloadContainer, TeamPayload, TeamRow, Student} from '../interfaces/ui/team.interface';
 import {logger} from '../../utils/logger';
 import {ContainerInfo} from '../controllers/deliverable.controller';
@@ -373,6 +373,18 @@ const removeRepoFromTeams = (req: restify.Request, res: restify.Response, next: 
     .catch((err: any) => res.json(500, {err: err}));
 };
 
+const raiseContainer = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return dockerCtrl.raiseContainer(req.params)
+    .then((defaultDeliv: any) => res.json(200, {response: defaultDeliv}))
+    .catch((err: any) => res.json(500, {err: err}));
+};
+
+const dropContainer = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return dockerCtrl.dropContainer(req.params)
+    .then((defaultDeliv: any) => res.json(200, {response: defaultDeliv}))
+    .catch((err: any) => res.json(500, {err: err}));
+};
+
 const testJwt = (req: restify.Request, res: any, next: restify.Next) => {
   res.setCookie('thiscookie', 'testS', {path: '/', maxAge: 60, secure: true});
   return res.json(200, {response: 'response'});
@@ -390,5 +402,5 @@ export {
   createCustomTeam, isStudentInSameLab, getCourseTeamInfo, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
   getStdioFile, addStaffList, getAllStaff, getDefaultDeliv, removeRepoFromTeams, testJwt,
-  getGradesByDeliv, getGradesIfReleased,
+  getGradesByDeliv, getGradesIfReleased, raiseContainer, dropContainer,
 };

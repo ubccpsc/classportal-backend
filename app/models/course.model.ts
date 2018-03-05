@@ -4,11 +4,12 @@ import {logger} from '../../utils/logger';
 
 interface ICourseDocument extends mongoose.Document {
   courseId: string;
-  customData: any;
+  custom: any;
   delivKey: string;
   solutionsKey: string;
   classList: Object[];
-  grades: [Object];
+  dockerKey: string;
+  dockerRepo: string;
   labSections: LabSection[];
   admins: IUserDocument[];
   staffList: IUserDocument[];
@@ -46,7 +47,6 @@ export interface CourseSettings {
 }
 
 interface ICourseModel extends mongoose.Model<ICourseDocument> {
-  findByPlugin(customData: string): Promise<ICourseDocument>;
   findByCourseId(courseId: string): Promise<ICourseDocument>;
   findUsersInCourse(courseId: string): Promise<ICourseDocument[]>;
   createOrUpdate(course: ICourseDocument): Promise<ICourseDocument>;
@@ -102,8 +102,20 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     type: Object,
     default: {},
   },
+  dockerRepo:       {
+    type: String,
+    default: '',
+  },
+  dockerKey:        {
+    type: Object,
+    default: '',
+  },
   githubOrg:           {
     type: String,
+  },
+  whitelistedServers:  {
+    type: String,
+    default: 'portal.cs.ubc.ca:1210 portal.cs.ubc.ca:1310 portal.cs.ubc.ca:1311',
   },
   settings:            {
     type: Object,

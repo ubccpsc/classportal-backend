@@ -19,6 +19,7 @@ const config: any = {
   github_callback_url:  process.env.GITHUB_OAUTH_CALLBACK,
   super_admin:          process.env.DEV_SUPER_ADMIN,
   admins:               process.env.DEV_ADMINS.split(' '),
+  defaultServerWhitelist: process.env.DEFAULT_SERVER_WHITELIST,
   auth_strategy:        'github',
   github_auth_token:    process.env.GITHUB_AUTH_TOKEN,
   github_clone_token:   process.env.GITHUB_CLONE_TOKEN,

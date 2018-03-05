@@ -58,6 +58,19 @@ export class Helper {
   }
 
   /**
+   * Creates a full url with github repo url and auth token that works on the command line with `git clone`
+   * 
+   * @param url string Url of github repo without token. ie. https://github.com/username/repo
+   * @param authKey string long Github Auth token 
+   */
+  public static addGithubAuthToken(url: string, authToken: string): string {
+    let start_append = url.indexOf('//') + 2;
+    let authKey = authToken + '@';
+    let authedUrl = url.slice(0, start_append) + authKey + url.slice(start_append);
+    return authedUrl;
+  }
+
+  /**
    * Helper method for reading and parsing JSON data files.
    */
   public static readJSON(filename: string, callback: any) {

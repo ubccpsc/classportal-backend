@@ -13,6 +13,8 @@ interface IDeliverableDocument extends mongoose.Document {
   deliverableKey: string;
   open: number;
   close: number;
+  dockerRepo: string;
+  dockerKey: string;
   projectCount: number;
   teamsInSameLab: boolean;
   rate: number;
@@ -48,6 +50,14 @@ const DeliverableSchema = new mongoose.Schema({
   },
   courseNum: {
     type: Number,
+  },
+  dockerRepo: {
+    type: String,
+    default: '',
+  },
+  dockerKey: {
+    type: String,
+    default: '',
   },
   dockerImage: {
     type: String,
@@ -164,11 +174,6 @@ DeliverableSchema.static({
    * Find a Deliverable by object query. If doesn't exist, creates it based on object query and returns it.
    * @param {object} search parameters
    * @returns {Promise<IDeliverableDocument>} Returns a Promise of the user.
-   */
-  /**
-   * Find a user by Github username. If does not exist, then user created in DB.
-   * @param {string} github username
-   * @returns {Promise<IUserDocument>} Returns a Promise of the user.
    */
   findOrCreate: (query: Object): Promise<IDeliverableDocument> => {
     return Deliverable

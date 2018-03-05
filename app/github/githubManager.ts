@@ -1369,18 +1369,11 @@ export default class GitHubManager {
     console.log('import repo', importRepo);
     console.log('student repo', studentRepo);
 
-    function addGithubAuthToken(url: string) {
-      let start_append = url.indexOf('//') + 2;
-      let authKey = config.github_clone_token + '@';
-      let authedUrl = url.slice(0, start_append) + authKey + url.slice(start_append);
-      return authedUrl;
-    }
-
-    var exec = require('child-process-promise').exec;
+    let exec = require('child-process-promise').exec;
     let tempDir = await tmp.dir({dir: '/recycling', unsafeCleanup: true});
     let tempPath = tempDir.path;
-    let authedStudentRepo = addGithubAuthToken(studentRepo);
-    let authedImportRepo = addGithubAuthToken(importRepo);
+    let authedStudentRepo = Helper.addGithubAuthToken(importRepo, config.github_clone_token);
+    let authedImportRepo = Helper.addGithubAuthToken(importRepo, config.github_clone_token);
 
     return cloneRepo().then(() => {
       return enterRepoPath()
@@ -1584,7 +1577,6 @@ export default class GitHubManager {
           logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
           fulfill(inputGroup);
         }).catch(function (err) {
-        inputGroup._team.githubState.creationRecord.error = err;
         // logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
         logger.error("******");
         logger.error("******");
@@ -1592,7 +1584,7 @@ export default class GitHubManager {
         logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
         logger.error("******");
         logger.error("******");
-
+        inputGroup._team.githubState.creationRecord.error = err;
         inputGroup._team.save();
         reject(err);
       });
@@ -1731,8 +1723,8 @@ export default class GitHubManager {
         logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
         logger.error("******");
         logger.error("******");
-
-        inputGroup.url = "";
+        inputGroup._team.githubState.creationRecord.error = err;
+        inputGroup._team.save();
         reject(err);
       });
     });
