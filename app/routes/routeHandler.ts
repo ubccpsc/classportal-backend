@@ -181,7 +181,7 @@ const addGradesCSV = (req: restify.Request, res: restify.Response, next: restify
 
 const createGithubTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return githubCtrl.createGithubTeam(req.params)
-    .then((githubResponse: Object) => res.json(200, {response: 'Successfully created team with members.'}))
+    .then((githubResponse: Object) => res.json(200, {response: 'Starting Github provision...'}))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 

@@ -173,6 +173,16 @@ function createRepoName(course: ICourseDocument, delivName: string, teamNum: str
 }
 
 /** 
+ * Repairs the problems in a Github repo.
+ * 
+ *    IF: 
+ *    - A team member has failed to been added. (happens often)
+ *    - A webhook is not implemented, or a webhook has been updated. (has not been seen)
+ * 
+ *    NOTE: 
+ * 
+ *    - Errors are caught and saved in the Team object under the githubState property.
+ * 
  * @param payload.courseId = number, ie. 310
  * @param payload.githubOrg = string, ie. "CPSC310-2017W-T2"
  * @param payload.deliverableName = string, ie. "d0"
@@ -229,6 +239,19 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
 }
 
 /**
+ * Creates Github Enterprise repositories if they do not exist. 
+ * 
+ *    NOTE: Only runs creation for repos for Team objects that do not already have
+ *    githubState.repo.url assigned. Hence, this script can be run as many times as 
+ *    you want to ensure that new teams are provisioned repos without affecting other
+ *    teams.
+ * 
+ *    NOTE: 
+ * 
+ *    - Errors are caught and saved in the Team object under the githubState property.
+ *    - Run the '/:courseId/admin/github/repo/team/repair' script to fix connection errors,
+ *      or if errors due to Github users not logged in first time.
+ * 
  * @param payload.courseId course id ie. '310'
  * @param payload.deliverableName The name of the Deliverable ie. 'd1', 'pn2'
  * @return string "Succesfully created 200 message"

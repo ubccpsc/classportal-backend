@@ -1573,6 +1573,11 @@ export default class GitHubManager {
         logger.info("GitHubManager::completeTeamProvision(..) - admin staff added to repo; saving url");
         return that.setGithubUrl(inputGroup.url, inputGroup._team);
       })
+        .then(() => {
+          // If successfully completes, update error state to no errors
+          inputGroup._team.githubState.creationRecord.error = {};
+          inputGroup._team.save();
+        })
         .then(function () {
           logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
           fulfill(inputGroup);
@@ -1813,79 +1818,6 @@ export default class GitHubManager {
     });
   }
 
-  completeIndividualProvision(inputGroup: ProjectRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<ProjectRepoDescription> {
-    let that = this;
-    logger.info("GitHubManager::completeIndividualProvision(..) - start: " + inputGroup.projectName);
-    return new Promise(function (fulfill, reject) {
-
-      const DELAY = that.DELAY_SEC * 3;
-      // slow down creation to avoid getting in trouble with GH
-      that.delay(inputGroup.projectIndex * DELAY).then(function () {
-        logger.info("GitHubManager::completeIndividualProvision(..) - creating project: " + inputGroup.projectName);
-        return that.createRepo(inputGroup.projectName);
-      }).then(function (newRepoInfo: NewGithubRepoInfo) {
-        inputGroup.url = newRepoInfo.url;
-        // let importUrl = 'https://github.com/CS310-2016Fall/cpsc310project';
-        logger.info("GitHubManager::completeIndividualProvision(..) - project created; importing url: " + importUrl);
-        inputGroup.project.githubState.repo.name = newRepoInfo.name;
-        inputGroup.project.githubState.repo.id = newRepoInfo.id;
-        inputGroup.project.githubState.repo.url = newRepoInfo.url;
-        inputGroup.project.save()
-          .then((project: IProjectDocument) => {
-          })
-          .catch((err: any) => {
-            logger.error(`GithubManager::completeIndividualProvision() inputGroup.project.save() ERROR ${err}`);
-          });
-        return that.importRepoFS(importUrl, inputGroup.url);
-      }).then(function () {
-        logger.info("GitHubManager::completeIndividualProvision(..) - import started; adding webhook");
-        return that.addWebhook(inputGroup.projectName, webhookEndpoint);
-      }).then(function () {
-        // add individual to repo
-        logger.info("GitHubManager::completeIndividualProvision(..) - webhook added; adding user: " + inputGroup.student);
-        return that.addCollaboratorToRepo(inputGroup.student, inputGroup.projectName, 'push');
-        /*
-         // don't need teams for individual repos
-         .then(function () {
-         logger.info("GitHubManager::completeIndividualProvision(..) - webhook added; creating team: " + inputGroup.teamName);
-         return that.createTeam(inputGroup.teamName, 'push');
-         }).then(function (teamDeets: any) {
-         var teamId = teamDeets.teamId;
-         logger.info("GitHubManager::completeIndividualProvision(..) - team created ( " + teamId + " ) ; adding members: " + JSON.stringify(inputGroup.members));
-         return that.addMembersToTeam(teamId, inputGroup.members);
-         }).then(function (teamId: number) {
-         logger.info("GitHubManager::completeIndividualProvision(..) - members added to team ( " + teamId + " ); adding team to project");
-         const TEAM_PERMISSIONS = 'push';
-         return that.addTeamToRepo(teamId, inputGroup.projectName, TEAM_PERMISSIONS);
-         */
-      }).then(function () {
-        logger.info("GitHubManager::completeIndividualProvision(..) - person added to repo; getting staff team number for: " + staffTeamName);
-        // let staffTeamName = '310staff';
-        return that.getTeamNumber(staffTeamName);
-      }).then(function (staffTeamNumber: number) {
-        logger.info("GitHubManager::completeIndividualProvision(..) - found staff team number ( " + staffTeamNumber + " ); adding staff to repo");
-        const STAFF_PERMISSIONS = 'admin';
-        return that.addTeamToRepo(staffTeamNumber, inputGroup.projectName, STAFF_PERMISSIONS);
-      }).then(function () {
-        logger.info("GitHubManager::completeIndividualProvision(..) - admin staff added to repo; setting individual URL");
-        // TODO: write githubURL as importUrl
-        return that.setProjectUrl(inputGroup.project, inputGroup.url);
-      }).then(function (project: IProjectDocument) {
-        logger.info("GitHubManager::completeIndividualProvision(..) - process complete for: " + JSON.stringify(inputGroup));
-        fulfill(inputGroup);
-      }).catch(function (err) {
-        logger.error("******");
-        logger.error("******");
-        logger.error("Input Description: " + JSON.stringify(inputGroup));
-        logger.error("GitHubManager::completeIndividualProvision(..) - ERROR: " + err);
-        logger.error("******");
-        logger.error("******");
-        inputGroup.url = "";
-        reject(err);
-      });
-    });
-  }
-
   // Assumes that the repo was made successfully and cloned at this time
   // If not, then completeIndividualProvision should run successfully on
   // new projects that need to be created.
@@ -1926,158 +1858,6 @@ export default class GitHubManager {
       });
     });
   }
-
-  // Assumes that the repo was made successfully and cloned at this time
-  // If not, then completeIndividualProvision should run successfully on
-  // new projects that need to be created.
-  reAddUser(inputGroup: ProjectRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<ProjectRepoDescription> {
-    let that = this;
-    logger.info("GitHubManager::reapirIndividualProvision(..) - start: " + inputGroup.projectName);
-    return new Promise(function (fulfill, reject) {
-
-      const DELAY = 10000;
-      // slow down creation to avoid getting in trouble with GH
-      that.delay(inputGroup.projectIndex * DELAY).then(function () {
-        logger.info("GitHubManager:: DELAY TIME GAP (..) - delaying: " + inputGroup.projectName);
-        return;
-      })
-        .then(function () {
-          // add individual to repo
-          logger.info("GitHubManager::completeIndividualProvision(..) - adding user: " + inputGroup.student);
-          return that.addCollaboratorToRepo(inputGroup.student, inputGroup.projectName, 'push')
-            .catch(err => {
-              logger.info(`GithubManager::completeIndividualProvision(..) Collaborator was not added: ${err}`);
-            });
-        }).then(function (project: IProjectDocument) {
-        logger.info("GitHubManager::completeIndividualProvision(..) - process complete for: " + inputGroup.projectName);
-        fulfill(inputGroup);
-      }).catch(function (err) {
-        logger.error("******");
-        logger.error("******");
-        logger.error("Input Description: " + inputGroup.projectName);
-        logger.error("GitHubManager::completeIndividualProvision(..) - ERROR: " + err);
-        logger.error("******");
-        logger.error("******");
-        inputGroup.url = "";
-        reject(err);
-      });
-    });
-  }
-
-
-  // Assumes that the repo was made successfully and cloned at this time
-  // If not, then completeIndividualProvision should run successfully on
-  // new projects that need to be created.
-  repairIndividualProvision(inputGroup: ProjectRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<ProjectRepoDescription> {
-    let that = this;
-    logger.info("GitHubManager::reapirIndividualProvision(..) - start: ");
-    return new Promise(function (fulfill, reject) {
-
-      const DELAY = 10000;
-      // slow down creation to avoid getting in trouble with GH
-      that.delay(inputGroup.projectIndex * DELAY).then(function () {
-        logger.info("GitHubManager:: DELAY TIME GAP (..) - delaying: " + inputGroup.projectName);
-        return;
-      }).then(function () {
-        logger.info("GitHubManager:: GETTING WEBHOOKS (..) - listing");
-        return that.getWebhooks(inputGroup.projectName);
-      })
-        .then(function (webhooks: any) {
-          logger.info("GitHubManager:: REMOVING WEBHOOKS (..) - listing");
-          let index = 1;
-          Object.keys(webhooks).forEach((key: string) => {
-            let webhookId: Number = webhooks[key].id;
-            that.removeWebhook(inputGroup.projectName, webhookId).then((res: any) => {
-              if (res === 'success') {
-                logger.info(`GitHubManager:: REMOVED WEBHOOK (..) - ${webhooks[key].url}`);
-              }
-            })
-              .catch(err => {
-                logger.error(`GitHubManager:: CANNOT REMOVE WEBHOOK (..) - ${err}`);
-              });
-            if (index === Object.keys(webhooks).length) {
-              return;
-            }
-          });
-          logger.info("GitHubManager:: DELAY TIME GAP (..) - delaying: " + inputGroup.projectName);
-        });
-      that.delay(inputGroup.projectIndex * DELAY).then(function () {
-        logger.info("GitHubManager::completeIndividualProvision(..) adding webhook;");
-        return that.addWebhook(inputGroup.projectName, webhookEndpoint);
-      })
-        .then(function () {
-          // add individual to repo
-          logger.info("GitHubManager::completeIndividualProvision(..) - webhook added; adding user: " + inputGroup.student);
-          return that.addCollaboratorToRepo(inputGroup.student, inputGroup.projectName, 'push')
-            .catch(err => {
-              logger.info(`GithubManager::completeIndividualProvision(..) Collaborator was not added: ${err}`);
-            });
-        }).then(function () {
-        logger.info("GitHubManager::completeIndividualProvision(..) - person added to repo; getting staff team number for: " + staffTeamName);
-        // let staffTeamName = '310staff';
-        return that.getTeamNumber(staffTeamName);
-      }).then(function (staffTeamNumber: number) {
-        logger.info("GitHubManager::completeIndividualProvision(..) - found staff team number ( " + staffTeamNumber + " ); adding staff to repo");
-        const STAFF_PERMISSIONS = 'admin';
-        return that.addTeamToRepo(staffTeamNumber, inputGroup.projectName, STAFF_PERMISSIONS)
-          .catch(err => {
-            logger.info(`GithubManager::completeIndividualProvision(..) Did not add STAFF TEAM to repos ${err}`);
-          });
-      }).then(function (project: IProjectDocument) {
-        logger.info("GitHubManager::completeIndividualProvision(..) - process complete for: " + inputGroup.projectName);
-        fulfill(inputGroup);
-      }).catch(function (err) {
-        logger.error("******");
-        logger.error("******");
-        logger.error("Input Description: " + inputGroup.projectName);
-        logger.error("GitHubManager::completeIndividualProvision(..) - ERROR: " + err);
-        logger.error("******");
-        logger.error("******");
-        inputGroup.url = "";
-        reject(err);
-      });
-    });
-  }
-
-  provisionRepo(inputGroup: GroupRepoDescription, repoName: string, importURL: string): Promise<GroupRepoDescription> {
-    let that = this;
-    logger.info("GitHubManager::provisionRepo(..) - start: " + JSON.stringify(inputGroup));
-    return new Promise(function (fulfill, reject) {
-
-      let initDelay = 60 * 1000;
-      that.delay((inputGroup.teamIndex * 5000) + initDelay).then(function () {
-        logger.info("GitHubManager::provisionProject(..) - creating repo: " + repoName);
-        return that.createRepo(repoName);
-      }).then(function (newRepoInfo: NewGithubRepoInfo) {
-        inputGroup._team.githubState.repo.id = newRepoInfo.id;
-        inputGroup._team.githubState.repo.name = newRepoInfo.name;
-        inputGroup._team.save().catch((err) => {
-          logger.error(`completeTeamProvision::_team.save() ERROR ${err}`);
-        });
-        logger.info("GitHubManager::provisionProject(..) - repo created; importing url: " + importURL);
-        return that.importRepoToNewRepo(repoName, importURL);
-      }).then(function () {
-        logger.info("GitHubManager::provisionProject(..) - repo imported; getting team number for: " + inputGroup.teamName);
-        return that.getTeamNumber(inputGroup.teamName);
-      }).then(function (teamId: number) {
-        logger.info("GitHubManager::provisionProject(..) - have team id ( " + teamId + " ); adding to repo");
-        return that.addTeamToRepo(teamId, repoName, 'push');
-      }).then(function () {
-        logger.info("GitHubManager::provisionProject(..) - team added to repo; getting staff team number");
-        return that.getTeamNumber('310Staff');
-      }).then(function (staffTeamNumber: number) {
-        logger.info("GitHubManager::provisionProject(..) - found staff team number ( " + staffTeamNumber + " ); adding staff to repo");
-        return that.addTeamToRepo(staffTeamNumber, repoName, 'admin');
-      }).then(function () {
-        logger.info("GitHubManager::provisionProject(..) - process complete for: " + inputGroup.projectName);
-        fulfill(inputGroup);
-      }).catch(function (err) {
-        logger.error("GitHubManager::provisionProject(..) - ERROR: " + err);
-        reject(err);
-      });
-    });
-  }
-
 
   completeClean(inputGroup: GroupRepoDescription): Promise<GroupRepoDescription> {
     let that = this;
