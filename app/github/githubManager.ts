@@ -1643,16 +1643,17 @@ export default class GitHubManager {
         }
         })
         .then((teamId: number) => {
-          // SECOND: Add staff team
+          // SECOND: Add Team to Repo
           logger.info("GitHubManager::completeTeamProvision(..) - members added to team ( " + teamId + " ); adding team to project");
           const TEAM_PERMISSIONS = 'push';
           return that.addTeamToRepo(inputGroup._team.githubState.team.id, inputGroup.projectName, TEAM_PERMISSIONS);
         })
         .then(() => {
+          // THIRD: Get Staff Team ID and Add to REPO
           return that.getTeamNumber(STAFF)
           .then((staffTeamId: number) => {
             const STAFF_PERMISSION = 'admin';
-            return that.addTeamToRepo(staffTeamId, inputGroup.team, STAFF_PERMISSION);
+            return that.addTeamToRepo(staffTeamId, inputGroup.projectName, STAFF_PERMISSION);
           });
         })
         .then(() => {
