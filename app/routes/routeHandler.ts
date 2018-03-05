@@ -254,7 +254,7 @@ const getMyTeams = (req: restify.Request, res: restify.Response, next: restify.N
 const repairGithubReposForTeams = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return githubCtrl.repairGithubReposForTeams(req.params)
     .then((projects: any) => res.json(200, {response: projects}))
-    .catch((err: any) => res.json(500, {err: err.message}));
+    .catch((err: any) => res.json(500, {err: err}));
 };
 
 const createCustomTeam = (req: restify.Request, res: restify.Response, next: restify.Next) => {
@@ -266,13 +266,13 @@ const createCustomTeam = (req: restify.Request, res: restify.Response, next: res
 const isStudentInSameLab = (req: any, res: restify.Response, next: restify.Next) => {
   return userCtrl.isStudentInSameLab(req.params, req.user.username)
     .then((enrollmentStatus: object) => res.json(200, {response: enrollmentStatus}))
-    .catch((err: any) => res.json(500, {err: err.message}));
+    .catch((err: any) => res.json(500, {err: err}));
 };
 
 const getCourseTeamInfo = (req: any, res: restify.Response, next: restify.Next) => {
   return teamCtrl.getCourseTeamInfo(req.params)
     .then((teamPayload: TeamPayload) => res.json(200, {response: teamPayload}))
-    .catch((err: any) => res.json(500, {err: err.message}));
+    .catch((err: any) => res.json(500, {err: err}));
 };
 
 const getDashForDeliverable = (req: restify.Request, res: restify.Response, next: restify.Next) => {
