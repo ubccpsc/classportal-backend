@@ -177,6 +177,7 @@ function createRepoName(course: ICourseDocument, delivName: string, teamNum: str
  * 
  *    IF: 
  *    - A team member has failed to been added. (happens often)
+ *    - Adds/Updates repo webhook.
  * 
  *    NOTE: 
  * 
@@ -214,21 +215,41 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
         });
     })
     .then(() => {
-      // deliverableIds.0 ensures that it is a Deliverable and not a regression test
-      return Team.find({courseId: course._id, 'deliverableIds.0': deliverable._id}).populate({path: 'members'}).then((_teams: ITeamDocument[]) => {
-        for (let i = 0; i < _teams.length; i++) {
-          let inputGroup = {
-            teamName:    'name',
-            members:     _teams[i].members.map((user: IUserDocument) => {
-              return user.username;
-            }),
-            projectName: payload.deliverableName + '_' + _teams[i].name,
-            teamIndex:   i,
-            team:        _teams[i].name,
-            _team:       _teams[i],
-            orgName:     course.githubOrg
-          };
-          githubManager.reAddUsersToTeam(inputGroup, inputGroup.projectName, STAFF_TEAM, '')
+      // IMPORTANT: deliverableIds.0 ensures that we retrieve Teams with original assigned Deliverable, and not additional regression test
+      return Team.find({courseId: course._id, 'deliverableIds.0': deliverable._id}).populate({path: 'members'})
+      .then((_teams: ITeamDocument[]) => {
+        if (_teams) {
+          teams = _teams;
+          return _teams;
+        }
+        throw `Cannot find any Teams for Course ${payload.courseId} and Deliverable ${payload.deliverableName}`;
+      });
+    })
+    .then((_teams: ITeamDocument[]) => {
+      let repairCount = 0;
+      let teamsForRepair = [];
+
+      for (let i = 0; i < _teams.length; i++) {
+        let inputGroup = {
+          teamName:    'name',
+          members:     _teams[i].members.map((user: IUserDocument) => {
+            return user.username;
+          }),
+          projectName: payload.deliverableName + '_' + _teams[i].name,
+          teamIndex:   i,
+          team:        _teams[i].name,
+          _team:       _teams[i],
+          orgName:     course.githubOrg
+        };
+
+        // NOTE: Only repair Team if it has been provisioned, aka. githubState.repo.url !== '',
+        // as you cannot repair a repo that does not exist.
+        
+        if (_teams[i].githubState.repo.url !== '') {
+          teamsForRepair.push(teams[i]);
+          repairCount++;
+
+          githubManager.repairTeamProvision(inputGroup, deliverable.url, 'staff', course.urlWebhook)
             .then(() => {
               // if successful, remove any previous error state: 
               inputGroup._team.githubState.creationRecord.error = {};
@@ -239,13 +260,20 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
               return inputGroup._team.save();
             });
         }
-        return _teams;
-      });
+      }
+      return {repairCount: repairCount, teamsForRepair: teamsForRepair};
     })
     .catch(err => {
       logger.error(`GithubController::repairGithubReposForTeams ERROR ${err}`);
     });
 }
+
+/**
+ * Repair Github Repos
+ * 
+ * 
+ * 
+ */
 
 /**
  * Creates Github Enterprise repositories if they do not exist. 
