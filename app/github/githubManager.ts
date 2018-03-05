@@ -1642,6 +1642,7 @@ export default class GitHubManager {
         }
         })
         .then((teamId: number) => {
+          // SECOND: Add staff team
           logger.info("GitHubManager::completeTeamProvision(..) - members added to team ( " + teamId + " ); adding team to project");
           const TEAM_PERMISSIONS = 'push';
           return that.addTeamToRepo(inputGroup._team.githubState.team.id, inputGroup.projectName, TEAM_PERMISSIONS);
