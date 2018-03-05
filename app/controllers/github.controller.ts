@@ -177,7 +177,6 @@ function createRepoName(course: ICourseDocument, delivName: string, teamNum: str
  * 
  *    IF: 
  *    - A team member has failed to been added. (happens often)
- *    - A webhook is not implemented, or a webhook has been updated. (has not been seen)
  * 
  *    NOTE: 
  * 
@@ -227,10 +226,11 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
             teamIndex:   i,
             team:        _teams[i].name,
             _team:       _teams[i],
-            orgName:     'CPSC310-2017W-T1'
+            orgName:     course.githubOrg
           };
           githubManager.reAddUsersToTeam(inputGroup, inputGroup.projectName, STAFF_TEAM, '');
         }
+        return _teams;
       });
     })
     .catch(err => {
@@ -336,7 +336,7 @@ function createGithubReposForTeams(payload: any): Promise<any> {
         if (_teams.length == 0) {
           throw `No Teams found. Must add teams before you can build Repos.`;
         }
-        console.log('teams found', teams);
+        console.log('GithubController:: Teams with empty githubState.repo.url', teams);
         teams = _teams;
         return _teams;
       })
