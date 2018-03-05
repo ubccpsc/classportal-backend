@@ -11,6 +11,7 @@ let rp = require('request-promise-native');
 let async = require('async');
 let _ = require('lodash');
 let apiPath = config.github_api_path;
+const STAFF = 'staff';
 
 
 export interface NewGithubRepoInfo {
@@ -1618,7 +1619,7 @@ export default class GitHubManager {
    *    - Adds a member to a team if team already exists or creates team if does not exist.
    *    - 
    */
-  public repairTeamRepos(inputGroup: GroupRepoDescription, staffTeamName: string): Promise<GroupRepoDescription> {
+  public repairTeamRepos(inputGroup: GroupRepoDescription): Promise<GroupRepoDescription> {
     let that = this;
     let failingUserAttempts: string[] = new Array();
     logger.info("GitHubManager::completeTeamProvision(..) - start: " + JSON.stringify(inputGroup));
@@ -1648,7 +1649,7 @@ export default class GitHubManager {
           return that.addTeamToRepo(inputGroup._team.githubState.team.id, inputGroup.projectName, TEAM_PERMISSIONS);
         })
         .then(() => {
-          return that.getTeamNumber(staffTeamName)
+          return that.getTeamNumber(STAFF)
           .then((staffTeamId: number) => {
             const STAFF_PERMISSION = 'admin';
             return that.addTeamToRepo(staffTeamId, inputGroup.team, STAFF_PERMISSION);

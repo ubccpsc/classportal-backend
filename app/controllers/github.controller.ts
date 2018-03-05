@@ -249,7 +249,7 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
           teamsForRepair.push(teams[i]);
           repairCount++;
 
-          githubManager.repairTeamRepos(inputGroup, 'STAFF')
+          githubManager.repairTeamRepos(inputGroup)
             .then(() => {
               // if successful, remove any previous error state: 
               inputGroup._team.githubState.creationRecord.error = {};
