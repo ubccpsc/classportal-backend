@@ -2,6 +2,7 @@ import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
 import {Helper} from "../github/util";
 import {link} from "fs";
+import db from '../db/MongoDBClient';
 import {ITeamDocument, Team} from '../models/team.model';
 import {IProjectDocument, Project} from '../models/project.model';
 let fs = require('fs');
@@ -1591,7 +1592,7 @@ export default class GitHubManager {
       })
         .then(() => {
           // If successfully completes, update error state to no errors
-          inputGroup._team.githubState.creationRecord.error = new Error();
+          inputGroup._team.githubState.creationRecord.error = '';
           inputGroup._team.save();
         })
         .then(function () {
@@ -1605,8 +1606,7 @@ export default class GitHubManager {
         logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
         logger.error("******");
         logger.error("******");
-        inputGroup._team.githubState.creationRecord.error = err;
-        inputGroup._team.save();
+        db.updateRecord('teams', {_id: inputGroup._team._id}, {$set: {'githubState.creationRecord.error': JSON.stringify(err)}});
         reject(err);
       });
     });
@@ -1660,7 +1660,7 @@ export default class GitHubManager {
         })
         .then(() => {
           // FINALLY: If we did not run into errors, erase the GithubState errors from previous provision runs
-          inputGroup._team.githubState.creationRecord.error = new Error();
+          inputGroup._team.githubState.creationRecord.error = '';
           return inputGroup._team.save()
             .then(() => {
               logger.info("GitHubManager::repairTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));

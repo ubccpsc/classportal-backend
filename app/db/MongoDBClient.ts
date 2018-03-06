@@ -72,6 +72,22 @@ export class MongoDB {
     }
   }
 
+  public async updateRecord(collectionName: string, query: object, newProperties: object): Promise<any> {
+    return new Promise<any>((fulfill, reject) => {
+      try {
+        this.conn.then((db: mongodb.Db) => {
+          db.collection(collectionName)
+            .update(query, newProperties)
+            .then((result: object) => {
+              fulfill(result);
+            });
+        });
+      } catch (err) {
+        logger.error(`MongoDB::updateMany() Problem performing updateMany() in MongoDBClient.ts ` + err);
+      }
+    });
+  }
+
   public async updateMany(collectionName: string, query: object, newProperties: object): Promise<any> {
     return new Promise<any>((fulfill, reject) => {
       try {

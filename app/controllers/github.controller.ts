@@ -253,11 +253,11 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
           githubManager.repairTeamProvision(inputGroup)
             .then(() => {
               // if successful, remove any previous error state: 
-              inputGroup._team.githubState.creationRecord.error = new Error();
+              inputGroup._team.githubState.creationRecord.error = '';
               return inputGroup._team.save();
             })
             .catch((err) => {
-              inputGroup._team.githubState.creationRecord.error = err;
+              inputGroup._team.githubState.creationRecord.error = JSON.stringify(err);
               return inputGroup._team.save();
             });
         }
@@ -361,7 +361,11 @@ function createGithubReposForTeams(payload: any): Promise<any> {
         _team:       _teams[i],
         orgName:     course.githubOrg
       };
-      githubManager.completeTeamProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook);
+      githubManager.completeTeamProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook)
+        .catch((err) => {
+          inputGroup._team.githubState.creationRecord.error = JSON.stringify(err);
+          inputGroup._team.save();
+        });
     }
   }
 

@@ -15,7 +15,7 @@ export interface GithubTeam {
 }
 
 export interface GithubCreationRecord {
-  error: object; // Error object thrown from Github
+  error: string; // Error object MUST BE stringified for MongoDB
 }
 
 export const defaultGithubRepo = {
@@ -31,7 +31,7 @@ export const defaultTeam = {
 };
 
 export const defaultCreationRecord: GithubCreationRecord = {
-  error: {},
+  error: '',
 };
 
 export const defaultGithubState = {
