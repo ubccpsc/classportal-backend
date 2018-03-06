@@ -74,24 +74,18 @@ const TeamSchema = new mongoose.Schema({
     type: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
   },
   githubState:          {
-    type: Object,
-    default: {
-      repo: {
-        url:        {type: String, default: ''},
-        id:         {type: Number, default: 0},
-        name:       {type: String, default: ''},
-        webhookId:  {type: Number, default: 0},
-        webhookUrl: {type: String, default: ''},
-      },
-      team: {
-        id: {type: Number, default: 0}
-      },
-      creationRecord: {
-        type: Object,
-        default: {
-          error: {type: Object, default: new Error()}
-        }
-      }
+    repo: {
+      url:        {type: String, default: ''},
+      id:         {type: Number, default: 0},
+      name:       {type: String, default: ''},
+      webhookId:  {type: Number, default: 0},
+      webhookUrl: {type: String, default: ''},
+    },
+    team: {
+      id: {type: Number, default: 0}
+    },
+    creationRecord: {
+      error: {type: Object, default: null}
     }
   },
 });
