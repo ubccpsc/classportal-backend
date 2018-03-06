@@ -4,7 +4,6 @@ import * as parse from 'csv-parse';
 import {IUserDocument, User} from '../models/user.model';
 import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
-import * as request from '../helpers/request';
 
 
 /**

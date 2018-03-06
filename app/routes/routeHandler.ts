@@ -197,12 +197,6 @@ const getRepos = (req: restify.Request, res: restify.Response, next: restify.Nex
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
-const deleteRepos = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return githubCtrl.deleteRepos(req.params)
-    .then((reposList: [Object]) => res.json(200, {response: reposList}))
-    .catch((err: any) => res.json(500, {err: err.message}));
-};
-
 const getCurrentUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return authCtrl.getCurrentUser(req, res, next)
     .then((currentUser: object) => res.json(200, {response: currentUser}))
@@ -374,8 +368,8 @@ const removeRepoFromTeams = (req: restify.Request, res: restify.Response, next: 
     .catch((err: any) => res.json(500, {err: err}));
 };
 
-const raiseContainer = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return dockerCtrl.raiseContainer(req.params)
+const buildContainer = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return dockerCtrl.buildContainer(req.params)
     .then((defaultDeliv: any) => res.json(200, {response: defaultDeliv}))
     .catch((err: any) => res.json(500, {err: err}));
 };
@@ -396,12 +390,12 @@ export {
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaffOrAdmin,
   getAllGrades, createTeam, updateTeam, getStudentNamesFromCourse,
   addAdminList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
-  deleteRepos, getCurrentUser, isAuthenticated, getMyCourses,
+  getCurrentUser, isAuthenticated, getMyCourses,
   getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
   addDeliverable, randomlyGenerateTeamsPerCourse, getTestDelay, getContainerInfo,
   getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamInfo, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
   getStdioFile, addStaffList, getAllStaff, getDefaultDeliv, removeRepoFromTeams, testJwt,
-  getGradesByDeliv, getGradesIfReleased, raiseContainer, dropContainer,
+  getGradesByDeliv, getGradesIfReleased, buildContainer, dropContainer,
 };

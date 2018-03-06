@@ -1780,32 +1780,6 @@ export default class GitHubManager {
     });
   }
 
-  completeClean(inputGroup: GroupRepoDescription): Promise<GroupRepoDescription> {
-    let that = this;
-    logger.info("GitHubManager::completeClean(..) - start: " + JSON.stringify(inputGroup));
-    return new Promise(function (fulfill, reject) {
-
-      logger.info("GitHubManager::completeClean(..) - removing project: " + inputGroup.projectName);
-
-      that.deleteRepo(inputGroup.projectName).then(function (url: string) {
-
-        logger.info("GitHubManager::completeClean(..) - project removed; removing team");
-
-        return that.deleteTeam(inputGroup.teamName);
-
-      }).then(function () {
-        logger.info("GitHubManager::completeClean(..) - team removed; all done.");
-
-        fulfill(inputGroup);
-      }).catch(function (err) {
-        logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
-        inputGroup.url = "";
-        reject(err);
-      });
-    });
-  }
-
-
   delay(ms: number): Promise<{}> {
     // logger.info("GitHubManager::delay( " + ms + ") - start");
     return new Promise(function (resolve, reject) {

@@ -5,7 +5,6 @@ import {ICourseDocument, Course} from '../models/course.model';
 import {IUserDocument, User, CourseData} from '../models/user.model';
 import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
-import * as request from '../helpers/request';
 import {log} from 'util';
 import {LabSection, StudentWithLab} from '../models/course.model';
 import {ENOLCK} from 'constants';

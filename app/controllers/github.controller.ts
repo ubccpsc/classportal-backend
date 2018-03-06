@@ -4,10 +4,15 @@ import {ITeamDocument, Team} from '../models/team.model';
 import {ICourseDocument, Course} from '../models/course.model';
 import {IProjectDocument, Project} from '../models/project.model';
 import {IUserDocument, User} from '../models/user.model';
+import {config} from '../../config/env';
 import {IDeliverableDocument, Deliverable} from '../models/deliverable.model';
 import db from '../db/MongoDBClient';
 import GitHubManager, {GroupRepoDescription} from '../github/githubManager';
 import * as auth from '../middleware/auth.middleware';
+
+let request = require('request');
+let rp = require('request-promise-native');
+
 // const ORG_NAME = 'CS310-2016Fall';
 const ORG_NAME = 'CPSC310-2017W-T2';
 
@@ -124,10 +129,6 @@ function getProjectHealthReport(payload: any) {
     });
 
 
-  function checkIfRepoCreated() {
-
-  }
-
   function getNumberOfGithubRepos(): Number {
     return reposUnderDeliv.length;
   }
@@ -156,14 +157,6 @@ function createGithubTeam(payload: any): Promise<number> {
     .then((newTeam) => {
       return githubManager.addMembersToTeam(newTeam.teamId, payload.members);
     });
-}
-
-function deleteRepos(payload: any): Promise<[string]> {
-  let githubManager = new GitHubManager(payload.orgName);
-
-  return Promise.all([payload.repoNames.map((name: string) => {
-    return githubManager.deleteRepo(name);
-  })]);
 }
 
 function createRepoName(course: ICourseDocument, delivName: string, teamNum: string) {
@@ -255,10 +248,6 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
               // if successful, remove any previous error state: 
               inputGroup._team.githubState.creationRecord.error = '';
               return inputGroup._team.save();
-            })
-            .catch((err) => {
-              inputGroup._team.githubState.creationRecord.error = JSON.stringify(err);
-              return inputGroup._team.save();
             });
         }
       }
@@ -268,13 +257,6 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
       logger.error(`GithubController::repairGithubReposForTeams ERROR ${err}`);
     });
 }
-
-/**
- * Repair Github Repos
- * 
- * 
- * 
- */
 
 /**
  * Creates Github Enterprise repositories if they do not exist. 
@@ -470,5 +452,5 @@ function getTeams(payload: any) {
 
 export {
   getTeams, createGithubTeam, createGithubReposForTeams, removeReposFromTeams,
-  getRepos, deleteRepos, getProjectHealthReport, repairGithubReposForTeams
+  getRepos, getProjectHealthReport, repairGithubReposForTeams
 };

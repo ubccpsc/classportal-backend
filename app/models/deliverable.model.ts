@@ -15,6 +15,8 @@ interface IDeliverableDocument extends mongoose.Document {
   close: number;
   dockerRepo: string;
   dockerKey: string;
+  dockerLog: object;
+  dockerInProgress: boolean;
   projectCount: number;
   teamsInSameLab: boolean;
   rate: number;
@@ -44,6 +46,14 @@ interface IDeliverableModel extends mongoose.Model<IDeliverableDocument> {
 const DeliverableSchema = new mongoose.Schema({
   courseId:       {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
+  },
+  dockerInProgress: {
+    type: Boolean,
+    default: false,
+  },
+  dockerLog: {
+    type: Object,
+    default: {},
   },
   teamCount:      {
     type: Number,

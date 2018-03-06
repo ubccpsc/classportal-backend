@@ -50,7 +50,7 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/admin/teams/:deliverable/overview', adminAuthenticated, routeHandler.getTeamProvisionOverview);  
   server.get('/admin/files/:deliverable/:username/:commit/:filename', adminAuthenticated,
     routeHandler.getFileFromResultRecord);
-  server.put('/:courseId/admin/raiseContainer', adminAuthenticated, routeHandler.raiseContainer);
+  server.put('/:courseId/admin/buildContainer', adminAuthenticated, routeHandler.buildContainer);
   server.put('/:courseId/admin/dropContainer', adminAuthenticated, routeHandler.dropContainer);
   server.get('/:courseId/:deliverableName/container', routeHandler.getContainerInfo);
   server.get('/admin/files/:stdioRef/stdio.txt', adminAuthenticated, routeHandler.getStdioFile);
@@ -68,12 +68,10 @@ const routes = (server: restify.Server) => {
   server.put('/:courseId/admin/github/repo/team/unlink', adminAuthenticated, routeHandler.removeRepoFromTeams);
   server.post('/:courseId/admin/teamGeneration', adminAuthenticated, routeHandler.randomlyGenerateTeamsPerCourse);
   server.get('/:courseId/admin/github/repos/:orgName', adminAuthenticated, routeHandler.getRepos);
-  server.del('/:courseId/admin/github/repos/:orgName', adminAuthenticated, routeHandler.deleteRepos);
   server.put('/admin/:courseId', adminAuthenticated, routeHandler.createCourse);
   server.post('/:courseId/admin/team', adminAuthenticated, routeHandler.updateTeam);
   server.get('/:courseId/admin/students', adminAuthenticated, routeHandler.getClassList);
   server.post('/:courseId/admin/classList', adminAuthenticated, routeHandler.updateClassList);
-  // server.post('/:courseId/admin/grades', adminAuthenticated, routeHandler.addGrades);
   server.get('/:courseId/admin/grades', adminAuthenticated, routeHandler.getAllGrades);
   server.get('/:courseId/admin/grades/:delivName', adminAuthenticated, routeHandler.getGradesByDeliv);
   server.post('/:courseId/admin/grades/:delivName', adminAuthenticated, routeHandler.addGradesCSV);

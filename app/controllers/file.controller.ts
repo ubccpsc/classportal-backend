@@ -4,7 +4,6 @@ import * as parse from 'csv-parse';
 import {ICourseDocument, Course} from '../models/course.model';
 import {IUserDocument, User, CourseData} from '../models/user.model';
 import {logger} from '../../utils/logger';
-import * as request from '../helpers/request';
 import {config} from '../../config/env';
 import db, {Database} from '../db/MongoDBClient';
 import mongodb = require('mongodb');

@@ -5,7 +5,6 @@ import {IUserDocument, User} from '../models/user.model';
 import {ICourseDocument, Course} from '../models/course.model';
 import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
-import * as request from '../helpers/request';
 
 /**
  * @param payload.courseId string ie. 310

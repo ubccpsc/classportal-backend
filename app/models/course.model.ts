@@ -10,6 +10,8 @@ interface ICourseDocument extends mongoose.Document {
   classList: Object[];
   dockerKey: string;
   dockerRepo: string;
+  dockerInProgress: boolean;
+  dockerLog: object;
   labSections: LabSection[];
   admins: IUserDocument[];
   staffList: IUserDocument[];
@@ -109,6 +111,14 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   dockerKey:        {
     type: Object,
     default: '',
+  },
+  dockerInProgress: {
+    type: Boolean,
+    default: false,
+  },
+  dockerLog: {
+    type: Object,
+    default: {},
   },
   githubOrg:           {
     type: String,
