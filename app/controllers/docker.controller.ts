@@ -149,12 +149,18 @@ async function buildContainer(payload: any): Promise<any> {
         course.save();
       }
 
+      // If catch in below child method, we still want partial logs saved to data base
+      // in addition to actual error;
+      let partialResultLogsInError: any = {stderr: null, stdout: null};
+
       return exec(`${appPath}app/helpers/docker-build-helper.sh ${tempPath} ${githubToken} ${course.courseId} ${delivInput} ` +
         `${envInput} ${config.app_path}:1${course.courseId}/`)
           .then(function (result: any) {
             logger.info('DockerController:: Building Container STDOUT/STDERR:');
             logger.info('DockerController:: Building Container STDOUT:' + result.stdout);
             logger.info('DockerController:: Building Container STDERR:' + result.stderr);
+            partialResultLogsInError.stderr = result.stderr;
+            partialResultLogsInError.stdout = result.stdout;
             return {stderr: result.stderr, stdout: result.stdout};
             })
             .then((resultFile: any) => {
@@ -172,11 +178,15 @@ async function buildContainer(payload: any): Promise<any> {
             })
             .catch((err: any) => {
               if (typeof payload.deliverableName !== 'undefined') {
-                deliv.dockerLog = err;
+                partialResultLogsInError.stderr = partialResultLogsInError.stderr + 
+                  'DockerController: ERROR ' + JSON.stringify(err);
+                deliv.dockerLog = partialResultLogsInError;
                 deliv.dockerInProgress = false;
                 deliv.save();
               } else {
-                course.dockerLog = err;
+                partialResultLogsInError.stderr = 'Build errors: ' + partialResultLogsInError.stderr + '\n\n' + 
+                  'DockerController: ERROR ' + JSON.stringify(err);
+                course.dockerLog = partialResultLogsInError;
                 course.dockerInProgress = false;
                 course.save();
               }
