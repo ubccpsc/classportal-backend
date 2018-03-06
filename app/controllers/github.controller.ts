@@ -176,8 +176,9 @@ function createRepoName(course: ICourseDocument, delivName: string, teamNum: str
  * Repairs the problems in a Github repo.
  * 
  *    IF: 
- *    - A team member has failed to been added. (happens often)
- *    - Adds/Updates repo webhook.
+ *    - A adding members to a team has failed, members are re-added to team.
+ *    - If adding a team to a repo has failed, re-adds team to the repo.
+ *    - Adds/Updates the repo webhook if it was incorrect or fails.
  * 
  *    NOTE: 
  * 
@@ -249,10 +250,10 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
           teamsForRepair.push(teams[i]);
           repairCount++;
 
-          githubManager.repairTeamRepos(inputGroup)
+          githubManager.repairTeamProvision(inputGroup)
             .then(() => {
               // if successful, remove any previous error state: 
-              inputGroup._team.githubState.creationRecord.error = {};
+              inputGroup._team.githubState.creationRecord.error = new Error();
               return inputGroup._team.save();
             })
             .catch((err) => {

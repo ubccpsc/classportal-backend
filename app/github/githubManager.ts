@@ -1591,7 +1591,7 @@ export default class GitHubManager {
       })
         .then(() => {
           // If successfully completes, update error state to no errors
-          inputGroup._team.githubState.creationRecord.error = {};
+          inputGroup._team.githubState.creationRecord.error = new Error();
           inputGroup._team.save();
         })
         .then(function () {
@@ -1615,20 +1615,22 @@ export default class GitHubManager {
   /**
    * Repairs Provisioned Team Repositories that experienced issues.
    * 
-   *    CURRENTLY IMPLEMENTED: 
-   *    - Adds a member to a team if team already exists or creates team if does not exist.
-   *    - 
+   *    IF: 
+   *    - Adding members to a team has failed, members are re-added to team.
+   *    - Adding a team to a repo has failed, re-adds team to the repo.
+   *    - Adds/Updates the repo webhook if it was incorrect or fails. (unimplemented. Use readdWebhook function)
+   * 
    */
-  public repairTeamRepos(inputGroup: GroupRepoDescription): Promise<GroupRepoDescription> {
+  public repairTeamProvision(inputGroup: GroupRepoDescription): Promise<GroupRepoDescription> {
     let that = this;
     let failingUserAttempts: string[] = new Array();
-    logger.info("GitHubManager::completeTeamProvision(..) - start: " + JSON.stringify(inputGroup));
+    logger.info("GitHubManager::repairTeamProvision(..) - start: " + JSON.stringify(inputGroup));
     return new Promise((fulfill, reject) => {
       let teamProvisionRecord: any;
       const DELAY = that.DELAY_SEC * 3; // 2 would be enough, but let's just be safe
       // slow down creation to avoid getting in trouble with GH
       that.delay(inputGroup.teamIndex * DELAY).then(() => {
-        logger.info("GitHubManager::completeTeamProvision(..) - creating project: " + inputGroup.projectName);
+        logger.info("GitHubManager::repairTeamProvision(..) - creating project: " + inputGroup.projectName);
         // FIRST: Add members to team that already exists. If does not exist, create team.
         if (inputGroup._team.githubState.team.id > 0) {
           return that.addMembersToTeam(inputGroup._team.githubState.team.id, inputGroup.members)
@@ -1644,7 +1646,7 @@ export default class GitHubManager {
         })
         .then((teamId: number) => {
           // SECOND: Add Team to Repo
-          logger.info("GitHubManager::completeTeamProvision(..) - members added to team ( " + teamId + " ); adding team to project");
+          logger.info("GitHubManager::repairTeamProvision(..) - members added to team ( " + teamId + " ); adding team to project");
           const TEAM_PERMISSIONS = 'push';
           return that.addTeamToRepo(inputGroup._team.githubState.team.id, inputGroup.projectName, TEAM_PERMISSIONS);
         })
@@ -1657,142 +1659,25 @@ export default class GitHubManager {
           });
         })
         .then(() => {
-          // FINALLY: If we did not run into errors, erase the GithubState errors
-          inputGroup._team.githubState.creationRecord.error = {};
+          // FINALLY: If we did not run into errors, erase the GithubState errors from previous provision runs
+          inputGroup._team.githubState.creationRecord.error = new Error();
           return inputGroup._team.save()
             .then(() => {
-              logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
+              logger.info("GitHubManager::repairTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
               fulfill(inputGroup);
             });
         })
         .catch(function (err: any) {
-          // logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
           logger.error("******");
           logger.error("******");
           logger.error("Input Description: " + JSON.stringify(inputGroup));
-          logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
+          logger.error("GitHubManager::repairTeamProvision(..) - ERROR: " + err);
           logger.error("******");
           logger.error("******");
 
-          console.log('error object output', err);
+          console.log('GitHubManager::repairTeamProvision(..) ERROR:', err);
           reject(err);
         });
-    });
-  }
-
-  /**
-   * Implemented for step in repairing a Github Team Repository
-   * 
-   * @param inputGroup GroupRepoDescription Team repo details brought in from database Teams object
-   * @param importUrl String 
-   */
-  reAddUsersToTeam(inputGroup: GroupRepoDescription, staffTeamName: string): Promise<GroupRepoDescription> {
-    let that = this;
-    let failingUserAttempts: string[] = new Array();
-    logger.info("GitHubManager::completeTeamProvision(..) - start: " + JSON.stringify(inputGroup));
-    return new Promise(function (fulfill, reject) {
-      let teamProvisionRecord: any;
-      const DELAY = that.DELAY_SEC * 3; // 2 would be enough, but let's just be safe
-      // slow down creation to avoid getting in trouble with GH
-      that.delay(inputGroup.teamIndex * DELAY).then(function () {
-        logger.info("GitHubManager::completeTeamProvision(..) - creating project: " + inputGroup.projectName);
-        return that.addMembersToTeam(inputGroup._team.githubState.team.id, inputGroup.members);
-      })
-        .then(function (teamId: number) {
-          logger.info("GitHubManager::completeTeamProvision(..) - members added to team ( " + teamId + " ); adding team to project");
-          const TEAM_PERMISSIONS = 'push';
-          console.log('original team id');
-          console.log('inputGroup._team.githubState.team.id', inputGroup._team.githubState.team.id);
-          return that.addTeamToRepo(inputGroup._team.githubState.team.id, inputGroup.projectName, TEAM_PERMISSIONS);
-        })
-        .then(function () {
-          logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
-          fulfill(inputGroup);
-        })
-        .catch(function (err: any) {
-          // logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
-          logger.error("******");
-          logger.error("******");
-          logger.error("Input Description: " + JSON.stringify(inputGroup));
-          logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
-          logger.error("******");
-          logger.error("******");
-
-          console.log('error object output', err);
-          reject(err);
-        });
-    });
-  }
-
-  repairTeamProvision(inputGroup: GroupRepoDescription, importUrl: string, staffTeamName: string, webhookEndpoint: string): Promise<GroupRepoDescription> {
-    let that = this;
-    logger.info("GitHubManager::completeTeamProvision(..) - start: " + JSON.stringify(inputGroup));
-    return new Promise(function (fulfill, reject) {
-      let teamProvisionRecord: any;
-      const DELAY = that.DELAY_SEC * 3; // 2 would be enough, but let's just be safe
-      // slow down creation to avoid getting in trouble with GH
-      that.delay(inputGroup.teamIndex * DELAY).then(function () {
-        logger.info("GitHubManager::completeTeamProvision(..) - creating project: " + inputGroup.projectName);
-        return that.createRepo(inputGroup.projectName);
-      }).then(function (newRepoInfo: NewGithubRepoInfo) {
-
-        inputGroup.url = newRepoInfo.url;
-
-        logger.info("GitHubManager::completeIndividualProvision(..) - project created; importing url: " + importUrl);
-        inputGroup._team.githubState.repo.name = newRepoInfo.name;
-        inputGroup._team.githubState.repo.id = newRepoInfo.id;
-        inputGroup._team.githubState.repo.url = newRepoInfo.url;
-        inputGroup._team.save()
-          .then((team: ITeamDocument) => {
-          })
-          .catch((err: any) => {
-            logger.error(`GithubManager::completeIndividualProvision() inputGroup.project.save() ERROR ${err}`);
-          });
-        // let importUrl = 'https://github.com/CS310-2016Fall/cpsc310project';
-        logger.info("GitHubManager::completeTeamProvision(..) - project created; importing url: " + importUrl);
-        return that.importRepoFS(importUrl, inputGroup.url);
-      })
-        .then(function () {
-          logger.info("GitHubManager::completeTeamProvision(..) - import started; adding webhook");
-          console.log(webhookEndpoint);
-          return that.addWebhook(inputGroup.projectName, webhookEndpoint);
-        }).then(function () {
-        logger.info("GitHubManager::completeTeamProvision(..) - webhook added; creating team: " + inputGroup.teamName);
-        if (inputGroup._team.githubState.team.id > 0 ) {
-
-        }
-        return that.createTeam(inputGroup.teamName, 'push');
-      }).then(function (teamDeets: any) {
-        var teamId = teamDeets.teamId;
-        logger.info("GitHubManager::completeTeamProvision(..) - team created ( " + teamId + " ) ; adding members: " + JSON.stringify(inputGroup.members));
-        return that.setTeamId(teamId, inputGroup._team)
-          .then(() => {
-            return that.addMembersToTeam(teamId, inputGroup.members);
-          });
-      }).then(function (teamId: number) {
-        logger.info("GitHubManager::completeTeamProvision(..) - members added to team ( " + teamId + " ); adding team to project");
-        const TEAM_PERMISSIONS = 'push';
-        return that.addTeamToRepo(teamId, inputGroup.projectName, TEAM_PERMISSIONS);
-      }).then(function () {
-        logger.info("GitHubManager::completeTeamProvision(..) - team added to repo; getting staff team number");
-        let staffTeamName = 'staff';
-        return that.getTeamNumber(staffTeamName);
-      })
-        .then(function () {
-          logger.info("GitHubManager::completeTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
-          fulfill(inputGroup);
-        }).catch(function (err) {
-        // logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
-        logger.error("******");
-        logger.error("******");
-        logger.error("Input Description: " + JSON.stringify(inputGroup));
-        logger.error("GitHubManager::completeTeamProvision(..) - ERROR: " + err);
-        logger.error("******");
-        logger.error("******");
-        inputGroup._team.githubState.creationRecord.error = err;
-        inputGroup._team.save();
-        reject(err);
-      });
     });
   }
 

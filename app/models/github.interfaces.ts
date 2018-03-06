@@ -31,7 +31,7 @@ export const defaultTeam = {
 };
 
 export const defaultCreationRecord: GithubCreationRecord = {
-  error: {},
+  error: new Error(),
 };
 
 export const defaultGithubState = {

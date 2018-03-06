@@ -170,7 +170,7 @@ const getAllAdmins = (req: restify.Request, res: restify.Response, next: restify
 const getTeams = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return teamCtrl.getTeams(req.params)
     .then((teamList: ITeamDocument[]) => res.json(200, {response: teamList}))
-    .catch((err: any) => res.json(500, {err: err.message}));
+    .catch((err: any) => res.json(500, {err: err}));
 };
 
 const addGradesCSV = (req: restify.Request, res: restify.Response, next: restify.Next) => {
@@ -291,7 +291,8 @@ const disbandTeamById = (req: restify.Request, res: restify.Response, next: rest
 
 const getTeamProvisionOverview = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return teamCtrl.getTeamProvisionOverview(req.params)
-    .then((overview: any) => res.json(200, {response: overview}))
+    .then((overview: any) => 
+    res.json(200, {response: overview}))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 

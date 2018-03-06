@@ -747,6 +747,7 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
         });
     };
 
+
     return getStudentsTeamStatus().then(() => {
       let healthCheckObj: ProvisionHealthCheck = { 
         classSize: CLASS_SIZE,
@@ -766,30 +767,46 @@ function createTeamHealthInfo(course: ICourseDocument, deliverable: IDeliverable
 }
 
   /**
-   * Returns all of the raw ITeamDocument[] mongoose documents
-   * underneath a courseId.
+   * Returns all Teams with github state, member, and error information based 
+   * on Course and Deliverable
+   * 
    * @param courseId string - courseId ie. '310'
+   * @param deliverableName string - deliverable name ie. 'd3', 'project4'
    * @return ITeamDocument[] list
    */
 function getTeams(payload: any): Promise<ITeamDocument[]> {
+  let course: ICourseDocument;
+  let deliv: IDeliverableDocument;
   return Course.findOne({courseId: payload.courseId})
-    .then(c => {
-      return Team.find({courseId: c._id})
-        .populate({
-          path:   'TAs',
-        })
-        .populate({
-          path:   'deliverableIds',
-        })
-        .populate({
-          path:   'members',
-        })
-        .then((teams: ITeamDocument[]) => {
-          if (teams) {
-            return teams;
+    .then((_course: ICourseDocument) => {
+      if (_course) {
+        course = _course;
+        return _course;
+      }
+      throw `Could not find Course ${payload.courseId}`;
+    })
+    .then(() => {
+      return Deliverable.findOne({name: payload.deliverableName, courseId: course._id})
+        .then((_deliv: IDeliverableDocument) => {
+          if (_deliv) {
+            deliv = _deliv;
+            return _deliv;
           }
-          throw `Cannot find any teams under course ${payload.courseId}`;
+          throw `Could not find Deliverable under Course ${payload.courseId} and ${payload.deliverableName}`;
         });
+    })
+    .then(() => {
+      // IMPORTANT: deliverableIds.0 matches the original deliverable and ignores regression tests
+      return Team.find({courseId: course._id, 'deliverableIds.0': deliv._id})
+      .populate({
+        path:   'TAs deliverableIds members',
+      })
+      .then((teams: ITeamDocument[]) => {
+        if (teams) {
+          return teams;
+        }
+        throw `Cannot find any teams under course ${payload.courseId}`;
+      });
     });
 }
 

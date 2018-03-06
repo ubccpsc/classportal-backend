@@ -23,10 +23,8 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/grades/released', isAuthenticated, routeHandler.getGradesIfReleased);
   server.post('/:courseId/students/isInSameLab', isAuthenticated, routeHandler.isStudentInSameLab);
   server.get('/:courseId/students/withoutTeam', isAuthenticated, routeHandler.getUsersNotOnTeam);
-  server.put('/:courseId/team', routeHandler.createTeam);
+  server.put('/:courseId/team', isAuthenticated, routeHandler.createTeam);
   server.put('/:courseId/admin/customTeam', adminAuthenticated, routeHandler.createCustomTeam);
-  server.put('/:courseId/admin/raiseContainer', adminAuthenticated, routeHandler.raiseContainer);
-  server.put('/:courseId/admin/dropContainer', adminAuthenticated, routeHandler.dropContainer);
   server.put('/:courseId/students/customTeam', isAuthenticated, routeHandler.createCustomTeam);
   // OAuth routes by logged-in users only
   server.post('/logout', auth.loadUser, routeHandler.logout);
@@ -52,8 +50,11 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/admin/teams/:deliverable/overview', adminAuthenticated, routeHandler.getTeamProvisionOverview);  
   server.get('/admin/files/:deliverable/:username/:commit/:filename', adminAuthenticated,
     routeHandler.getFileFromResultRecord);
+  server.put('/:courseId/admin/raiseContainer', adminAuthenticated, routeHandler.raiseContainer);
+  server.put('/:courseId/admin/dropContainer', adminAuthenticated, routeHandler.dropContainer);
   server.get('/:courseId/:deliverableName/container', routeHandler.getContainerInfo);
   server.get('/admin/files/:stdioRef/stdio.txt', adminAuthenticated, routeHandler.getStdioFile);
+  server.get('/:courseId/admin/teams/:deliverableName', adminAuthenticated, routeHandler.getTeams);
   server.post('/:courseId/admin/grades/results', adminAuthenticated, routeHandler.getGradesFromResults);
   server.get('/:courseId/admin/teams/info/:deliverableName', adminAuthenticated, routeHandler.getCourseTeamInfo);
   server.get('/:courseId/admin/courseSettings', adminAuthenticated, routeHandler.getCourseSettings);
