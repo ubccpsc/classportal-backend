@@ -153,7 +153,7 @@ async function buildContainer(payload: any): Promise<any> {
       // in addition to actual error;
       let partialResultLogsInError: any = {stderr: null, stdout: null};
 
-      return exec(`${appPath}app/helpers/docker-build-helper.sh ${tempPath} ${githubToken} ${course.courseId} ${delivInput} ` +
+      return exec(`${appPath}app/scripts/docker-build-helper.sh ${tempPath} ${githubToken} ${course.courseId} ${delivInput} ` +
         `${envInput} ${config.app_path}:1${course.courseId}/`)
           .then(function (result: any) {
             logger.info('DockerController:: Building Container STDOUT/STDERR:');
