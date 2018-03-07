@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import {UserSchema, IUserDocument} from '../models/user.model';
+import {DockerLogs} from '../controllers/docker.controller';
 import {logger} from '../../utils/logger';
 
 interface ICourseDocument extends mongoose.Document {
@@ -11,7 +12,7 @@ interface ICourseDocument extends mongoose.Document {
   dockerKey: string;
   dockerRepo: string;
   dockerInProgress: boolean;
-  dockerLog: object;
+  dockerLogs: DockerLogs;
   labSections: LabSection[];
   admins: IUserDocument[];
   staffList: IUserDocument[];
@@ -116,7 +117,7 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  dockerLog: {
+  dockerLogs: {
     type: Object,
     default: {},
   },

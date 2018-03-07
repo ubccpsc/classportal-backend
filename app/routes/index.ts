@@ -51,7 +51,7 @@ const routes = (server: restify.Server) => {
   server.get('/admin/files/:deliverable/:username/:commit/:filename', adminAuthenticated,
     routeHandler.getFileFromResultRecord);
   server.put('/:courseId/admin/buildContainer', adminAuthenticated, routeHandler.buildContainer);
-  server.put('/:courseId/admin/dropContainer', adminAuthenticated, routeHandler.dropContainer);
+  server.put('/:courseId/admin/destroyContainer', adminAuthenticated, routeHandler.destroyContainer);
   server.get('/:courseId/:deliverableName/container', routeHandler.getContainerInfo);
   server.get('/admin/files/:stdioRef/stdio.txt', adminAuthenticated, routeHandler.getStdioFile);
   server.get('/:courseId/admin/teams/:deliverableName', adminAuthenticated, routeHandler.getTeams);

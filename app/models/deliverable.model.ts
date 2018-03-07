@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import {logger} from '../../utils/logger';
 import {ITeamDocument} from './team.model';
+import {DockerLogs} from '../controllers/docker.controller';
 
 const DEFAULT_MAX_TEAM_SIZE: number = 1;
 const DEFAULT_MIN_TEAM_SIZE: number = 1;
@@ -15,7 +16,7 @@ interface IDeliverableDocument extends mongoose.Document {
   close: number;
   dockerRepo: string;
   dockerKey: string;
-  dockerLog: object;
+  dockerLogs: DockerLogs;
   dockerInProgress: boolean;
   projectCount: number;
   teamsInSameLab: boolean;
@@ -51,9 +52,18 @@ const DeliverableSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  dockerLog: {
+  dockerLogs: {
     type: Object,
-    default: {},
+    default: {
+      buildHistory: {
+        type: Object,
+        default: {stdout: '', stderr: ''},
+      },
+      destroyHistory:{
+        type: Object,
+        default: {stdout: '', stderr: ''},
+      },
+    },
   },
   teamCount:      {
     type: Number,

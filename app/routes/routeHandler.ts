@@ -374,9 +374,9 @@ const buildContainer = (req: restify.Request, res: restify.Response, next: resti
     .catch((err: any) => res.json(500, {err: err}));
 };
 
-const dropContainer = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return dockerCtrl.dropContainer(req.params)
-    .then((defaultDeliv: any) => res.json(200, {response: defaultDeliv}))
+const destroyContainer = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return dockerCtrl.destroyContainer(req.params)
+    .then((message: any) => res.json(200, {response: message}))
     .catch((err: any) => res.json(500, {err: err}));
 };
 
@@ -397,5 +397,5 @@ export {
   createCustomTeam, isStudentInSameLab, getCourseTeamInfo, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
   getStdioFile, addStaffList, getAllStaff, getDefaultDeliv, removeRepoFromTeams, testJwt,
-  getGradesByDeliv, getGradesIfReleased, buildContainer, dropContainer,
+  getGradesByDeliv, getGradesIfReleased, buildContainer, destroyContainer,
 };
