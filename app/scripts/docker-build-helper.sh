@@ -61,11 +61,3 @@ docker build -f ${dockerFilePath}/Dockerfile --tag ${tagName} \
  --build-arg githubKey="${githubKey}" \
  --no-cache \
  "${dockerDir}"
-
-# Results in the :latest tag on the image, which AutoTest will use. Can be switched back to :master but requries end-to-end testing
-if [[ "$deliverable" != "0" ]]
-then
-  docker tag ${tagName} autotest/cpsc${courseId}__${deliverable}__bootstrap
-else
-  docker tag ${tagName} autotest/cpsc${courseId}__bootstrap
-fi

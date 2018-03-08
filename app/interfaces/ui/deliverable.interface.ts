@@ -1,3 +1,5 @@
+import {DockerLogs, Logs} from '../../controllers/docker.controller';
+
 export interface DeliverablePayload {
   _id: string;
   id: string;
@@ -13,7 +15,11 @@ export interface DeliverablePayload {
   dockerImage: string;
   dockerBuild: string;
   dockerOverride: boolean;
+  dockerKey: string;
+  dockerRepo: string;
   containerBuilt: boolean;
+  buildingContainer: boolean;
+  dockerLogs: DockerLogs;
   buildingRepos: boolean;
   gradesReleased: boolean;
   regressionTest: boolean;

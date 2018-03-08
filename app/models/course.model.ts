@@ -7,12 +7,13 @@ interface ICourseDocument extends mongoose.Document {
   courseId: string;
   custom: any;
   delivKey: string;
+  buildingContainer: boolean;
   solutionsKey: string;
   classList: Object[];
   dockerKey: string;
   dockerRepo: string;
-  dockerInProgress: boolean;
   dockerLogs: DockerLogs;
+  dockerImage: string;
   labSections: LabSection[];
   admins: IUserDocument[];
   staffList: IUserDocument[];
@@ -61,6 +62,10 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     required: true,
     unique:   true,
   },
+  buildingContainer:   {
+    type:     Boolean,
+    default:  false,
+  },
   name:                {
     type:    String,
     default: '',
@@ -105,6 +110,10 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     type: Object,
     default: {},
   },
+  dockerImage:      {
+    type: String,
+    default: '',
+  },
   dockerRepo:       {
     type: String,
     default: '',
@@ -112,10 +121,6 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   dockerKey:        {
     type: Object,
     default: '',
-  },
-  dockerInProgress: {
-    type: Boolean,
-    default: false,
   },
   dockerLogs: {
     type: Object,

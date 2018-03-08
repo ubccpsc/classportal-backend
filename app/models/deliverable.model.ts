@@ -6,6 +6,9 @@ import {DockerLogs} from '../controllers/docker.controller';
 const DEFAULT_MAX_TEAM_SIZE: number = 1;
 const DEFAULT_MIN_TEAM_SIZE: number = 1;
 
+// # IMPORTANT: export interface DeliverablePayload also exists in the Deliverable.interface
+// file. You must also update these fields.
+
 interface IDeliverableDocument extends mongoose.Document {
   courseId: string;
   name: string;
@@ -13,11 +16,11 @@ interface IDeliverableDocument extends mongoose.Document {
   courseNum: string;
   deliverableKey: string;
   open: number;
+  buildingContainer: boolean;
   close: number;
   dockerRepo: string;
   dockerKey: string;
   dockerLogs: DockerLogs;
-  dockerInProgress: boolean;
   projectCount: number;
   teamsInSameLab: boolean;
   rate: number;
@@ -48,22 +51,12 @@ const DeliverableSchema = new mongoose.Schema({
   courseId:       {
     type: mongoose.Schema.Types.ObjectId, ref: 'Course',
   },
-  dockerInProgress: {
+  buildingContainer: {
     type: Boolean,
     default: false,
   },
   dockerLogs: {
     type: Object,
-    default: {
-      buildHistory: {
-        type: Object,
-        default: {stdout: '', stderr: ''},
-      },
-      destroyHistory:{
-        type: Object,
-        default: {stdout: '', stderr: ''},
-      },
-    },
   },
   teamCount:      {
     type: Number,

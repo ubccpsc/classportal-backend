@@ -113,17 +113,17 @@ async function buildContainer(payload: any): Promise<any> {
         }
       })
       .then(() => {
-        // THIRD: Abort build if the container is already built or dockerInProgress === true;
+        // THIRD: Abort build if the container is already built or buildingContainer === true;
         return exec(GET_CONTAINER_LIST_CMD)
           .then((process: any) => {
             if (String(process.stdout).indexOf(tagName) > -1) {
               throw `Container ${tagName} already built. Aborting build.`;
             }
             if (typeof payload.deliverableName === 'undefined') {
-              if (course.dockerInProgress) {
+              if (course.buildingContainer) {
                 throw `Container ${tagName} is already being built. Aborting this build.`;
               }
-            } else if (deliv.dockerInProgress) {
+            } else if (deliv.buildingContainer) {
               throw `Container ${tagName} is already being built. Aborting this build.`;
             }
           });
@@ -175,10 +175,10 @@ async function buildContainer(payload: any): Promise<any> {
         let githubToken = String(config.github_auth_token).replace('token ', '');
 
         if (typeof payload.deliverableName !== 'undefined') {
-          deliv.dockerInProgress = true;
+          deliv.buildingContainer = true;
           deliv.save();
         } else {
-          course.dockerInProgress = true;
+          course.buildingContainer = true;
           course.save();
         }
         fulfill(`Starting Docker build of ${tagName}...`);
@@ -196,11 +196,13 @@ async function buildContainer(payload: any): Promise<any> {
               console.log('DockerController:: Building Container SUCCESS');
               if (typeof payload.deliverableName !== 'undefined') {
                 deliv.dockerLogs = dockerLogs;
-                deliv.dockerInProgress = false;
+                deliv.dockerImage = tagName;
+                deliv.buildingContainer = false;
                 deliv.save();
               } else {
                 course.dockerLogs = dockerLogs;
-                course.dockerInProgress = false;
+                course.buildingContainer = false;
+                course.dockerImage = tagName;
                 course.save();
               }
               tempDir.cleanup();
@@ -210,16 +212,16 @@ async function buildContainer(payload: any): Promise<any> {
         // Handle some of the Log and Clean-up saving logic in case of error. Then throw original error
         // to the API.
         if (typeof payload.deliverableName !== 'undefined') {
-          dockerLogs.buildHistory.stderr = dockerLogs.buildHistory.stderr + 
-            '\n\n\nAdditional Error Child-Process Error Info: ' + JSON.stringify(err);
+          dockerLogs.buildHistory.stderr = '\n\n\n FAILED BUILD DOCKER COMMAND: \n\n' + dockerLogs.buildHistory.stderr + 
+            '\n\n\nOUTPUT UP UNTIL FAILED COMMAND: \n\n' + err.stdout;
           deliv.dockerLogs = dockerLogs;
-          deliv.dockerInProgress = false;
+          deliv.buildingContainer = false;
           deliv.save();
         } else {
           dockerLogs.buildHistory.stderr = 'Build errors: ' + dockerLogs.buildHistory.stderr + '\n\n' + 
-            '\n\n\nAdditional Error Child-Process Error Info: ' + JSON.stringify(err);
+            '\n\n\nAdditional Error Child-Process Error Info: \n\n' + err.stdout;
           course.dockerLogs = dockerLogs;
-          course.dockerInProgress = false;
+          course.buildingContainer = false;
           course.save();
         }
         tempDir.cleanup();
@@ -303,16 +305,17 @@ async function buildContainer(payload: any): Promise<any> {
               });
           })
           .then(() => {
-            // # THIRD: Concat prior Build logs with Destruction logs for viewing.
-            // # Save to respective Course or Deliverable.
+            // # THIRD: Save to respective Course or Deliverable.
             if (typeof payload.deliverableName === 'undefined') {
               course.dockerLogs.destroyHistory.stderr = stdErr;
-              course.dockerLogs.destroyHistory.stderr = stdOut;
+              course.dockerLogs.destroyHistory.stdout = stdOut;
+              course.dockerImage = '';
               course.markModified('dockerLogs');
               return course.save();
             } else {
               deliv.dockerLogs.destroyHistory.stderr = stdErr;
               deliv.dockerLogs.destroyHistory.stdout = stdOut;
+              deliv.dockerImage = '';
               deliv.markModified('dockerLogs');
               return deliv.save();
             }
