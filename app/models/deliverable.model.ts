@@ -57,6 +57,16 @@ const DeliverableSchema = new mongoose.Schema({
   },
   dockerLogs: {
     type: Object,
+    default: {
+      type: Object,
+      default: { 
+        type: Object,
+        buildHistory: {
+          stderr: '', stdout: ''
+        },
+        destroyHistory: {stderr: '', stdout: ''},
+      },
+    },
   },
   teamCount:      {
     type: Number,

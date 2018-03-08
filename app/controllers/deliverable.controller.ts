@@ -379,6 +379,13 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
 
   let isValid: boolean = isDeliverableValid(newDeliverable);
   let createdDeliv: IDeliverableDocument;
+
+  // Quick fix. Don't want the front-end touching this stuff.
+  newDeliverable.dockerLogs = {
+    destroyHistory: {stderr: '', stdout: ''}, 
+    buildHistory: {stderr: '', stdout: ''}
+  };
+
   if (isValid) {
     return Deliverable.findOne(newDeliverable)
     .then((deliv: IDeliverableDocument) => {
