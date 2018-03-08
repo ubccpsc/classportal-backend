@@ -380,6 +380,12 @@ const destroyContainer = (req: restify.Request, res: restify.Response, next: res
     .catch((err: any) => res.json(500, {err: err}));
 };
 
+const isContainerBuilt = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return dockerCtrl.isContainerBuilt(req.params)
+    .then((message: any) => res.json(200, {response: message}))
+    .catch((err: any) => res.json(500, {err: err}));
+};
+
 const testJwt = (req: restify.Request, res: any, next: restify.Next) => {
   res.setCookie('thiscookie', 'testS', {path: '/', maxAge: 60, secure: true});
   return res.json(200, {response: 'response'});
@@ -397,5 +403,5 @@ export {
   createCustomTeam, isStudentInSameLab, getCourseTeamInfo, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
   getStdioFile, addStaffList, getAllStaff, getDefaultDeliv, removeRepoFromTeams, testJwt,
-  getGradesByDeliv, getGradesIfReleased, buildContainer, destroyContainer,
+  getGradesByDeliv, getGradesIfReleased, buildContainer, destroyContainer, isContainerBuilt
 };

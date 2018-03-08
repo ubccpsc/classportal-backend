@@ -14,39 +14,47 @@
 
 tagName=${1}
 
+# DECLARED BASH METHODS
+stopRunningContainers() {
+  printf "2d. STOP RUNNING CONTAINERS: ${runningImages}\n"
+  printf "    STOPPED LIST:\n"
+  docker stop ${runningImages}
+}
+
+checkForRunningContainers() {
+  if [ ${runningImages} -ne "" ]
+  then 
+    echo "2c. NO RUNNING CONTAINERS FOUND"
+  else 
+    echo "2c. RUNNING CONTAINERS FOUND"
+    stopRunningContainers
+  fi
+}
+
+# SCRIPT START
+
 #1. Get container ID based on tag name 
-printf "SETTING containerId=`docker images -a | grep "$tagName" | awk NR==1'{print $3'}`\n\n"
+printf "\n\n1. FINDING IMAGE TO DESTROY BASED ON TAG NAME:\n"
+printf "containerId=`docker images -a | grep "$tagName" | awk NR==1'{print $3'}`"
 containerId=`docker images -a | grep "$tagName" | awk NR==1'{print $3'}`
 
-# containerId=`docker images -a | grep "cpsc310__" | awk NR==1'{print $3'}` // gets course base image id
+#2a. GRAB RUNNING IMAGE TAGS. 
+printf "\n\n2a. GRAB RUNNING IMAGE TAGS:\n"
+printf "runningImages=`docker ps -a | grep ${containerId} | awk '{print $1}' | xargs`"
+runningImages=`docker ps -a | grep ${containerId} | awk '{print $1}' | xargs`
 
-# #2. search for running images on tag and log them
-# printf "docker ps -a | grep "$containerId"\n\n"
-# docker ps -a | grep "$containerId"
-
-# #3. Grab running image tags
-# printf "runningImages=`docker ps -a | grep ${containerId} | awk '{print $1}' | xargs`\n\n"
-# runningImages=`docker ps -a | grep ${containerId} | awk '{print $1}' | xargs`
-
-# #4. Stop running image tags
-# printf "docker stop $runningImages"
-
-# docker stop $runningImages
-
-
-# # COMMENTED OUT AS HAVE TO FIND A WAY TO GRACEFULLY BUT REDUNDANTLY INCLUDE
-# # THIS LINE WITHOUT THROWING AN ERROR.
-# # #5. Kill running images that are not stopped.
-# # printf "docker kill $runningImages\n\n"
-# # docker kill $runningImages
+#2b. CONFIRM IF CONTAINERS RUNNING; KILL RUNNING CONTAINERS
+printf "\n\n2b. CHECKING FOR RUNNING CONTAINERS\n"
+checkForRunningContainers
 
 # #6. Remove stopped and killed containers
 # printf "docker rm -f $runningImages\n\n"
 # docker rm -f $runningImages
 
-#6. Finally, remove image tag from original container ID and delete container ID
-printf "RUNNING docker rmi "$tagName"\n\n"
+printf "\n5. REMOVING BUILD IMAGE ID\n"
+printf "docker rmi "$tagName"\n\n"
 docker rmi -f "$tagName"
 
-printf "RUNNING docker rmi $containerId\n\n"
-docker rmi -f $containerId
+# printf "RUNNING docker rmi $containerId\n\n"
+# docker rmi -f $containerId
+

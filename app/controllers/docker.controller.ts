@@ -212,8 +212,14 @@ async function buildContainer(payload: any): Promise<any> {
         // Handle some of the Log and Clean-up saving logic in case of error. Then throw original error
         // to the API.
         if (typeof payload.deliverableName !== 'undefined') {
-          dockerLogs.buildHistory.stderr = '\n\n\n FAILED BUILD DOCKER COMMAND: \n\n' + dockerLogs.buildHistory.stderr + 
-            '\n\n\nOUTPUT UP UNTIL FAILED COMMAND: \n\n' + err.stdout;
+          console.log(err.stdout);
+          console.log(err.stderr);
+          dockerLogs.buildHistory.stderr = err.stdout + '\n\n' + dockerLogs.buildHistory.stderr;
+
+          if (typeof err.stdout === 'undefined' || typeof err.stdout === 'undefined') {
+            dockerLogs.buildHistory.stderr = err;
+          }
+
           deliv.dockerLogs = dockerLogs;
           deliv.buildingContainer = false;
           deliv.save();
@@ -328,6 +334,64 @@ async function buildContainer(payload: any): Promise<any> {
 }
 
 /**
+ * Determines if a container has been built based on Course, or a Deliverable if a 
+ * deliverableName is specified.
+ * 
+ * @param payload.courseId String course id ie. '310'
+ * @param payload.deliverableName String deliverable name ie. 'd1'
+ * @return Boolean returns true if built.
+ */
+function isContainerBuilt(payload: any) {
+  logger.info('GithubManager::isContainerBuilt() - start');
+  let course: ICourseDocument;
+  let deliv: IDeliverableDocument;
+
+  return Course.findOne({courseId: payload.courseId})
+    .then((c: ICourseDocument) => {
+      if (c) {
+        course = c;
+        return c;
+      }
+      throw `Could not find Course under ${payload.coursId}`;
+    })
+    .then(() => {
+      if (typeof payload.deliverableName !== 'undefined') {
+        return Deliverable.findOne({courseId: course._id, name: payload.deliverableName})
+          .then((d: IDeliverableDocument) => {
+            if (d) {
+              deliv = d;
+              return d;
+            }
+            throw `Could not find Deliverable ${payload.deliverableName} under ${payload.courseId}`;
+          });
+      }
+      return null;
+    })
+    .then(() => {
+      if (typeof payload.deliverableName === 'undefined') {
+        let tagName = DOCKER_PREPEND + course.courseId + DOCKER_APPEND;
+        return tagName;
+      } else {
+        let tagName = DOCKER_PREPEND + course.courseId + '__' + deliv.name + DOCKER_APPEND;
+        return tagName;
+      }
+    })
+    .then((tagName: string) => {
+      return exec(GET_CONTAINER_LIST_CMD)
+      .then(function (result: any) {
+        logger.info('GithubManager::isContainerBuilt() STDOUT/STDERR:');
+        console.log('stdout: ', result.stdout);
+        console.log('stderr: ', result.stderr);
+        if (String(result.stdout).indexOf(tagName) > -1) {
+          return true;
+        }
+        return false;
+      });
+    });
+}
+
+
+/**
  * Clones a Github repo somewhere on the FS specified by temp path dir.
  * 
  * @param repoUrl String Github Repo url ie. https://github.com/andrew/repoName
@@ -348,5 +412,5 @@ function cloneRepo(repoUrl: string, tempPath: string) {
 
 
 export {
-  buildContainer, destroyContainer
+  buildContainer, destroyContainer, isContainerBuilt
 };

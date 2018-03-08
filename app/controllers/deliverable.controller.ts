@@ -34,7 +34,7 @@ function isDeliverableValid(deliv: IDeliverableDocument): boolean {
   const TEAM_SIZE_ERR: string = 'The minimum team size cannot be greater than the maximum team size';
   const CUSTOM_JSON_ERR: string = 'Your custom JSON input should be valid stringified JSON: ';
   const DELIV_NAME_ERR: string = 'A deliverable name must be all lowercase letters, up to 10 characters, and a combination of [a-z] and [0-9].';
-  const HTTPS_GIT_REPO_ERR: string = 'Please make sure your Git repo addresses are valid Https URIs.';
+  // const HTTPS_GIT_REPO_ERR: string = 'Please make sure your Git repo addresses are valid Https URIs.';
   const OPEN_CLOSE_ERR: string = 'The close date must be greater than the open date.';
 
   if (deliv.minTeamSize > deliv.maxTeamSize) {
@@ -54,9 +54,10 @@ function isDeliverableValid(deliv: IDeliverableDocument): boolean {
       throw DELIV_NAME_ERR;
   }
 
-  if (deliv.url.search(HTTPS_REGEX) === -1 || deliv.solutionsUrl.search(HTTPS_REGEX) === -1) {
-      throw HTTPS_GIT_REPO_ERR;
-  }
+  // Disabled. Too determined.
+  // if (deliv.url.search(HTTPS_REGEX) === -1 || deliv.solutionsUrl.search(HTTPS_REGEX) === -1) {
+  //     throw HTTPS_GIT_REPO_ERR;
+  // }
 
   return true;
 }
