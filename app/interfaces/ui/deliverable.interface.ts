@@ -1,4 +1,4 @@
-import {DockerLogs, Logs} from '../../controllers/docker.controller';
+import {DockerLogs} from '../../controllers/docker.controller';
 
 export interface DeliverablePayload {
   _id: string;

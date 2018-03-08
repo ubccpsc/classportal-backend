@@ -60,11 +60,14 @@ const DeliverableSchema = new mongoose.Schema({
     default: {
       type: Object,
       default: { 
-        type: Object,
         buildHistory: {
-          stderr: '', stdout: ''
+          type: String,
+          default: '',
+        }, 
+        destroyHistory: {
+          type: String,
+          default: '',
         },
-        destroyHistory: {stderr: '', stdout: ''},
       },
     },
   },

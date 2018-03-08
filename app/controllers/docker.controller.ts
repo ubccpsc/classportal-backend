@@ -14,13 +14,8 @@ const GET_CONTAINER_LIST_CMD = 'docker images';
 const APP_PATH = String(__dirname).replace('build/app/controllers', '');
 
 export interface DockerLogs {
-  buildHistory: Logs;
-  destroyHistory: Logs;
-}
-
-export interface Logs {
-  stdout: string;
-  stderr: string;
+  buildHistory: string;
+  destroyHistory: string;
 }
 
 const DOCKER_PREPEND = 'autotest/cpsc';
@@ -67,8 +62,8 @@ async function buildContainer(payload: any): Promise<any> {
 
   // On each build, we clear out the logs and start from scratch
   let dockerLogs: DockerLogs = {
-    buildHistory: {stdout: '', stderr: ''}, 
-    destroyHistory: {stdout: '', stderr: ''}
+    buildHistory: '',
+    destroyHistory: '',
   };
 
   const DOCKERFILE_NAME: string = 'Dockerfile';
@@ -188,8 +183,7 @@ async function buildContainer(payload: any): Promise<any> {
               logger.info('DockerController:: Building Container STDOUT/STDERR:');
               logger.info('DockerController:: Building Container STDOUT:' + result.stdout);
               logger.info('DockerController:: Building Container STDERR:' + result.stderr);
-              dockerLogs.buildHistory.stderr = result.stderr;
-              dockerLogs.buildHistory.stdout = result.stdout;
+              dockerLogs.buildHistory = result.stdout + '\n' + result.stderr;
               return dockerLogs;
               })
             .then(() => {
@@ -214,18 +208,17 @@ async function buildContainer(payload: any): Promise<any> {
         if (typeof payload.deliverableName !== 'undefined') {
           console.log(err.stdout);
           console.log(err.stderr);
-          dockerLogs.buildHistory.stderr = err.stdout + '\n\n' + dockerLogs.buildHistory.stderr;
+          dockerLogs.buildHistory += err.stdout + '\n\n' + dockerLogs.buildHistory;
 
           if (typeof err.stdout === 'undefined' || typeof err.stdout === 'undefined') {
-            dockerLogs.buildHistory.stderr = err;
+            dockerLogs.buildHistory += err;
           }
 
           deliv.dockerLogs = dockerLogs;
           deliv.buildingContainer = false;
           deliv.save();
         } else {
-          dockerLogs.buildHistory.stderr = 'Build errors: ' + dockerLogs.buildHistory.stderr + '\n\n' + 
-            '\n\n\nAdditional Error Child-Process Error Info: \n\n' + err.stdout;
+          dockerLogs.buildHistory = err.stdout + '\n' + err.stderr;
           course.dockerLogs = dockerLogs;
           course.buildingContainer = false;
           course.save();
@@ -313,14 +306,12 @@ async function buildContainer(payload: any): Promise<any> {
           .then(() => {
             // # THIRD: Save to respective Course or Deliverable.
             if (typeof payload.deliverableName === 'undefined') {
-              course.dockerLogs.destroyHistory.stderr = stdErr;
-              course.dockerLogs.destroyHistory.stdout = stdOut;
+              course.dockerLogs.destroyHistory = stdOut + stdErr;
               course.dockerImage = '';
               course.markModified('dockerLogs');
               return course.save();
             } else {
-              deliv.dockerLogs.destroyHistory.stderr = stdErr;
-              deliv.dockerLogs.destroyHistory.stdout = stdOut;
+              deliv.dockerLogs.destroyHistory = stdOut + stdErr;
               deliv.dockerImage = '';
               deliv.markModified('dockerLogs');
               return deliv.save();

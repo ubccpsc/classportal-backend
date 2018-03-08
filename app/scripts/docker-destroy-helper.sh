@@ -47,14 +47,8 @@ runningImages=`docker ps -a | grep ${containerId} | awk '{print $1}' | xargs`
 printf "\n\n2b. CHECKING FOR RUNNING CONTAINERS\n"
 checkForRunningContainers
 
-# #6. Remove stopped and killed containers
-# printf "docker rm -f $runningImages\n\n"
-# docker rm -f $runningImages
-
-printf "\n5. REMOVING BUILD IMAGE ID\n"
-printf "docker rmi "$tagName"\n\n"
-docker rmi -f "$tagName"
-
-# printf "RUNNING docker rmi $containerId\n\n"
-# docker rmi -f $containerId
+#3. REMOVE CONTAINER ID
+printf "\n3. REMOVING BUILD IMAGE ID\n"
+printf "docker rmi "$containerId"\n\n"
+docker rmi -f "$containerId"
 

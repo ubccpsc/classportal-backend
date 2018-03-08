@@ -383,8 +383,8 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
 
   // Quick fix. Don't want the front-end touching this stuff.
   newDeliverable.dockerLogs = {
-    destroyHistory: {stderr: '', stdout: ''}, 
-    buildHistory: {stderr: '', stdout: ''}
+    destroyHistory: '',
+    buildHistory: '',
   };
 
   if (isValid) {
