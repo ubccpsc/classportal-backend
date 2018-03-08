@@ -171,12 +171,24 @@ async function buildContainer(payload: any): Promise<any> {
 
         if (typeof payload.deliverableName !== 'undefined') {
           deliv.buildingContainer = true;
-          deliv.save();
+          deliv.dockerLogs.destroyHistory = '';
+          deliv.dockerLogs.buildHistory = '';
+          deliv.markModified('dockerLogs');
+          deliv.save()
+            .then((deliv: IDeliverableDocument) => {
+              fulfill(`Starting Docker build of ${tagName}...`);
+            });
         } else {
+          course.dockerLogs.destroyHistory = '';
+          course.dockerLogs.buildHistory = '';
           course.buildingContainer = true;
-          course.save();
+          course.markModified('dockerLogs');
+          course.save()
+            .then((course: ICourseDocument) => {
+              fulfill(`Starting Docker build of ${tagName}...`);
+            });
         }
-        fulfill(`Starting Docker build of ${tagName}...`);
+        
         return exec(`${APP_PATH}app/scripts/docker-build-helper.sh ${tempPath} ${githubToken} ${course.courseId} ${delivInput} ` +
           `${envInput} ${config.app_path}:1${course.courseId}/`)
             .then(function (result: any) {
