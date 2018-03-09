@@ -1,14 +1,14 @@
 import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
-import {ICourseDocument, Course} from '../models/course.model';
+import {ICourseDocument, Course, CoursePayload} from '../models/course.model';
 import {IUserDocument, User, CourseData} from '../models/user.model';
 import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
 import {log} from 'util';
 import {LabSection, StudentWithLab} from '../models/course.model';
 import {ENOLCK} from 'constants';
-
+import {DockerLogs} from './docker.controller';
 
 /**
  * Gets a list of users who are Admins underneath a particular course
@@ -138,7 +138,7 @@ function addAdminList(reqFiles: any, courseId: string) {
  * specified @param courseId)
  * 
  * Pre-req #1 is that HEADERS in CSV are labelled with headers below:
- *                    HEADERS: CWL (required) / CSID (optional) / SNUM (optional) 
+ *                    HEADERS: CWL (required) / CSID / SNUM
  * 
  * ** WARNING ** Uploading a staffList will overwrite the previous labList 
  * in the Course object.
@@ -170,8 +170,8 @@ function addStaffList(reqFiles: any, courseId: string) {
          'exist for CSV line: ' + JSON.stringify(staff));
       userQueries.push(usersRepo.findOrCreate({
         username: staff.CWL,
-        csid: staff.CWL,
-        snum: staff.CWL
+        csid: staff.CSID,
+        snum: staff.SNUM
       }).then((u: IUserDocument) => {
         return u;
       }));
@@ -224,7 +224,7 @@ function addStaffList(reqFiles: any, courseId: string) {
  * 
  * ** SUPER IMPORTANT ** Team creation requires that students are seen as in the same lab
  * or not. Instead of writing two sets of code, we add students who are not in a lab as the "NOLAB" 
- * section. To clarify, as "NOLAB" is a string like any other lab string, and "NOLAB" is added to users
+ * section. As "NOLAB" is a string like any other lab string, and "NOLAB" is added to users
  * without a lab by default, "NOLAB" is considered as the same lab. Therefore, these students can enter
  * a team from within the same lab.
  * 
@@ -505,8 +505,7 @@ function getStudentNamesFromCourse(courseId: string) {
  */
 function getAllCourses(req: restify.Request) {
   logger.info('get() in Courses Controller');
-  let query = Course.find({}, `courseId minTeamSize maxTeamSize studentsSetTeams description
-  teamsMustBeInSameLab icon name -_id`)
+  let query = Course.find({}, `courseId description name -_id`)
     .sort({courseId: -1}).exec();
 
   return query.then(result => {
@@ -527,7 +526,7 @@ function getAllCourses(req: restify.Request) {
 function getMyCourses(req: any): Promise<object[]> {
 
   return User.findOne({username: req.user.username})
-    .populate({path: 'courses', select: 'courseId studentsSetTeams teamsMustBeInSameLab'})
+    .populate({path: 'courses', select: 'courseId'})
     .exec()
     .then((user: any) => {
       return user.courses;
@@ -574,6 +573,23 @@ function isStaffOrAdmin(payload: any): Promise<boolean> {
     });
 }
 
+/** 
+ * Validates a course
+ * 
+ * @param payload.course CoursePayload object that fits Course interface from 
+ * @return Boolean true if valid, false if invalid.
+ * Models.ts file in classportal-ui
+*/
+function validateCourse(course: CoursePayload) {
+  logger.info('CourseController::validateCourse() - start');
+
+}
+
+/**
+ * Creates a Course object after validation.
+ * 
+ * @param course Course object from Course.Interface front-end
+ */
 function create(course: ICourseDocument) {
   logger.info('create() in Courses Controller');
   let query = Course.findOne({'courseId': course.courseId}).exec();
@@ -603,26 +619,9 @@ function update(req: restify.Request, res: restify.Response, next: restify.Next)
   return next();
 }
 
-/**
- * Gets logged in username
- * @param {restify.Request} restify request object
- * @returns {boolean} true value if valid CSID/SNUM aka. real user in database
- **/
-function getCourseSettings(req: restify.Request): Promise<object> {
-  let courseId = req.params.courseId;
-  return Course.findOne({courseId: req.params.courseId})
-    .then((course: ICourseDocument) => {
-      if (course) {
-        return Promise.resolve(course.settings);
-      } else {
-        return Promise.reject(`CourseController::GetCourseSettings Could not find course ${courseId}`);
-      }
-    });
-}
-
 
 export {
   getAllCourses, create, update, updateClassList, getClassList, getStudentNamesFromCourse,
-  getAllAdmins, getMyCourses, getCourseSettings, getLabSectionsFromCourse,
+  getAllAdmins, getMyCourses, getLabSectionsFromCourse,
   getCourseLabSectionList, getCourse, isStaffOrAdmin, addAdminList, addStaffList, getAllStaff
 };

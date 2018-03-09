@@ -3,6 +3,27 @@ import {UserSchema, IUserDocument} from '../models/user.model';
 import {DockerLogs} from '../controllers/docker.controller';
 import {logger} from '../../utils/logger';
 
+// Used to interface with Front-End 'classportal-ui' or raw Mongo queries
+export interface CoursePayload {
+  courseId: string; // ie. '310', '210'
+  githubOrg: string; // Github Enterprise Organization where student repos are located.
+  dockerRepo: string; // The Repo where Dockerfile builds image from
+  dockerKey: string; // Github auth token key if Repo is not public
+  labSections: LabSection[]; // Array that holds the lab sections with the students
+  urlWebhook: string; // The Portal address and port that a ResultRecord should be sent to after internal Docker Grading.
+  admins: IUserDocument[]; // Mongo Object ID / Professors only. TAs with staff priviledges must go under staff list. Only SuperAdmin can add admins
+  staffList: IUserDocument[]; // Mongo Object ID / TAs who can do unlimited Grade Requests and access areas of ClassPortal
+  classList: IUserDocument[]; // Mongo Object ID / Every student who is enrolled in the course should be in this list
+  name: string; // The Course Title -- Unused though
+  description: string; // The course description -- Unused though.
+  url: string; // The github starter code
+  deliverableKey: string; // The Github auth token key for starter code if repo not public
+  dockerImage: string; // name of the Docker image
+  whitelistedServers: string; // list of space dilineated server:port combinations that Docker container implemented
+  dockerLogs: DockerLogs; // Latest Docker build and drop logs for this Course
+  buildingContainer: boolean; // If currently building a container, this should be true.
+}
+
 interface ICourseDocument extends mongoose.Document {
   courseId: string;
   custom: any;
@@ -19,7 +40,6 @@ interface ICourseDocument extends mongoose.Document {
   staffList: IUserDocument[];
   urlWebhook: string;
   githubOrg: string;
-  settings: CourseSettings;
 }
 
 // Interface helps with the front-end Class List View
@@ -41,18 +61,7 @@ export interface LabSection {
   users: IUserDocument[];
 }
 
-
-export interface CourseSettings {
-  bootstrapImage: string;
-  testingDelay: boolean;
-  delayTime: Date;
-  markDelivsByBatch: boolean;
-  deliverables: Object;
-}
-
 interface ICourseModel extends mongoose.Model<ICourseDocument> {
-  findByCourseId(courseId: string): Promise<ICourseDocument>;
-  findUsersInCourse(courseId: string): Promise<ICourseDocument[]>;
   createOrUpdate(course: ICourseDocument): Promise<ICourseDocument>;
 }
 
@@ -133,9 +142,6 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     type: String,
     default: 'portal.cs.ubc.ca:1210 portal.cs.ubc.ca:1310 portal.cs.ubc.ca:1311',
   },
-  settings:            {
-    type: Object,
-  },
   description:         {
     type: String,
   }, 
@@ -152,27 +158,7 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
 CourseSchema.static({
 
   /**
-   * Gets a list of Users in the course.classList object.
-   * @param {string} search parameters
-   * @returns {Promise<IUserDocument>} Returns a Promise of the user.
-   */
-  findUsersInCourse: (courseId: string): Promise<ICourseDocument> => {
-    return Course
-      .findOne({'courseId': courseId})
-      .populate('classList')
-      .exec()
-      .then((course) => {
-        if (course) {
-          return course;
-        } else {
-          logger.info('findUsersInCourse(): Course #' + courseId + ' not found.');
-          return Error('findUsersInCourse(): Course #' + courseId + ' not found.');
-        }
-      });
-  },
-
-  /**
-   * Finds a Grade and updates it, or creates the Grade if it does not exist.
+   * Finds a Course and updates it or creates it if it does not exist.
    * @param {ICourseDocument} search parameters
    * @returns {Promise<ICourseDocument>} Returns a Promise of the user.
    */

@@ -209,12 +209,6 @@ const isAuthenticated = (req: restify.Request, res: restify.Response, next: rest
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
-const getCourseSettings = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return courseCtrl.getCourseSettings(req)
-    .then((courseSettings: Object) => res.json(200, {response: courseSettings}))
-    .catch((err: any) => res.json(500, {err: err.message}));
-};
-
 const getCourseTeamsPerUser = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return teamCtrl.getCourseTeamsPerUser(req)
     .then((teams: ITeamDocument[]) => res.json(200, {response: teams}))
@@ -397,7 +391,7 @@ export {
   getAllGrades, createTeam, updateTeam, getStudentNamesFromCourse,
   addAdminList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
   getCurrentUser, isAuthenticated, getMyCourses,
-  getCourseSettings, getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
+  getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
   addDeliverable, randomlyGenerateTeamsPerCourse, getTestDelay, getContainerInfo,
   getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamInfo, getDashForDeliverable,

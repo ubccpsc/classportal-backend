@@ -138,6 +138,17 @@ async function buildContainer(payload: any): Promise<any> {
                 fulfill(fileIndex);
               });
             });
+          })
+          .catch((err: any) => {
+            if (typeof payload.deliverableName === 'undefined') {
+              deliv.dockerLogs.buildHistory = err.toString();
+              deliv.save();
+            } else {
+              course.dockerLogs.buildHistory = err.toString();
+              course.save();
+            }
+            reject(err);
+            throw err;
           });
       })
       .then((fileIndexArr: string[]) => {
@@ -402,7 +413,6 @@ function isContainerBuilt(payload: any) {
  */
 function cloneRepo(repoUrl: string, tempPath: string) {
   logger.info('GithubManager::cloneRepo() begins');
-
   return exec(`git clone ${repoUrl} ${tempPath}`)
     .then(function (result: any) {
       logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
@@ -411,8 +421,6 @@ function cloneRepo(repoUrl: string, tempPath: string) {
       return result;
     });
 }
-
-
 
 export {
   buildContainer, destroyContainer, isContainerBuilt

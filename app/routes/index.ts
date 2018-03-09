@@ -58,7 +58,6 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/admin/teams/:deliverableName', adminAuthenticated, routeHandler.getTeams);
   server.post('/:courseId/admin/grades/results', adminAuthenticated, routeHandler.getGradesFromResults);
   server.get('/:courseId/admin/teams/info/:deliverableName', adminAuthenticated, routeHandler.getCourseTeamInfo);
-  server.get('/:courseId/admin/courseSettings', adminAuthenticated, routeHandler.getCourseSettings);
   server.get('/:courseId/admin/classList', adminAuthenticated, routeHandler.getClassList);
 
 

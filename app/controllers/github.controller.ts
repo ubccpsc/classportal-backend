@@ -280,7 +280,6 @@ function createGithubReposForTeams(payload: any): Promise<any> {
 
   let githubManager: GitHubManager;
   let course: ICourseDocument;
-  let courseSettings: any;
   let teams: ITeamDocument[];
   let team: ITeamDocument;
   let buildByBatch: boolean;
@@ -296,7 +295,6 @@ function createGithubReposForTeams(payload: any): Promise<any> {
       if (_course) {
         githubManager = new GitHubManager(_course.githubOrg);
         course = _course;
-        courseSettings = _course.settings;
       } else {
         throw `Could not find course ${payload.courseId}`;
       }

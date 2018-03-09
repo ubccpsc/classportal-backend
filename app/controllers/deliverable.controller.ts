@@ -131,6 +131,8 @@ function updateDeliverable(payload: any): Promise<IDeliverableDocument> {
         d.dockerImage = deliv.dockerImage;
         d.dockerBuild = deliv.dockerBuild;
         d.dockerOverride = deliv.dockerOverride;
+        d.dockerRepo = deliv.dockerRepo;
+        d.dockerKey = deliv.dockerKey;
         d.containerBuilt = deliv.containerBuilt;
         d.buildingRepos = deliv.buildingRepos;
         d.gradesReleased = deliv.gradesReleased;
@@ -142,8 +144,6 @@ function updateDeliverable(payload: any): Promise<IDeliverableDocument> {
         d.deliverableKey = deliv.deliverableKey;
         d.custom = deliv.custom;
         d.customHtml = deliv.customHtml;
-        d.dockerRepo = deliv.dockerRepo;
-        d.dockerKey = deliv.dockerKey;
         return d;
       }
       throw `DeliverableController::queryAndUpdateDeliverable() ERROR Could not update ${deliv.name}.`;

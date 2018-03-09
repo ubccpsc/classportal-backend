@@ -5,9 +5,12 @@
 import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
 import mongodb = require('mongodb');
+import {CoursePayload} from '../models/course.model';
 
 let MongoClient = mongodb.MongoClient;
 const RESULTS = 'results';
+const DELIVERABLES = 'deliverables';
+const COURSES = 'courses';
 
 export class MongoDB {
 
@@ -124,6 +127,58 @@ export class MongoDB {
       }
     });
   }
+
+  /** 
+   * Resets all external Docker/Github task states from 'true', if in progress, to 'false'
+   * @return Promise<boolean> true if update worked.
+  */
+  public async resetCourseStates(): Promise<boolean> {
+    return new Promise<any>((fulfill, reject) => {
+      try {
+        this.conn.then((db: mongodb.Db) => {
+          db.collection(COURSES)
+            .updateMany({}, {$set: {buildingContainer: false}})
+            .then((onfulfilled: mongodb.UpdateWriteOpResult) => {
+                logger.info('MongoDB::resetCourseStates() Reset Course script activity states;');
+              fulfill(onfulfilled);
+            })
+            .then((err) => {
+              reject(err);
+            });
+        });
+      }
+      catch (err) {
+        logger.error(`MongoDB::resetCourseStates() Problem  ${COURSES}: ${err}`);
+        reject(err);
+      }
+    });
+  }
+
+  /** 
+   * Resets all external Docker/Github task states from 'true', if in progress, to 'false'
+   * @return Promise<boolean>;
+  */
+ public async resetDeliverableStates(): Promise<boolean> {
+  return new Promise<any>((fulfill, reject) => {
+    try {
+      this.conn.then((db: mongodb.Db) => {
+        db.collection(DELIVERABLES)
+          .updateMany({}, {$set: {buildingContainer: false, buildingRepos: false}})
+          .then((onfulfilled: mongodb.UpdateWriteOpResult) => {
+            logger.info('MongoDB::resetDeliverableStates() Reset Deliverable script activity states;');
+            fulfill(onfulfilled);
+          })
+          .then((err) => {
+            reject(err);
+          });
+      });
+    }
+    catch (err) {
+      logger.error(`MongoDB::resetDeliverableStates() Problem  ${COURSES}: ${err}`);
+      reject(err);
+    }
+  });
+}
 
   /**
    * Gets all unique strings in a row (ie. all Deliverable names "d1", "d2", etc.)

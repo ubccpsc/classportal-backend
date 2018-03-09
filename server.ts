@@ -1,6 +1,7 @@
 import mongoose = require('mongoose');
 import {config} from './config/env';
 import {app} from './config/restify';
+import db from './app/db/MongoDBClient';
 import {logger} from './utils/logger';
 
 // use native ES6 promises instead of mongoose promise library
@@ -19,6 +20,10 @@ const connection = mongoose.connect(config.db, {
     },
   },
 }).connection;
+
+db.resetCourseStates();
+db.resetDeliverableStates();
+
 
 // print to log if debug flag is set
 if (config.debug) mongoose.set('debug', true);
