@@ -62,16 +62,12 @@ GradeSchema.static({
    * @returns {Promise<IGradeDocument>} Returns a Promise of the user.
    */
   findOrCreate: (query: any): Promise<IGradeDocument> => {
-    return Grade.findOne({
-      snum:  query.snum,
-      csid:  query.csid,
-      deliverable: query.deliverable,
-      course: query.course,
-    })
+    return Grade.findOne(query)
     .then((grade: IGradeDocument) => {
       if (grade) {
         return grade;
       } 
+      
       return Grade.create({
         snum: query.snum, 
         csid: query.csid, 

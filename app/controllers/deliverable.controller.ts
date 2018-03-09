@@ -1,11 +1,10 @@
 import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
-import {Deliverable, IDeliverableDocument} from '../models/deliverable.model';
+import {Deliverable, IDeliverableDocument, DeliverablePayload} from '../models/deliverable.model';
 import {Course, ICourseDocument} from '../models/course.model';
 import {User, IUserDocument} from '../models/user.model';
 import {logger} from '../../utils/logger';
-import {DeliverablePayload} from '../interfaces/ui/deliverable.interface';
 import {isAdmin} from '../middleware/auth.middleware';
 import {TEAM_ADMINS} from '../../test/assets/mockDataObjects';
 import {MongoClient} from 'mongodb';
@@ -54,7 +53,7 @@ function isDeliverableValid(deliv: IDeliverableDocument): boolean {
       throw DELIV_NAME_ERR;
   }
 
-  // Disabled. Too determined.
+  // Disabled. Too determined. 
   // if (deliv.url.search(HTTPS_REGEX) === -1 || deliv.solutionsUrl.search(HTTPS_REGEX) === -1) {
   //     throw HTTPS_GIT_REPO_ERR;
   // }
@@ -366,6 +365,9 @@ function getTestDelay(payload: any): Promise<number> {
  * Creates a new Deliverable if it passes validation. Ensures that Deliverable
  * 'name' is all lowercase server-side.
  * 
+ * Adds Course + DelivName information to the new Deliverable 'dockerImage' property
+ * used to drop and add Containers. Front-end should not touch this property.
+ * 
  * @param payload.deliverable IDeliverableDocument
  * @return IDeliverableDocument returned on successful creation
  */
@@ -381,12 +383,6 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
   let isValid: boolean = isDeliverableValid(newDeliverable);
   let createdDeliv: IDeliverableDocument;
 
-  // Quick fix. Don't want the front-end touching this stuff.
-  newDeliverable.dockerLogs = {
-    destroyHistory: '',
-    buildHistory: '',
-  };
-
   if (isValid) {
     return Deliverable.findOne(newDeliverable)
     .then((deliv: IDeliverableDocument) => {
@@ -399,6 +395,11 @@ function addDeliverable(payload: any): Promise<IDeliverableDocument> {
         return Course.findOne({courseId: payload.courseId})
           .then((course: ICourseDocument) => {
             if (course) {
+
+              // Adding in Docker Image Course and Deliv info:
+              newDeliverable.dockerImage = 'autotest/cpsc' + course.courseId + '__' + newDeliverable.name + '__bootstrap';
+
+              // Adding in MongoDB object Id
               newDeliverable.courseId = course._id;
               return newDeliverable;
             }

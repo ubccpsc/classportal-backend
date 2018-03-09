@@ -6,8 +6,38 @@ import {DockerLogs} from '../controllers/docker.controller';
 const DEFAULT_MAX_TEAM_SIZE: number = 1;
 const DEFAULT_MIN_TEAM_SIZE: number = 1;
 
-// # IMPORTANT: export interface DeliverablePayload also exists in the Deliverable.interface
-// file. You must also update these fields.
+export interface DeliverablePayload {
+  _id: string;
+  id: string;
+  open: number; // timestamp
+  close: number; // timestamp
+  teamsInSameLab: boolean;
+  studentsMakeTeams: boolean;
+  solutionsUrl: string;
+  solutionsKey: string;
+  maxTeamSize: number;
+  minTeamSize: number;
+  rate: number;
+  dockerImage: string;
+  dockerBuild: string;
+  dockerOverride: boolean;
+  dockerKey: string;
+  dockerRepo: string;
+  containerBuilt: boolean;
+  buildingContainer: boolean;
+  dockerLogs: DockerLogs;
+  buildingRepos: boolean;
+  gradesReleased: boolean;
+  regressionTest: boolean;
+  regressionTests: string;
+  whitelistedServers: string;
+  projectCount: number;
+  url: string;
+  deliverableKey: string;
+  custom: object;
+  customHtml: boolean;
+  name: string;
+}
 
 interface IDeliverableDocument extends mongoose.Document {
   courseId: string;
@@ -143,7 +173,7 @@ const DeliverableSchema = new mongoose.Schema({
   url:            {
     type: String,
   },
-  deliverableKey: {
+  urlKey: {
     type: String,
     default: '',
   },

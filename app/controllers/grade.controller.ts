@@ -157,24 +157,53 @@ function addGradesCSV(req: any): Promise<IGradeDocument[]> {
 
           // Identify user to join fname and lname
           let studentExists: boolean = false;
+
           course.classList.map((u: IUserDocument) => {
-            if (u.snum === result[i].SNUM || u.csid === result[i].CSID) {
+            if (typeof result[i].SNUM !== 'undefined' && u.snum === result[i].SNUM) {
+              user = u;
+              studentExists = true;
+            } else if (typeof result[i].CSID !== 'undefined' && u.csid === result[i].CSID) {
+              user = u;
+              studentExists = true;
+            } else if (typeof result[i].CWL !== 'undefined' && u.username === result[i].CWL) {
               user = u;
               studentExists = true;
             }
           });
+
 
           // If student does not exist, throw error before Promise.all, as we do not want grades for fake students.
           if (!studentExists) {
             allStudentsExist = false;
           }
 
-          let gradePromise = Grade.findOrCreate({
-            snum: result[i].SNUM, 
-            csid: result[i].CSID, 
-            deliverable: deliv.name, 
-            course: course.courseId
-          })
+          let gradeQuery: object;
+
+          // Change query to search for student on basis of what is available out of CSID, SNUM, or CWL:
+          // Got to do a join to add in missing required fields below from matching User object above
+          if (typeof result[i].CSID !== 'undefined') { // CSID
+            gradeQuery = {
+              csid: String(result[i].CSID).toLowerCase(), 
+              snum: user.snum,
+              deliverable: deliv.name, 
+              course: course.courseId
+            };
+          } else if (typeof result[i].SNUM !== 'undefined') { // SNUM
+            gradeQuery = {
+              snum: String(result[i].SNUM).toLowerCase(), 
+              csid: user.csid,
+              deliverable: deliv.name, 
+              course: course.courseId
+            };
+          } else if (typeof result[i].CWL !== 'undefined') { // CWL
+            gradeQuery = {
+              username: String(result[i].CWL).toLowerCase(),
+              deliverable: deliv.name, 
+              course: course.courseId
+            };
+          }
+
+          let gradePromise = Grade.findOrCreate(gradeQuery)
           .then((grade: IGradeDocument) => {
             grade.grade = result[i].GRADE === "-1" || "" ? null : Number(result[i].GRADE);
             grade.comments = result[i].COMMENTS || '';
