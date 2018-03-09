@@ -13,6 +13,11 @@ import db, {Database} from '../db/MongoDBClient';
 import * as parse from 'csv-parse';
 import mongodb = require('mongodb');
 
+export interface GradeUploadResponse {
+  cannotUpdate: any[]; // UploadGradeCSV objects
+  updatedGrades: IGradeDocument[];
+}
+
 let context: Database = db;
 let MongoClient = mongodb.MongoClient;
 let fs = require('fs');
@@ -113,11 +118,12 @@ let csvParser = function (filePath: string, options: any) {
  * @param req.files.gradesFile.path upload CSV location. (managed by Restify)
  * @return IGradeDocument[] list of updated grades under the delivName and courseId
  */
-function addGradesCSV(req: any): Promise<IGradeDocument[]> {
+function addGradesCSV(req: any): Promise<GradeUploadResponse> {
 
   let course: ICourseDocument;
   let deliv: IDeliverableDocument;
   let allStudentsExist: boolean = true;
+  let cannotUpdate: any = [];
 
   // CSV parser options
   const options = {
@@ -171,9 +177,10 @@ function addGradesCSV(req: any): Promise<IGradeDocument[]> {
             }
           });
 
-
-          // If student does not exist, throw error before Promise.all, as we do not want grades for fake students.
+          // If student does not exist, return it in an additional payload object.
           if (!studentExists) {
+            logger.warn('GradeController:: csvParser() WARNING: Student does not exist', result[i]);
+            cannotUpdate.push(result[i]);
             allStudentsExist = false;
           }
 
@@ -181,52 +188,69 @@ function addGradesCSV(req: any): Promise<IGradeDocument[]> {
 
           // Change query to search for student on basis of what is available out of CSID, SNUM, or CWL:
           // Got to do a join to add in missing required fields below from matching User object above
-          if (typeof result[i].CSID !== 'undefined') { // CSID
-            gradeQuery = {
-              csid: String(result[i].CSID).toLowerCase(), 
-              snum: user.snum,
-              deliverable: deliv.name, 
-              course: course.courseId
-            };
-          } else if (typeof result[i].SNUM !== 'undefined') { // SNUM
-            gradeQuery = {
-              snum: String(result[i].SNUM).toLowerCase(), 
-              csid: user.csid,
-              deliverable: deliv.name, 
-              course: course.courseId
-            };
-          } else if (typeof result[i].CWL !== 'undefined') { // CWL
-            gradeQuery = {
-              username: String(result[i].CWL).toLowerCase(),
-              deliverable: deliv.name, 
-              course: course.courseId
-            };
+          try {
+            if (typeof result[i].CSID !== 'undefined') { // CSID
+              gradeQuery = {
+                csid: String(result[i].CSID).toLowerCase(), 
+                snum: user.snum,
+                deliverable: deliv.name, 
+                course: course.courseId
+              };
+            } else if (typeof result[i].SNUM !== 'undefined') { // SNUM
+              gradeQuery = {
+                snum: String(result[i].SNUM).toLowerCase(), 
+                csid: user.csid,
+                deliverable: deliv.name, 
+                course: course.courseId
+              };
+            } else if (typeof result[i].CWL !== 'undefined') { // CWL
+              gradeQuery = {
+                csid: user.csid,
+                snum: user.snum,
+                deliverable: deliv.name, 
+                course: course.courseId
+              };
+            }
+            console.log(user);
+              console.log('student coming by', user);
+          } catch (err) {
+            console.log('major err' + err);
           }
 
-          let gradePromise = Grade.findOrCreate(gradeQuery)
-          .then((grade: IGradeDocument) => {
-            grade.grade = result[i].GRADE === "-1" || "" ? null : Number(result[i].GRADE);
-            grade.comments = result[i].COMMENTS || '';
-            grade.fname = user.fname;
-            grade.lname = user.lname;
-            grade.username = user.username;
-            grade.save();
-            if (grade) {
-              updatedGrades.push(grade);
+
+          if (studentExists) {
+            if (user.snum === '26728135') {
+              console.log('oh oh', user);
             }
-          });
-          gradePromises.push(gradePromise);
+            let gradePromise = Grade.findOrCreate(gradeQuery)
+              .then((grade: IGradeDocument) => {
+                grade.grade = result[i].GRADE === "-1" || "" ? null : Number(result[i].GRADE);
+                grade.comments = result[i].COMMENTS || '';
+                grade.fname = user.fname;
+                grade.lname = user.lname;
+                grade.username = user.username;
+                if (grade) {
+                  updatedGrades.push(grade);
+                }
+                return grade.save();
+              });
+            gradePromises.push(gradePromise);
+          } else {
+            console.log('student does not exist ', result[i]);
+          }
         }
 
-          if (allStudentsExist) {
-            return Promise.all(gradePromises)
-            .then(() => {
-              // Return updated grades to front-end
-              return updatedGrades;
-            });
-          } else {
-            throw `Ensure that all students exist in Class List before uploading Grades.`;
-          }
+          return Promise.all(gradePromises)
+          .then(() => {
+            // Return updated grades to front-end
+            console.log({cannotUpdate, updatedGrades});
+            return {cannotUpdate, updatedGrades};
+          })
+          .catch((err) => {
+            console.log('why heer' + err);
+            return {cannotUpdate, updatedGrades};
+          });
+
         });
     });
 }

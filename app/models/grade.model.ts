@@ -69,11 +69,11 @@ GradeSchema.static({
       } 
       
       return Grade.create({
-        snum: query.snum, 
-        csid: query.csid, 
-        deliverable: query.deliverable,
-        course: query.course,
-      })
+          snum: query.snum, 
+          csid: query.csid, 
+          deliverable: query.deliverable,
+          course: query.course,
+        })
         .then((grade: IGradeDocument) => {
           return grade;
         });
