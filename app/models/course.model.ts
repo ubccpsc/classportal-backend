@@ -14,8 +14,6 @@ export interface CoursePayload {
   admins: IUserDocument[]; // Mongo Object ID / Professors only. TAs with staff priviledges must go under staff list. Only SuperAdmin can add admins
   staffList: IUserDocument[]; // Mongo Object ID / TAs who can do unlimited Grade Requests and access areas of ClassPortal
   classList: IUserDocument[]; // Mongo Object ID / Every student who is enrolled in the course should be in this list
-  name: string; // The Course Title -- Unused though
-  description: string; // The course description -- Unused though.
   url: string; // The github starter code
   deliverableKey: string; // The Github auth token key for starter code if repo not public
   dockerImage: string; // name of the Docker image
