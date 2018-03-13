@@ -5,7 +5,7 @@
 import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
 import mongodb = require('mongodb');
-import {CoursePayload} from '../models/course.model';
+import {CourseInterface} from '../models/course.model';
 
 let MongoClient = mongodb.MongoClient;
 const RESULTS = 'results';

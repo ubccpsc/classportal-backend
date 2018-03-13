@@ -32,38 +32,17 @@ const adminAuthenticated = (req: any, res: restify.Response, next: restify.Next)
   let userrole: string = String(req.user.userrole);
   if (req.isAuthenticated() === true && userrole === ADMIN_ROLE || userrole === SUPERADMIN_ROLE) {
     return next();
-    // let loggedInUser = req.user.username;
-    // let adminOrSuperAdmin = function() {
-    // return config.admins.indexOf(loggedInUser) >= 0 ||
-    //   config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
-    // };
-    // if (adminOrSuperAdmin()) {
-    //   return next(); // authorized
-    // }
   }
   next(new errors.UnauthorizedError('Permission denied.'));
 };
 
 const superAuthenticated = (req: any, res: restify.Response, next: restify.Next) => {
   if (req.isAuthenticated()) {
-    let loggedInUser = req.user.username;
+    let userrole = req.user.userrole;
     let superAdmin = function () {
-      return config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
+      return userrole === 'superadmin' ? true : false;
     };
     if (superAdmin()) {
-      return next();
-    }
-  }
-  next(new errors.UnauthorizedError('Permission denied.'));
-};
-
-const adminOrProfAuthenticated = (req: any, res: restify.Response, next: restify.Next) => {
-  if (req.isAuthenticated()) {
-    let loggedInUser = req.user.username;
-    let superAdmin = function () {
-      return config.super_admin.indexOf(loggedInUser) >= 0 ? true : false;
-    };
-    if (isAdminOrProf) {
       return next();
     }
   }
@@ -83,26 +62,4 @@ const isAdmin = (req: any, res: restify.Response, next: restify.Next) => {
   return false;
 };
 
-const isAdminOrProf = (req: any, res: restify.Response, next: restify.Next) => {
-  let authenticated: boolean;
-  if (req.isAuthenticated()) {
-    let loggedInUser = req.user.username;
-    let userrole: string;
-    let userQuery = User.findOne({username: req.user.username})
-      .exec(u => {
-        userrole = u.userrole;
-      });
-
-    let answer = userQuery.then(() => {
-      authenticated = config.admins.indexOf(loggedInUser) >= 0 || loggedInUser == userrole;
-      return Promise.resolve(authenticated);
-    });
-  }
-  console.log('auth.middleware::isAdminOrProf() - authenticated: ' + authenticated);
-  if (authenticated) {
-    return next();
-  }
-  return next(new errors.UnauthorizedError('Permission denied.'));
-};
-
-export {isAuthenticated, adminAuthenticated, superAuthenticated, isAdmin, adminOrProfAuthenticated};
+export {isAuthenticated, adminAuthenticated, superAuthenticated, isAdmin};

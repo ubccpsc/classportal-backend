@@ -1,7 +1,18 @@
+/**
+ * FUTURE COMPATIBILITY OF COURSES:
+ * 
+ * IMPORTANT: Courses have been created as strings. While validation demands a number between 3-4 chars long,
+ * if growth in Courses leads to multiple Courses with different Github Organizations on Github, then you 
+ * may change the validation to include letters as appendages, such as ie. '310a', '310b', etc.
+ * 
+ * A different Github Organization can be specified in a different Course object to create seperate namespaces
+ * and Course sections for different sets of students.
+ */
+
 import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
-import {ICourseDocument, Course, CoursePayload, LabSection, StudentWithLab} from '../models/course.model';
+import {ICourseDocument, Course, CourseInterface, LabSection, StudentWithLab} from '../models/course.model';
 import {IUserDocument, User, CourseData} from '../models/user.model';
 import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
@@ -579,7 +590,7 @@ function isStaffOrAdmin(payload: any): Promise<boolean> {
  * @param course Course Interface object from CoursePayload front-end
  * @return ICourseDocument on successful creation || string on error.
  */
-async function createCourse(coursePayload: CoursePayload): Promise<ICourseDocument> {
+async function createCourse(coursePayload: CourseInterface): Promise<ICourseDocument> {
   logger.info('createCourse() in Courses Controller');
   let isValid: boolean = await validateCourse(coursePayload);
 
@@ -602,7 +613,7 @@ async function createCourse(coursePayload: CoursePayload): Promise<ICourseDocume
  * @param payload.course CoursePayload object that fits Course interface from 
  * @return Promise<Boolean> true if valid, false if invalid.
 */
-async function validateCourse(course: CoursePayload): Promise<boolean> {
+async function validateCourse(course: CourseInterface): Promise<boolean> {
   logger.info('CourseController::validateCourse() in Courses Controller');
   const HTTPS_REGEX = new RegExp(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
   const ORG_REGEX: RegExp = new RegExp('^([A-Z0-9{4}]+-)([A-Z0-9{4}]+-)([A-Z0-9{4}])*$');

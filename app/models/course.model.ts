@@ -4,8 +4,8 @@ import {DockerLogs} from '../controllers/docker.controller';
 import {logger} from '../../utils/logger';
 
 // Used to interface with Front-End 'classportal-ui' or raw Mongo queries
-export interface CoursePayload {
-  courseId: string; // ie. '310', '210'
+export interface CourseInterface {
+  courseId: string; // ie. '310', '210'.
   githubOrg: string; // Github Enterprise Organization where student repos are located.
   dockerRepo: string; // The Repo where Dockerfile builds image from
   dockerKey: string; // Github auth token key if Repo is not public
@@ -14,19 +14,14 @@ export interface CoursePayload {
   admins: IUserDocument[]; // Mongo Object ID / Professors only. TAs with staff priviledges must go under staff list. Only SuperAdmin can add admins
   staffList: IUserDocument[]; // Mongo Object ID / TAs who can do unlimited Grade Requests and access areas of ClassPortal
   classList: IUserDocument[]; // Mongo Object ID / Every student who is enrolled in the course should be in this list
-  url: string; // The github starter code
-  deliverableKey: string; // The Github auth token key for starter code if repo not public
-  dockerImage: string; // name of the Docker image
-  whitelistedServers: string; // list of space dilineated server:port combinations that Docker container implemented
   dockerLogs: DockerLogs; // Latest Docker build and drop logs for this Course
   buildingContainer: boolean; // If currently building a container, this should be true.
+  whitelistedServers: string; // Comma dilineated IP/DNS:PORT
 }
 
 interface ICourseDocument extends mongoose.Document {
   courseId: string;
-  delivKey: string;
   buildingContainer: boolean;
-  solutionsKey: string;
   classList: Object[];
   dockerKey: string;
   dockerRepo: string;
@@ -126,7 +121,10 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   },
   dockerLogs: {
     type: Object,
-    default: {},
+    default: {
+      buildHistory: '',
+      destroyHistory: '',
+    },
   },
   githubOrg:           {
     type: String,
@@ -146,7 +144,7 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
     type: String,
     default: '',
   }, 
-});
+}, {minimize: false});
 
 CourseSchema.static({
 

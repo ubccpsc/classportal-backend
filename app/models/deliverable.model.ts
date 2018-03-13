@@ -88,17 +88,8 @@ const DeliverableSchema = new mongoose.Schema({
   dockerLogs: {
     type: Object,
     default: {
-      type: Object,
-      default: { 
-        buildHistory: {
-          type: String,
-          default: '',
-        }, 
-        destroyHistory: {
-          type: String,
-          default: '',
-        },
-      },
+      buildHistory: '',
+      destroyHistory: '',
     },
   },
   teamCount:      {
@@ -219,7 +210,7 @@ const DeliverableSchema = new mongoose.Schema({
     type:    Object,
     default: {},
   }
-});
+}, {minimize: false});
 
 // Deliverable Name must be unique per Course
 DeliverableSchema.index({courseId: 1, name: 1}, {unique: true});
