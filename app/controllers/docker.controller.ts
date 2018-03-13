@@ -179,6 +179,7 @@ async function buildContainer(payload: any): Promise<any> {
         let delivInput = typeof payload.deliverableName === 'undefined' ? 0 : payload.deliverableName;
         let envInput = config.env === 'production' ? 1 : 0;
         let githubToken = String(config.github_auth_token).replace('token ', '');
+        logger.info('DockerController::buildContainer() ENV: ' + config.env);
 
         if (typeof payload.deliverableName !== 'undefined') {
           deliv.buildingContainer = true;

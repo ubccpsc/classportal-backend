@@ -26,7 +26,6 @@ export interface CoursePayload {
 
 interface ICourseDocument extends mongoose.Document {
   courseId: string;
-  custom: any;
   delivKey: string;
   buildingContainer: boolean;
   solutionsKey: string;
@@ -115,10 +114,6 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
       },
     },
   ],
-  custom:          {
-    type: Object,
-    default: {},
-  },
   dockerImage:      {
     type: String,
     default: '',

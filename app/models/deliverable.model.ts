@@ -173,7 +173,7 @@ const DeliverableSchema = new mongoose.Schema({
   url:            {
     type: String,
   },
-  urlKey: {
+  deliverableKey: {
     type: String,
     default: '',
   },

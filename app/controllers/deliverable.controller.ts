@@ -156,11 +156,11 @@ function updateDeliverable(payload: any): Promise<IDeliverableDocument> {
       return d;
     })
     .then((d: IDeliverableDocument) => {
-      const WHITESPACE_DELIN = /\S+/g;
-      let regressionTests: string[] = [];
       // #3: Ensure regress test Deliverable Ids in Teams.deliverableIds
       // so that the front-end can group teams together for grades.
 
+      const WHITESPACE_DELIN = /\S+/g;
+      let regressionTests: string[] = [];
       let regressDelivIds: any[] = [];
 
       if (deliv.regressionTests !== 'undefined' && deliv.regressionTests.length > 0) {

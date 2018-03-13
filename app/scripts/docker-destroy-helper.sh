@@ -21,8 +21,9 @@ stopRunningContainers() {
   docker stop ${runningImages}
 }
 
+# If running images has lenght greater than 0; THEN
 checkForRunningContainers() {
-  if [ ${runningImages} -ne "" ]
+  if [ ${#runningImages} -gt 0 ]
   then 
     echo "2c. NO RUNNING CONTAINERS FOUND"
   else 

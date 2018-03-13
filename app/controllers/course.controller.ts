@@ -1,12 +1,12 @@
 import * as fs from 'fs';
 import * as restify from 'restify';
 import * as parse from 'csv-parse';
-import {ICourseDocument, Course, CoursePayload} from '../models/course.model';
+import {ICourseDocument, Course, CoursePayload, LabSection, StudentWithLab} from '../models/course.model';
 import {IUserDocument, User, CourseData} from '../models/user.model';
 import {logger} from '../../utils/logger';
 import {config} from '../../config/env';
 import {log} from 'util';
-import {LabSection, StudentWithLab} from '../models/course.model';
+import {CourseInterface} from '../interfaces/ui/course.interface';;
 import {ENOLCK} from 'constants';
 import {DockerLogs} from './docker.controller';
 
@@ -573,6 +573,25 @@ function isStaffOrAdmin(payload: any): Promise<boolean> {
     });
 }
 
+/**
+ * Creates a Course object after validation.
+ * 
+ * @param course Course Interface object from Course.Interface front-end
+ */
+async function createCourse(course: CourseInterface) {
+  logger.info('createCourse() in Courses Controller');
+  let isValid: boolean = await validateCourse(course);
+  let query = Course.findOne({'courseId': course.courseId}).exec();
+
+  return query.then(result => {
+    if (result) {
+      return Course.create(course);
+    } else {
+      return Promise.reject(Error('Course ' + course.courseId + ' already exists'));
+    }
+  });
+}
+
 /** 
  * Validates a course
  * 
@@ -580,27 +599,69 @@ function isStaffOrAdmin(payload: any): Promise<boolean> {
  * @return Boolean true if valid, false if invalid.
  * Models.ts file in classportal-ui
 */
-function validateCourse(course: CoursePayload) {
-  logger.info('CourseController::validateCourse() - start');
+async function validateCourse(course: CourseInterface): Promise<boolean> {
+  logger.info('validateCourse() in Courses Controller');
+  const HTTPS_REGEX = new RegExp(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
+  const ORG_REGEX: RegExp = new RegExp('^([A-Z0-9{4}]+-)([A-Z0-9{4}]+-)([A-Z0-9{4}])*$');
+  const DNS_PORT_REGEX: RegExp = new RegExp(/^([^\:]+:[0-9]+\s|[0-9]+.[0-9]+.[0-9]+.[0-9]+:[0-9]\+)+$/g);
 
-}
+  // #1: If Course exists already, reject.
+  let courseExists = await Course.findOne({courseId: course.courseId})
+    .then((course: ICourseDocument) => {
+      if (course) {
+        return true;
+      }
+      return false;
+    });
 
-/**
- * Creates a Course object after validation.
- * 
- * @param course Course object from Course.Interface front-end
- */
-function create(course: ICourseDocument) {
-  logger.info('create() in Courses Controller');
-  let query = Course.findOne({'courseId': course.courseId}).exec();
+  if (courseExists) {
+    return Promise.resolve(false);
+  }
 
-  return query.then(result => {
-    if (result === null) {
-      return Course.create(course);
-    } else {
-      return Promise.reject(Error('Course ' + course.courseId + ' already exists'));
+  // #2: If dockerRepo string not blank, make sure it is https format
+  if (course.dockerRepo !== '' && HTTPS_REGEX.test(course.dockerRepo)) {
+    // do nothing if it matches
+  } else {
+    return Promise.resolve(false);
+  }
+
+  // #3: If github org does not match convention ie. 'CPSC210-2017W-T2', then reject
+  if (!ORG_REGEX.test(course.githubOrg)) {
+    return Promise.resolve(false);
+  }
+
+  // #4: Make sure that the DNS and PORTS are space separated
+  if (course.whitelistedServers.lastIndexOf(' ') + 1 !== course.whitelistedServers.length) {
+    // HACK: Add in an extra space to match RegExp pattern if it does not exist
+    course.whitelistedServers += ' ';
+    let isWhitelistValid: boolean = DNS_PORT_REGEX.test(course.whitelistedServers);
+
+    if (!isWhitelistValid) {
+      return Promise.reject(false);
     }
-  });
+  }
+
+  
+  
+
+  
+  // courseId: string; // number of a Course in string format
+  // dockerRepo: string; // repo that Course image is built from
+  // dockerKey: string; // long github personal access token string
+  // labSections: LabSection[]; // All students grouped into Labs
+  // githubOrg: string; // The github organization that is being used this semester
+  // delivKey: string;
+  // whitelistedServers: string; // space seperated list of servers and ports ie. 'serverDNS.com:port'
+  // solutionsKey: string;
+  // admins: IUserDocument[];
+  // dockerLogs: object; // UI should not touch.
+  // buildingContainer: boolean; // true when Docker image is being built.
+  // staffList: IUserDocument[];
+  // urlWebhook: string;
+  
+
+
+  return Promise.resolve(true);
 }
 
 function getCourse(payload: any) {
