@@ -26,15 +26,15 @@ let mime = require('mime-types');
 const pong = (req: restify.Request, res: restify.Response) => res.send('pong');
 
 const createCourse = (req: restify.Request, res: restify.Response) => {
-  return courseCtrl.create(req.params)
-    .then(() => res.json(200, {response: 'Successfully added Course #' + req.params.courseId}))
-    .catch((err: Error) => res.json(500, {'err': err.message}));
+  return courseCtrl.createCourse(req.params)
+    .then((course: ICourseDocument) => res.json(200, {response: course}))
+    .catch((err: any) => res.json(500, {err: err}));
 };
 
 const getAllCourses = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.getAllCourses(req.params)
     .then((courseList) => res.json(200, {response: courseList}))
-    .catch((err: Error) => res.json(500, {'err': err.message}));
+    .catch((err: any) => res.json(500, {err: err}));
 };
 
 const getMyCourses = (req: restify.Request, res: restify.Response) => {

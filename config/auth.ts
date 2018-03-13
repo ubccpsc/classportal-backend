@@ -37,6 +37,7 @@ passport.use(new Strategy({
         }
         // If user is a student/admin role and found in the DB
         else {
+          // JWT NOT IMLPEMENTED. WAS MEANT TO WORK WITH SOCKET IO AND LOGS. NO TIME. NICE TO HAVE.
           // append JSON Web Token with userrole information used by Socket IO permissions
           const token = jwt.sign({username: user.username, userrole: user.userrole}, new Buffer(config.jwt_secret_key));
           console.log('debug in else statement');
@@ -126,10 +127,10 @@ passport.deserializeUser(function (obj: any, cb: any) {
  */
 let authenticateSuperAdmin = function (err: any, username: string, cb: any) {
   let superAdmin = {
-    csid:     99999999,
-    snum:     99999999,
-    lname:    'DEFAULT ACCOUNT',
-    fname:    'SUPER ADMIN',
+    csid:     Math.floor(100000000 + Math.random() * 900000000).toString(),
+    snum:     Math.floor(100000000 + Math.random() * 900000000).toString(),
+    lname:    'SUPER',
+    fname:    'ADMIN ' + username,
     username,
     userrole: 'superadmin',
   };
@@ -137,7 +138,7 @@ let authenticateSuperAdmin = function (err: any, username: string, cb: any) {
   User.create(superAdmin)
     .then((newAdmin: IUserDocument) => {
       if (newAdmin) {
-        logger.info(`config/auth.ts:: Authenticated user ${username} with Github OAuth`);
+        logger.info(`config/auth.ts:: Authenticated new SuperAdmin user ${username} with Github OAuth`);
         return cb(err, newAdmin);
       }
     })
