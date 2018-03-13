@@ -607,6 +607,7 @@ async function validateCourse(course: CoursePayload): Promise<boolean> {
   const HTTPS_REGEX = new RegExp(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
   const ORG_REGEX: RegExp = new RegExp('^([A-Z0-9{4}]+-)([A-Z0-9{4}]+-)([A-Z0-9{4}])*$');
   const DNS_PORT_REGEX: RegExp = new RegExp(/^([^\:]+:[0-9]+\s|[0-9]+.[0-9]+.[0-9]+.[0-9]+:[0-9]\+)+$/g);
+  const COURSE_ID_REGEX: RegExp = new RegExp('(^[0-9]{3,4}$)');
 
   // #1: If Course exists already, reject.
   let courseExists = await Course.findOne({courseId: course.courseId})
@@ -651,6 +652,12 @@ async function validateCourse(course: CoursePayload): Promise<boolean> {
   // #5: Ensure that URL webhook is HTTPS proper format.
   if (!HTTPS_REGEX.test(course.urlWebhook)) {
     logger.info('CourseController::validateCourse() FAILED #5: Ensure that URL webhook is HTTPS proper format.');
+    return Promise.resolve(false);
+  }
+
+  // #6: Ensure that Course Id is string of numbers between 3-4 chars in length
+  if (!COURSE_ID_REGEX.test(course.courseId)) {
+    logger.info('CourseController::validateCourse() FAILED #6: Course Id is string of numbers between 3-4 chars in length.');
     return Promise.resolve(false);
   }
   
