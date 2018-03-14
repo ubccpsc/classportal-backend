@@ -1374,8 +1374,11 @@ export default class GitHubManager {
     let exec = require('child-process-promise').exec;
     let tempDir = await tmp.dir({dir: '/recycling', unsafeCleanup: true});
     let tempPath = tempDir.path;
-    let authedStudentRepo = Helper.addGithubAuthToken(importRepo, config.github_clone_token);
+    let authedStudentRepo = Helper.addGithubAuthToken(studentRepo, config.github_clone_token);
     let authedImportRepo = Helper.addGithubAuthToken(importRepo, config.github_clone_token);
+    
+    logger.info('GithubManager::importRepoFS() Set Authed Student Repo ' + authedImportRepo);
+    logger.info('GithubManager::importRepoFS() Set Authed Import Repo ' + authedImportRepo);
 
     return cloneRepo().then(() => {
       return enterRepoPath()

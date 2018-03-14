@@ -19,7 +19,6 @@ export interface DeliverablePayload {
   minTeamSize: number;
   rate: number;
   dockerImage: string;
-  dockerBuild: string;
   dockerOverride: boolean;
   dockerKey: string;
   dockerRepo: string;
@@ -59,7 +58,6 @@ interface IDeliverableDocument extends mongoose.Document {
   solutionsUrl: string;
   solutionsKey: string;
   dockerImage: string;
-  dockerBuild: string;
   dockerOverride: boolean;
   containerBuilt: boolean;
   maxTeamSize: number;
@@ -107,10 +105,6 @@ const DeliverableSchema = new mongoose.Schema({
     default: '',
   },
   dockerImage: {
-    type: String,
-    default: '',
-  },
-  dockerBuild: {
     type: String,
     default: '',
   },

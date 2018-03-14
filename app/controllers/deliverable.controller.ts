@@ -14,7 +14,6 @@ const ObjectId = require('mongodb').ObjectID;
 
 export interface ContainerInfo {
   dockerImage: string;
-  dockerBuild: string;
   testDelay: number;
   regressionTest: boolean;
   regressionDelivNames: string[];
@@ -82,7 +81,6 @@ function getContainerInfo(payload: any): Promise<ContainerInfo> {
           if (deliv) {
             let containerInfo: ContainerInfo = {
               dockerImage: deliv.dockerImage,
-              dockerBuild: deliv.dockerBuild,
               testDelay: Math.floor(deliv.rate / 1000),
               regressionTest: deliv.regressionTest,
               regressionDelivNames: deliv.regressionTests.match(/[^ ]+/g) || []
@@ -128,7 +126,6 @@ function updateDeliverable(payload: any): Promise<IDeliverableDocument> {
         d.minTeamSize = deliv.minTeamSize;
         d.rate = deliv.rate;
         d.dockerImage = deliv.dockerImage;
-        d.dockerBuild = deliv.dockerBuild;
         d.dockerOverride = deliv.dockerOverride;
         d.dockerRepo = deliv.dockerRepo;
         d.dockerKey = deliv.dockerKey;
@@ -455,7 +452,6 @@ function getDeliverablesByCourse(payload: any) {
                 minTeamSize: d.minTeamSize,
                 rate: d.rate,
                 dockerImage: d.dockerImage, 
-                dockerBuild: d.dockerBuild,
                 dockerRepo: d.dockerRepo,
                 dockerKey: d.dockerKey,
                 buildingContainer: d.buildingContainer,

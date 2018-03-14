@@ -515,7 +515,7 @@ function getStudentNamesFromCourse(courseId: string) {
  */
 function getAllCourses(req: restify.Request) {
   logger.info('get() in Courses Controller');
-  let query = Course.find({}, `courseId description name -_id`)
+  let query = Course.find({})
     .sort({courseId: -1}).exec();
 
   return query.then(result => {

@@ -33,8 +33,14 @@ const createCourse = (req: restify.Request, res: restify.Response) => {
 
 const getAllCourses = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.getAllCourses(req.params)
-    .then((courseList) => res.json(200, {response: courseList}))
+    .then((courseList) => res.json(200, {response: []}))
     .catch((err: any) => res.json(500, {err: err}));
+};
+
+const getCourseIds = (req: restify.Request, res: restify.Response) => {
+  return courseCtrl.getCourseIds(req.params)
+    .then((courseIds: string[]) => res.json(200, {response: []}))
+    .catch((err: Error) => res.json(500, {'err': err.message}));
 };
 
 const getMyCourses = (req: restify.Request, res: restify.Response) => {
@@ -52,12 +58,6 @@ const getLabSectionsFromCourse = (req: restify.Request, res: restify.Response) =
 const getCourseLabSectionList = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.getCourseLabSectionList(req)
     .then((courseList) => res.json(200, {response: courseList}))
-    .catch((err: Error) => res.json(500, {'err': err.message}));
-};
-
-const getCourseIds = (req: restify.Request, res: restify.Response) => {
-  return courseCtrl.getCourseIds(req.params)
-    .then((courseIds: string[]) => res.json(200, {response: courseIds}))
     .catch((err: Error) => res.json(500, {'err': err.message}));
 };
 
