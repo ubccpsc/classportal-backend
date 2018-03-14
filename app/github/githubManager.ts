@@ -5,6 +5,7 @@ import {link} from "fs";
 import db from '../db/MongoDBClient';
 import {ITeamDocument, Team} from '../models/team.model';
 import {IProjectDocument, Project} from '../models/project.model';
+import { IDeliverableDocument } from '../models/deliverable.model';
 let fs = require('fs');
 let tmp = require('tmp-promise');
 let request = require('request');
@@ -33,6 +34,7 @@ export interface GroupRepoDescription {
   teamName?: string;      // github team name
   teamIndex?: number;
   _team?: ITeamDocument;  // ITeamDocument model
+  deliverable?: IDeliverableDocument; // IDeliverableDocument model (needs)
 }
 
 export interface IndividualRepoDescription extends GroupRepoDescription {
@@ -1366,7 +1368,7 @@ export default class GitHubManager {
     });
   }
 
-  public async importRepoFS(importRepo: string, studentRepo: string) {
+  public async importRepoFS(importRepo: string, studentRepo: string, deliv: IDeliverableDocument) {
 
     console.log('import repo', importRepo);
     console.log('student repo', studentRepo);
@@ -1374,7 +1376,8 @@ export default class GitHubManager {
     let exec = require('child-process-promise').exec;
     let tempDir = await tmp.dir({dir: '/recycling', unsafeCleanup: true});
     let tempPath = tempDir.path;
-    let authedStudentRepo = Helper.addGithubAuthToken(studentRepo, config.github_clone_token);
+    let importToken: string = deliv.deliverableKey !== '' ? deliv.deliverableKey : '';
+    let authedStudentRepo = Helper.addGithubAuthToken(studentRepo, importToken);
     let authedImportRepo = Helper.addGithubAuthToken(importRepo, config.github_clone_token);
     
     logger.info('GithubManager::importRepoFS() Set Authed Student Repo ' + authedImportRepo);
@@ -1561,7 +1564,7 @@ export default class GitHubManager {
           });
         // let importUrl = 'https://github.com/CS310-2016Fall/cpsc310project';
         logger.info("GitHubManager::completeTeamProvision(..) - project created; importing url: " + importUrl);
-        return that.importRepoFS(importUrl, inputGroup.url);
+        return that.importRepoFS(importUrl, inputGroup.url, inputGroup.deliverable);
       })
         .then(function () {
           logger.info("GitHubManager::completeTeamProvision(..) - import started; adding webhook");

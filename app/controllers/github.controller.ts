@@ -233,7 +233,8 @@ function repairGithubReposForTeams(payload: any): Promise<any> {
           teamIndex:   i,
           team:        _teams[i].name,
           _team:       _teams[i],
-          orgName:     course.githubOrg
+          orgName:     course.githubOrg,
+          deliverable: deliverable
         };
 
         // NOTE: Only repair Team if it has been provisioned, aka. githubState.repo.url !== '',
@@ -320,14 +321,14 @@ function createGithubReposForTeams(payload: any): Promise<any> {
 
         return getTeamsToBuildForSelectedDeliv(course, deliv)
           .then((teams: ITeamDocument[]) => {
-            return buildTeamsForSelectedDeliv(teams);
+            return buildTeamsForSelectedDeliv(teams, deliv);
           })
           .catch(err => {
             logger.error(`GithubController::getTeamsToBuildForSelectedDeliv()/ buildTeamsForSelectedDeliv() ERROR ${err}`);
           });
     });
 
-  function buildTeamsForSelectedDeliv(_teams: ITeamDocument[]) {
+  function buildTeamsForSelectedDeliv(_teams: ITeamDocument[], _deliv: IDeliverableDocument) {
     for (let i = 0; i < _teams.length; i++) {
       console.log('teams output', _teams[i].members);
       let inputGroup = {
@@ -339,7 +340,8 @@ function createGithubReposForTeams(payload: any): Promise<any> {
         teamIndex:   i,
         team:        _teams[i].name,
         _team:       _teams[i],
-        orgName:     course.githubOrg
+        orgName:     course.githubOrg,
+        deliverable: _deliv
       };
       githubManager.completeTeamProvision(inputGroup, deliverable.url, STAFF_TEAM, course.urlWebhook)
         .catch((err) => {
