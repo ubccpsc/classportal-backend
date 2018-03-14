@@ -33,13 +33,13 @@ const createCourse = (req: restify.Request, res: restify.Response) => {
 
 const getAllCourses = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.getAllCourses(req.params)
-    .then((courseList) => res.json(200, {response: []}))
+    .then((courseList) => res.json(200, {response: courseList}))
     .catch((err: any) => res.json(500, {err: err}));
 };
 
 const getCourseIds = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.getCourseIds(req.params)
-    .then((courseIds: string[]) => res.json(200, {response: []}))
+    .then((courseIds: string[]) => res.json(200, {response: courseIds}))
     .catch((err: Error) => res.json(500, {'err': err.message}));
 };
 
