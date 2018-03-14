@@ -1370,8 +1370,8 @@ export default class GitHubManager {
 
   public async importRepoFS(importRepo: string, studentRepo: string, deliv: IDeliverableDocument) {
 
-    console.log('import repo', importRepo);
-    console.log('student repo', studentRepo);
+    logger.info('GithubManager::importRepoFS() SET Import Repo ' + importRepo);
+    logger.info('GithubManager::importRepoFS() SET Import Repo ' + studentRepo);
 
     let exec = require('child-process-promise').exec;
     let tempDir = await tmp.dir({dir: '/recycling', unsafeCleanup: true});
@@ -1379,9 +1379,13 @@ export default class GitHubManager {
     let importToken: string = deliv.deliverableKey !== '' ? deliv.deliverableKey : '';
     let authedStudentRepo = Helper.addGithubAuthToken(studentRepo, importToken);
     let authedImportRepo = Helper.addGithubAuthToken(importRepo, config.github_clone_token);
+
+    if (deliv.deliverableKey !== '') {
+      logger.info('GithubManager::importRepoFS() USING Deliverable.deliverableKey as Starter Code Auth');
+    }
     
-    logger.info('GithubManager::importRepoFS() Set Authed Student Repo ' + authedImportRepo);
-    logger.info('GithubManager::importRepoFS() Set Authed Import Repo ' + authedImportRepo);
+    logger.info('GithubManager::importRepoFS() SET Authed Student Repo ' + authedStudentRepo);
+    logger.info('GithubManager::importRepoFS() SET Authed Import Repo ' + authedImportRepo);
 
     return cloneRepo().then(() => {
       return enterRepoPath()
