@@ -9,7 +9,7 @@ const routes = (server: restify.Server) => {
   // Accessible by anyone
   server.get('/ping', routeHandler.pong);
   server.get('/:courseId/course', isAuthenticated, routeHandler.getCourse);
-  server.get('/courses', isAuthenticated, routeHandler.getAllCourses);
+  server.get('/courses', routeHandler.getCourseIds);
   server.get('/myCourses', isAuthenticated, routeHandler.getMyCourses);
   server.get('/:courseId/myTeams', routeHandler.getMyTeams);
   server.get('/:courseId/labSections', isAuthenticated, routeHandler.getLabSectionsFromCourse);
@@ -60,6 +60,7 @@ const routes = (server: restify.Server) => {
 
   // -- Super Admin Only Routes
   server.put('/:courseId/superadmin/course', superAuthenticated, routeHandler.createCourse);
+  server.get('/superadmin/courses', isAuthenticated, routeHandler.getAllCourses);
 
   // -- Admin or Super Admin Only Routes
   server.put('/:courseId/admin/github/team', adminAuthenticated, routeHandler.createGithubTeam);

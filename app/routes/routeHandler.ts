@@ -55,6 +55,12 @@ const getCourseLabSectionList = (req: restify.Request, res: restify.Response) =>
     .catch((err: Error) => res.json(500, {'err': err.message}));
 };
 
+const getCourseIds = (req: restify.Request, res: restify.Response) => {
+  return courseCtrl.getCourseIds(req.params)
+    .then((courseIds: string[]) => res.json(200, {response: courseIds}))
+    .catch((err: Error) => res.json(500, {'err': err.message}));
+};
+
 const updateClassList = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.updateClassList(req.files, req.params.courseId)
     .then((c: StudentWithLab[]) => res.json(200, {response: c}))
@@ -385,12 +391,13 @@ const testJwt = (req: restify.Request, res: any, next: restify.Next) => {
   return res.json(200, {response: 'response'});
 };
 
+
 export {
   pong, createCourse, getAllCourses, logout, updateClassList, getClassList,
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaffOrAdmin,
   getAllGrades, createTeam, updateTeam, getStudentNamesFromCourse,
   addAdminList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
-  getCurrentUser, isAuthenticated, getMyCourses,
+  getCurrentUser, isAuthenticated, getMyCourses, getCourseIds,
   getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
   addDeliverable, randomlyGenerateTeamsPerCourse, getTestDelay, getContainerInfo,
   getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,

@@ -692,9 +692,27 @@ function update(req: restify.Request, res: restify.Response, next: restify.Next)
   return next();
 }
 
+/**
+ * 
+ * @param payload.courseIds 
+ */
+function getCourseIds(payload: any): Promise<string[]> {
+  let courseIds: string[] = [];
+  return Course.find({})
+    .then((courses: ICourseDocument[]) => {
+      if (courses) {
+        courses.map((course) => {
+          courseIds.push(course.courseId);
+        });
+        return courseIds;
+      }
+      return [];
+    });
+}
+
 
 export {
   getAllCourses, createCourse, update, updateClassList, getClassList, getStudentNamesFromCourse,
-  getAllAdmins, getMyCourses, getLabSectionsFromCourse,
+  getAllAdmins, getMyCourses, getLabSectionsFromCourse, getCourseIds,
   getCourseLabSectionList, getCourse, isStaffOrAdmin, addAdminList, addStaffList, getAllStaff
 };
