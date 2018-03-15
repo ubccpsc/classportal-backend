@@ -34,9 +34,6 @@ interface IUserModel extends mongoose.Model<IUserDocument> {
 }
 
 const UserSchema = new mongoose.Schema({
-  token:    {
-    type: String,
-  },
   username: {
     type:    String,
     default: '',

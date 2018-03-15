@@ -31,6 +31,12 @@ const createCourse = (req: restify.Request, res: restify.Response) => {
     .catch((err: any) => res.json(500, {err: err}));
 };
 
+const updateCourse = (req: restify.Request, res: restify.Response) => {
+  return courseCtrl.updateCourse(req.params)
+    .then((course: ICourseDocument) => res.json(200, {response: course}))
+    .catch((err: any) => res.json(500, {err: err}));
+};
+
 const getAllCourses = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.getAllCourses(req.params)
     .then((courseList) => res.json(200, {response: courseList}))
@@ -39,13 +45,7 @@ const getAllCourses = (req: restify.Request, res: restify.Response) => {
 
 const getCourseIds = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.getCourseIds(req.params)
-    .then((courseIds: string[]) => res.json(200, {response: courseIds}))
-    .catch((err: Error) => res.json(500, {'err': err.message}));
-};
-
-const getMyCourses = (req: restify.Request, res: restify.Response) => {
-  return courseCtrl.getMyCourses(req)
-    .then((courseList) => res.json(200, {response: courseList}))
+    .then((courseIds: string[]) => res.json(200, {response: []}))
     .catch((err: Error) => res.json(500, {'err': err.message}));
 };
 
@@ -233,12 +233,6 @@ const getUsersNotOnTeam = (req: restify.Request, res: restify.Response, next: re
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
-const getCourse = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return courseCtrl.getCourse(req.params)
-    .then((course: ICourseDocument) => res.json(200, {response: course}))
-    .catch((err: any) => res.json(500, {err: err.message}));
-};
-
 const getMyTeams = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return teamCtrl.getMyTeams(req)
     .then((teams: ITeamDocument[]) => res.json(200, {response: teams}))
@@ -393,14 +387,14 @@ const testJwt = (req: restify.Request, res: any, next: restify.Next) => {
 
 
 export {
-  pong, createCourse, getAllCourses, logout, updateClassList, getClassList,
+  pong, createCourse, updateCourse, getAllCourses, logout, updateClassList, getClassList,
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaffOrAdmin,
   getAllGrades, createTeam, updateTeam, getStudentNamesFromCourse,
   addAdminList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
-  getCurrentUser, isAuthenticated, getMyCourses, getCourseIds,
+  getCurrentUser, isAuthenticated, getCourseIds,
   getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
   addDeliverable, randomlyGenerateTeamsPerCourse, getTestDelay, getContainerInfo,
-  getUsersNotOnTeam, getCourse, getMyTeams, repairGithubReposForTeams,
+  getUsersNotOnTeam, getMyTeams, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamInfo, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
   getStdioFile, addStaffList, getAllStaff, getDefaultDeliv, removeRepoFromTeams, testJwt,

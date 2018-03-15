@@ -16,7 +16,6 @@ export interface CourseInterface {
   classList: IUserDocument[]; // Mongo Object ID / Every student who is enrolled in the course should be in this list
   dockerLogs: DockerLogs; // Latest Docker build and drop logs for this Course
   buildingContainer: boolean; // If currently building a container, this should be true.
-  whitelistedServers: string; // Comma dilineated IP/DNS:PORT
 }
 
 interface ICourseDocument extends mongoose.Document {
@@ -128,10 +127,7 @@ const CourseSchema: mongoose.Schema = new mongoose.Schema({
   },
   githubOrg:           {
     type: String,
-  },
-  whitelistedServers:  {
-    type: String,
-    default: 'portal.cs.ubc.ca:1210 portal.cs.ubc.ca:1310 portal.cs.ubc.ca:1311',
+    unique: true,
   },
   description:         {
     type: String,

@@ -5,6 +5,8 @@
  * if growth in Courses leads to multiple Courses with different Github Organizations on Github, then you 
  * may change the validation to include letters as appendages, such as ie. '310a', '310b', etc.
  * 
+ * This change will require some minor mondifications in AutoTest.
+ * 
  * A different Github Organization can be specified in a different Course object to create seperate namespaces
  * and Course sections for different sets of students.
  */
@@ -19,6 +21,11 @@ import {config} from '../../config/env';
 import {log} from 'util';
 import {ENOLCK} from 'constants';
 import {DockerLogs} from './docker.controller';
+
+enum ValidationModes {
+  UPDATE,
+  CREATE
+}
 
 /**
  * Gets a list of users who are Admins underneath a particular course
@@ -528,22 +535,6 @@ function getAllCourses(req: restify.Request) {
 }
 
 /**
- * Gets user role from perspective of a student
- * @param {restify.Request} restify request object
- * @param {restify.Response} restify response object
- * @returns an array of Courses for user
- */
-function getMyCourses(req: any): Promise<object[]> {
-
-  return User.findOne({username: req.user.username})
-    .populate({path: 'courses', select: 'courseId'})
-    .exec()
-    .then((user: any) => {
-      return user.courses;
-    });
-}
-
-/**
  * Determine if a username is a 'staff' or 'admin' member in a Course.
  * @param payload.username string ie. 'steca' or 'x3b3c'
  * @param payload.courseId string ie. '310' to check for staff members in Course object
@@ -584,6 +575,44 @@ function isStaffOrAdmin(payload: any): Promise<boolean> {
 }
 
 /**
+ * Updates a Course Object from the SuperAdmin view.
+ * 
+ * NOTE: Not all properties in Course object are updated, as other endpoints handle
+ * their logic.
+ * 
+ * @param course Course Interface object from CoursePayload front-end
+ * @return ICourseDocument on successful creation || string on error.
+ */
+async function updateCourse(coursePayload: CourseInterface): Promise<ICourseDocument> {
+  logger.info('CourseController::updateCourse() in Courses Controller');
+  let isValid: boolean = await validateCourse(coursePayload, ValidationModes.UPDATE);
+
+  if (isValid) {
+    return Course.findOne({courseId: coursePayload.courseId})
+      .then((course: ICourseDocument) => {
+        if (course) {
+          // IMPORTANT: Never want to update courseId, as that would result in catastrophe.
+          course.githubOrg = coursePayload.githubOrg;
+          course.dockerRepo = coursePayload.dockerRepo;
+          course.dockerKey = coursePayload.dockerKey;
+          course.urlWebhook = coursePayload.urlWebhook;
+          // NOTE: Never want UI to update DockerLogs, buildingContainer. Purely back-end logic.
+          return course.save()
+            .then((course: ICourseDocument) => {
+              return course;
+            });
+        } 
+        throw `Could not find Course. updateCourse() expects that a Course already exists.`;
+      })
+      .then((course: ICourseDocument) => {
+        return course;
+      });
+  } else {
+    throw `Course is invalid. Cannot update Course`;
+  }
+}
+
+/**
  * Creates a Course object with the validation of a CoursePayload from
  * the UI.
  * 
@@ -591,10 +620,11 @@ function isStaffOrAdmin(payload: any): Promise<boolean> {
  * @return ICourseDocument on successful creation || string on error.
  */
 async function createCourse(coursePayload: CourseInterface): Promise<ICourseDocument> {
-  logger.info('createCourse() in Courses Controller');
-  let isValid: boolean = await validateCourse(coursePayload);
+  logger.info('CourseController::createCourse() in Courses Controller');
+  let isValid: boolean = await validateCourse(coursePayload, ValidationModes.CREATE);
 
   if (isValid) {
+    coursePayload.urlWebhook = config.app_path + ':1' + coursePayload.courseId + '/submit';
     return Course.create(coursePayload)
       .then((course) => {
         if (course) {
@@ -611,85 +641,65 @@ async function createCourse(coursePayload: CourseInterface): Promise<ICourseDocu
  * Validates a CoursePayload from the UI.
  * 
  * @param payload.course CoursePayload object that fits Course interface from 
+ * @param updateMode Use 'ValidationModes' enumerated string in this CourseController.ts
  * @return Promise<Boolean> true if valid, false if invalid.
 */
-async function validateCourse(course: CourseInterface): Promise<boolean> {
+async function validateCourse(course: CourseInterface, mode: ValidationModes): Promise<boolean> {
   logger.info('CourseController::validateCourse() in Courses Controller');
+  
   const HTTPS_REGEX = new RegExp(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
   const ORG_REGEX: RegExp = new RegExp('^([A-Z0-9{4}]+-)([A-Z0-9{4}]+-)([A-Z0-9{4}])*$');
   const DNS_PORT_REGEX: RegExp = new RegExp(/^([^\:]+:[0-9]+\s|[0-9]+.[0-9]+.[0-9]+.[0-9]+:[0-9]\+)+$/g);
   const COURSE_ID_REGEX: RegExp = new RegExp('(^[0-9]{3,4}$)');
 
-  // #1: If Course exists already, reject.
-  let courseExists = await Course.findOne({courseId: course.courseId})
-    .then((course: ICourseDocument) => {
-      if (course) {
-        logger.info('CourseController::validateCourse() FAILED #1: Course ' + course.courseId + ' already exists');
-        return true;
-      } 
-      return false;
-    });
+  if (mode === ValidationModes.CREATE) {
+    // CREATE COURSE VALIDATION REQUIRED: 
+    // If Course exists already, reject.
+    let courseExists = await Course.findOne({courseId: course.courseId})
+      .then((course: ICourseDocument) => {
+        if (course) {
+          logger.info('CourseController::validateCourse() FAILED #1: Course ' + course.courseId + ' already exists');
+          return true;
+        } 
+        return false;
+      });
 
-  if (courseExists) {
-    return Promise.resolve(false);
-  }
+    if (courseExists) {
+      return Promise.resolve(false);
+    }
 
-  // #2: If dockerRepo string not blank, make sure it is https format
-  if (course.dockerRepo === '' || HTTPS_REGEX.test(course.dockerRepo)) {
-    // do nothing if it matches
+    // Ensure that Course Id is string of numbers between 3-4 chars in length
+    if (!COURSE_ID_REGEX.test(course.courseId)) {
+      logger.info('CourseController::validateCourse() FAILED #6: Course Id is string of numbers between 3-4 chars in length.');
+      return Promise.resolve(false);
+    }
+  } else if (mode === ValidationModes.UPDATE) {
+    // UPDATING A COURSE VALIDATION REQUIRED:
   } else {
-    logger.info('CourseController::validateCourse() FAILED #2: `dockerRepo` string not blank, make sure it is https format');
-    return Promise.resolve(false);
-  }
+    // BOTH: UPDATING AND NEW COURSE VALIDATION REQUIRED:
+    // If dockerRepo string not blank, make sure it is https format
+    if (course.dockerRepo === '' || HTTPS_REGEX.test(course.dockerRepo)) {
+      // do nothing if it matches
+    } else {
+      logger.info('CourseController::validateCourse() FAILED #2: `dockerRepo` string not blank, make sure it is https format');
+      return Promise.resolve(false);
+    }
 
-  // #3: If github org does not match convention ie. 'CPSC210-2017W-T2', then reject
-  if (!ORG_REGEX.test(course.githubOrg)) {
-    logger.info('CourseController::validateCourse() FAILED #3: `githubOrg` does not match convention ie. "CPSC210-2017W-T2"');
-    return Promise.resolve(false);
-  }
+    // If github org does not match convention ie. 'CPSC210-2017W-T2', then reject
+    if (!ORG_REGEX.test(course.githubOrg)) {
+      logger.info('CourseController::validateCourse() FAILED #3: `githubOrg` does not match convention ie. "CPSC210-2017W-T2"');
+      return Promise.resolve(false);
+    }
 
-  // #4: Make sure that the DNS and PORTS are space dilinated
-  if (course.whitelistedServers.lastIndexOf(' ') + 1 !== course.whitelistedServers.length) {
-    // HACK: Add in an extra space to match RegExp pattern if it does not exist
-    course.whitelistedServers += ' ';
-    let isWhitelistValid: boolean = DNS_PORT_REGEX.test(course.whitelistedServers);
-
-    if (!isWhitelistValid) {
-      logger.info('CourseController::validateCourse() FAILED #4: Make sure that the DNS and PORTS are space dilineated');
-      return Promise.reject(false);
+    // Ensure that URL webhook is HTTPS proper format.
+    if (!HTTPS_REGEX.test(course.urlWebhook)) {
+      logger.info('CourseController::validateCourse() FAILED #5: Ensure that URL webhook is HTTPS proper format.');
+      return Promise.resolve(false);
     }
   }
 
-  // #5: Ensure that URL webhook is HTTPS proper format.
-  if (!HTTPS_REGEX.test(course.urlWebhook)) {
-    logger.info('CourseController::validateCourse() FAILED #5: Ensure that URL webhook is HTTPS proper format.');
-    return Promise.resolve(false);
-  }
-
-  // #6: Ensure that Course Id is string of numbers between 3-4 chars in length
-  if (!COURSE_ID_REGEX.test(course.courseId)) {
-    logger.info('CourseController::validateCourse() FAILED #6: Course Id is string of numbers between 3-4 chars in length.');
-    return Promise.resolve(false);
-  }
-  
   logger.info('CourseController::validateCourse SUCCESS: Course ' + course.courseId + ' passed validation');
   return Promise.resolve(true);
-}
-
-function getCourse(payload: any) {
-  logger.info(`CourseController::getCourse(${payload.courseId}`);
-  return Course.findOne({'courseId': payload.courseId})
-    .select('-labSections -classList -grades')
-    .exec();
-}
-
-/**
- * Create a team
- */
-function update(req: restify.Request, res: restify.Response, next: restify.Next) {
-  logger.info('update() in Courses Controller');
-  res.json(200, 'update team');
-  return next();
 }
 
 /**
@@ -712,7 +722,7 @@ function getCourseIds(payload: any): Promise<string[]> {
 
 
 export {
-  getAllCourses, createCourse, update, updateClassList, getClassList, getStudentNamesFromCourse,
-  getAllAdmins, getMyCourses, getLabSectionsFromCourse, getCourseIds,
-  getCourseLabSectionList, getCourse, isStaffOrAdmin, addAdminList, addStaffList, getAllStaff
+  getAllCourses, createCourse, updateClassList, getClassList, getStudentNamesFromCourse,
+  getAllAdmins, getLabSectionsFromCourse, getCourseIds, getCourseLabSectionList,
+  isStaffOrAdmin, addAdminList, addStaffList, getAllStaff, updateCourse
 };
