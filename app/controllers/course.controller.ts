@@ -32,36 +32,24 @@ enum ValidationModes {
  * @param payload.courseId string ie. '310'
  * @return User[] A list of admins
  */
-function getAllAdmins(payload: any) {
+function getCourseAdmins(payload: any) {
   return Course.findOne({courseId: payload.courseId})
-    .populate({path: 'admins', select: 'fname lname snum csid username _id'})
+    .populate({path: 'admins'})
     .then(c => {
-      if (c !== null && c.admins.length < 1) {
-        return Promise.reject(Error('There are no admins under course ' + payload.courseId + '.'));
-      } else if (c !== null) {
-        return Promise.resolve(c);
-      } else {
-        return Promise.reject(Error('Course ' + payload.courseId + ' does not exist.'));
-      }
+      return c.admins;
     });
 }
 
 /**
  * Gets a list of users who are Staff underneath a particular course
  * @param payload.courseId string ie. '310'
- * @return User[] A list of staff
+ * @return IUserDocument[] A list of staff
  */
-function getAllStaff(payload: any) {
+function getCourseStaff(payload: any) {
   return Course.findOne({courseId: payload.courseId})
-    .populate({path: 'staff', select: 'fname lname snum csid username _id'})
+    .populate({path: 'staffList'})
     .then(c => {
-      if (c !== null && c.admins.length < 1) {
-        return Promise.reject(Error('There are no staff under course ' + payload.courseId + '.'));
-      } else if (c !== null) {
-        return Promise.resolve(c);
-      } else {
-        return Promise.reject(Error('Course ' + payload.courseId + ' does not exist.'));
-      }
+      return c.staffList;
     });
 }
 
@@ -723,6 +711,6 @@ function getCourseIds(payload: any): Promise<string[]> {
 
 export {
   getAllCourses, createCourse, updateClassList, getClassList, getStudentNamesFromCourse,
-  getAllAdmins, getLabSectionsFromCourse, getCourseIds, getCourseLabSectionList,
-  isStaffOrAdmin, addAdminList, addStaffList, getAllStaff, updateCourse
+  getCourseAdmins, getLabSectionsFromCourse, getCourseIds, getCourseLabSectionList,
+  isStaffOrAdmin, addAdminList, addStaffList, getCourseStaff, updateCourse
 };

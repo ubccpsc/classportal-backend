@@ -5,7 +5,9 @@ import {link} from "fs";
 import db from '../db/MongoDBClient';
 import {ITeamDocument, Team} from '../models/team.model';
 import {IProjectDocument, Project} from '../models/project.model';
-import { IDeliverableDocument } from '../models/deliverable.model';
+import {IDeliverableDocument} from '../models/deliverable.model';
+import GithubCloneHelper from '../github/GithubCloneHelper';
+import { ICourseDocument } from '../models/course.model';
 let fs = require('fs');
 let tmp = require('tmp-promise');
 let request = require('request');
@@ -1368,118 +1370,6 @@ export default class GitHubManager {
     });
   }
 
-  public async importRepoFS(importRepo: string, studentRepo: string, deliv: IDeliverableDocument) {
-
-    logger.info('GithubManager::importRepoFS() SET Import Repo ' + importRepo);
-    logger.info('GithubManager::importRepoFS() SET Import Repo ' + studentRepo);
-
-    let exec = require('child-process-promise').exec;
-    let tempDir = await tmp.dir({dir: '/recycling', unsafeCleanup: true});
-    let tempPath = tempDir.path;
-    let importToken: string = deliv.deliverableKey !== '' ? deliv.deliverableKey : '';
-    let authedStudentRepo = Helper.addGithubAuthToken(studentRepo, importToken);
-    let authedImportRepo = Helper.addGithubAuthToken(importRepo, config.github_clone_token);
-
-    if (deliv.deliverableKey !== '') {
-      logger.info('GithubManager::importRepoFS() USING Deliverable.deliverableKey as Starter Code Auth');
-    }
-    
-    logger.info('GithubManager::importRepoFS() SET Authed Student Repo ' + authedStudentRepo);
-    logger.info('GithubManager::importRepoFS() SET Authed Import Repo ' + authedImportRepo);
-
-    return cloneRepo().then(() => {
-      return enterRepoPath()
-        .then(() => {
-          return removeGitDir();
-        })
-        .then(() => {
-          return initGitDir();
-        })
-        .then(() => {
-          return changeGitRemote();
-        })
-        .then(() => {
-          return addFilesToRepo();
-        })
-        .then(() => {
-          return pushToNewRepo();
-        })
-        .catch((err: any) => {
-          logger.error(`githubManager::cloneRepo() ` + err);
-        });
-    });
-
-    function cloneRepo() {
-      logger.info('GithubManager::cloneRepo() begins');
-      return exec(`git clone ${authedImportRepo} ${tempPath}`)
-        .then(function (result: any) {
-          logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
-          console.log('stdoutSOMETHING: ', result.stdout);
-          console.log('stderr: ', result.stderr);
-        });
-    }
-
-    function enterRepoPath() {
-      logger.info('GithubManager::cloneRepo() enterRepoPath');
-      return exec(`cd ${tempPath}`)
-        .then(function (result: any) {
-          logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
-          console.log('stdoutSOMETHING: ', result.stdout);
-          console.log('stderr: ', result.stderr);
-        });
-    }
-
-    function removeGitDir() {
-      logger.info('GithubManager::cloneRepo() begins');
-      return exec(`cd ${tempPath} && rm -rf .git`)
-        .then(function (result: any) {
-          logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
-          console.log('stdoutSOMETHING: ', result.stdout);
-          console.log('stderr: ', result.stderr);
-        });
-    }
-
-    function initGitDir() {
-      logger.info('GithubManager::cloneRepo() initGitDir()');
-      return exec(`cd ${tempPath} && git init`)
-        .then(function (result: any) {
-          logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
-          console.log('stdoutSOMETHING: ', result.stdout);
-          console.log('stderr: ', result.stderr);
-        });
-    }
-
-    function changeGitRemote() {
-      logger.info('GithubManager::cloneRepo() changeGitRemote()');
-      return exec(`cd ${tempPath} && git remote add origin ${authedStudentRepo}.git && git fetch --all`)
-        .then(function (result: any) {
-          logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
-          console.log('stdoutSOMETHING: ', result.stdout);
-          console.log('stderr: ', result.stderr);
-        });
-    }
-
-    function addFilesToRepo() {
-      logger.info('GithubManager::cloneRepo() addFilesToRepo()');
-      return exec(`cd ${tempPath} && git add . && git commit -m "Starter files"`)
-        .then(function (result: any) {
-          logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
-          console.log('stdoutSOMETHING: ', result.stdout);
-          console.log('stderr: ', result.stderr);
-        });
-    }
-
-    function pushToNewRepo() {
-      logger.info('GithubManager::cloneRepo() pushToNewRepo()');
-      return exec(`pushd ${tempPath} && git push origin master`)
-        .then(function (result: any) {
-          logger.info('GithubManager::cloneRepo STDOUT/STDERR:');
-          console.log('stdoutSOMETHING: ', result.stdout);
-          console.log('stderr: ', result.stderr);
-        });
-    }
-  }
-
   /**
    * Implemented for completeTeamProvision() as step in process.
    * 
@@ -1560,6 +1450,7 @@ export default class GitHubManager {
         inputGroup._team.githubState.repo.name = newRepoInfo.name;
         inputGroup._team.githubState.repo.id = newRepoInfo.id;
         inputGroup._team.githubState.repo.url = newRepoInfo.url;
+        inputGroup._team.markModified('githubState');
         inputGroup._team.save()
           .then((team: ITeamDocument) => {
           })
@@ -1568,7 +1459,8 @@ export default class GitHubManager {
           });
         // let importUrl = 'https://github.com/CS310-2016Fall/cpsc310project';
         logger.info("GitHubManager::completeTeamProvision(..) - project created; importing url: " + importUrl);
-        return that.importRepoFS(importUrl, inputGroup.url, inputGroup.deliverable);
+        return GithubCloneHelper(importUrl, inputGroup.url, "CREATE", inputGroup.deliverable);
+        // return that.importRepoFS(importUrl, inputGroup.url, inputGroup.deliverable);
       })
         .then(function () {
           logger.info("GitHubManager::completeTeamProvision(..) - import started; adding webhook");
@@ -1603,6 +1495,7 @@ export default class GitHubManager {
         .then(() => {
           // If successfully completes, update error state to no errors
           inputGroup._team.githubState.creationRecord.error = '';
+          inputGroup._team.markModified('githubState');
           inputGroup._team.save();
         })
         .then(function () {
@@ -1631,10 +1524,21 @@ export default class GitHubManager {
    *    - Adds/Updates the repo webhook if it was incorrect or fails. (unimplemented. Use readdWebhook function)
    * 
    */
-  public repairTeamProvision(inputGroup: GroupRepoDescription): Promise<GroupRepoDescription> {
+  public async repairTeamProvision(inputGroup: GroupRepoDescription, course: ICourseDocument): Promise<any> {
+    const IMPORT_REPO_URL = inputGroup.deliverable.url; // FROM Current Deliverable Repo settings
+    const STUDENT_REPO_URL = inputGroup._team.githubState.repo.url; // FROM SAVED Github State on Team
+    logger.info("GitHubManager::repairTeamProvision(..) - start: " + JSON.stringify(inputGroup));
+    logger.info('GithubManager::repairTeamProvision() SET Import Repo ' + IMPORT_REPO_URL);
+    logger.info('GithubManager::repairTeamProvision() SET Import Repo ' + STUDENT_REPO_URL);
+    let deliv = inputGroup.deliverable;
+    let exec = require('child-process-promise').exec;
+    let tempDir = await tmp.dir({dir: '/recycling', unsafeCleanup: true});
+    let tempPath = tempDir.path;
+    let importToken: string = deliv.deliverableKey !== '' ? deliv.deliverableKey : '';
+    let authedStudentRepo = Helper.addGithubAuthToken(STUDENT_REPO_URL, importToken);
+    let authedImportRepo = Helper.addGithubAuthToken(IMPORT_REPO_URL, config.github_clone_token);
     let that = this;
     let failingUserAttempts: string[] = new Array();
-    logger.info("GitHubManager::repairTeamProvision(..) - start: " + JSON.stringify(inputGroup));
     return new Promise((fulfill, reject) => {
       let teamProvisionRecord: any;
       const DELAY = that.DELAY_SEC * 3; // 2 would be enough, but let's just be safe
@@ -1669,6 +1573,9 @@ export default class GitHubManager {
           });
         })
         .then(() => {
+          return GithubCloneHelper(IMPORT_REPO_URL, STUDENT_REPO_URL, 'REPAIR', inputGroup.deliverable);
+        })
+        .then(() => {
           // FINALLY: If we did not run into errors, erase the GithubState errors from previous provision runs
           inputGroup._team.githubState.creationRecord.error = '';
           return inputGroup._team.save()
@@ -1676,6 +1583,9 @@ export default class GitHubManager {
               logger.info("GitHubManager::repairTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
               fulfill(inputGroup);
             });
+        })
+        .then(() => {
+          that.reAddWebhook(inputGroup, course.urlWebhook);
         })
         .catch(function (err: any) {
           logger.error("******");
@@ -1697,19 +1607,11 @@ export default class GitHubManager {
    * @param inputGroup GroupRepoDescription Team repo details brought in from database Teams object
    * @param importUrl String 
    */
-  public reAddWebhook(inputGroup: ProjectRepoDescription, webhookEndpoint: string): Promise<ProjectRepoDescription> {
+  public reAddWebhook(inputGroup: GroupRepoDescription, webhookEndpoint: string): Promise<GroupRepoDescription> {
     let that = this;
     logger.info("GitHubManager::reapirIndividualProvision(..) - start: ");
     return new Promise(function (fulfill, reject) {
-      const DELAY = 10000;
-      // slow down creation to avoid getting in trouble with GH
-      that.delay(inputGroup.projectIndex * DELAY).then(function () {
-        logger.info("GitHubManager:: DELAY TIME GAP (..) - delaying: " + inputGroup.projectName);
-        return;
-      }).then(function () {
-        logger.info("GitHubManager:: GETTING WEBHOOKS (..) - listing");
-        return that.getWebhooks(inputGroup.projectName);
-      })
+        return that.getWebhooks(inputGroup.projectName)
         .then(function (webhooks: any) {
           logger.info("GitHubManager:: REMOVING WEBHOOKS (..) - listing");
           let index = 1;
@@ -1728,15 +1630,16 @@ export default class GitHubManager {
             }
           });
           logger.info("GitHubManager:: DELAY TIME GAP (..) - delaying: " + inputGroup.projectName);
-        });
-      that.delay(inputGroup.projectIndex * DELAY).then(function () {
-        logger.info("GitHubManager::completeIndividualProvision(..) adding webhook;");
-        return that.addWebhook(inputGroup.projectName, webhookEndpoint);
-          })
-          .then(function () {
-          logger.info("GitHubManager::completeIndividualProvision(..) - process complete for: " + inputGroup.projectName);
-          fulfill(inputGroup);
-      }).catch(function (err) {
+        })
+        .then(() => {
+          logger.info("GitHubManager::completeIndividualProvision(..) adding webhook;");
+          return that.addWebhook(inputGroup.projectName, webhookEndpoint)
+            .then(function () {
+            logger.info("GitHubManager::completeIndividualProvision(..) - process complete for: " + inputGroup.projectName);
+            fulfill(inputGroup);
+          });
+        })
+        .catch(function (err) {
         logger.error("******");
         logger.error("******");
         logger.error("Input Description: " + inputGroup.projectName);

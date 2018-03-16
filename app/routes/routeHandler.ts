@@ -167,9 +167,9 @@ const addAdminList = (req: restify.Request, res: restify.Response, next: restify
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
-const getAllAdmins = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return courseCtrl.getAllAdmins(req.params)
-    .then((course: ICourseDocument) => res.json(200, {response: course.admins}))
+const getCourseAdmins = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.getCourseAdmins(req.params)
+    .then((adminList: IUserDocument[]) => res.json(200, {response: adminList}))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 
@@ -338,9 +338,9 @@ const addStaffList = (req: restify.Request, res: restify.Response, next: restify
     .catch((err: any) => res.json(500, {err: err}));
 };
 
-const getAllStaff = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-  return courseCtrl.getAllStaff(req.params)
-    .then((isStaff: any) => res.json(200, {response: isStaff}))
+const getCourseStaff = (req: restify.Request, res: restify.Response, next: restify.Next) => {
+  return courseCtrl.getCourseStaff(req.params)
+    .then((staffList: any) => res.json(200, {response: staffList}))
     .catch((err: any) => res.json(500, {err: err}));
 };
 
@@ -390,13 +390,13 @@ export {
   pong, createCourse, updateCourse, getAllCourses, logout, updateClassList, getClassList,
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaffOrAdmin,
   getAllGrades, createTeam, updateTeam, getStudentNamesFromCourse,
-  addAdminList, getAllAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
+  addAdminList, getCourseAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
   getCurrentUser, isAuthenticated, getCourseIds,
   getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
   addDeliverable, randomlyGenerateTeamsPerCourse, getTestDelay, getContainerInfo,
   getUsersNotOnTeam, getMyTeams, repairGithubReposForTeams,
   createCustomTeam, isStudentInSameLab, getCourseTeamInfo, getDashForDeliverable,
   disbandTeamById, getGradesFromResults, getFileFromResultRecord, getTeamProvisionOverview,
-  getStdioFile, addStaffList, getAllStaff, getDefaultDeliv, removeRepoFromTeams, testJwt,
+  getStdioFile, addStaffList, getCourseStaff, getDefaultDeliv, removeRepoFromTeams, testJwt,
   getGradesByDeliv, getGradesIfReleased, buildContainer, destroyContainer, isContainerBuilt
 };

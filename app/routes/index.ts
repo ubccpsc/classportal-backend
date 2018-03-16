@@ -33,10 +33,8 @@ const routes = (server: restify.Server) => {
   // Authenticated routes   
 
   // -- Prof or Admin Routes
-  server.post('/:courseId/admin/admins', adminAuthenticated, routeHandler.addAdminList);
   server.post('/:courseId/admin/staff', adminAuthenticated, routeHandler.addStaffList);
-  server.get('/:courseId/admin/staff', adminAuthenticated, routeHandler.getAllStaff);
-  server.get('/:courseId/admin/admins', adminAuthenticated, routeHandler.getAllAdmins);
+  server.get('/:courseId/admin/staff', adminAuthenticated, routeHandler.getCourseStaff);
   server.get('/:courseId/admin/teams', adminAuthenticated, routeHandler.getTeams);
   server.get('/:courseId/:deliverableName/rate', routeHandler.getTestDelay);
   server.get('/:courseId/defaultDeliverable', routeHandler.getDefaultDeliv);
@@ -55,11 +53,12 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/admin/teams/info/:deliverableName', adminAuthenticated, routeHandler.getCourseTeamInfo);
   server.get('/:courseId/admin/classList', adminAuthenticated, routeHandler.getClassList);
 
-
   // -- Super Admin Only Routes
   server.put('/:courseId/superadmin/course', superAuthenticated, routeHandler.createCourse);
   server.post('/:courseId/superadmin/course', superAuthenticated, routeHandler.updateCourse);
   server.get('/superadmin/courses', isAuthenticated, routeHandler.getAllCourses);
+  server.post('/:courseId/superadmin/admins', adminAuthenticated, routeHandler.addAdminList);
+  server.get('/:courseId/superadmin/admins', adminAuthenticated, routeHandler.getCourseAdmins);
 
   // -- Admin or Super Admin Only Routes
   server.put('/:courseId/admin/github/team', adminAuthenticated, routeHandler.createGithubTeam);
