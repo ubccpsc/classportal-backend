@@ -68,82 +68,84 @@ function getCourseStaff(payload: any) {
  * @param courseId string ie. '310' of the course we are adding labList too
  * @return adminList object
  */
-function addAdminList(reqFiles: any, courseId: string) {
+function addAdminList(reqFiles: any, courseId: string): Promise<IUserDocument[]> {
   logger.info('CourseController:: addAdminList() - start');
-  const ADMIN_USERROLE = 'admin';
-  const options = {
-    columns:          true,
-    skip_empty_lines: true,
-    trim:             true,
-  };
-
-  let rs = fs.createReadStream(reqFiles['adminList'].path);
-  let courseQuery = Course.findOne({'courseId': courseId}).exec();
-
-  let parser = parse(options, (err, data) => {
-
-    let usersRepo = User;
-    let userQueries: any = [];
-
-    Object.keys(data).forEach((key: string) => {
+  return new Promise((fulfill, reject) => {
+    const ADMIN_USERROLE = 'admin';
+    const options = {
+      columns:          true,
+      skip_empty_lines: true,
+      trim:             true,
+    };
+    
+    let rs = fs.createReadStream(reqFiles['adminList'].path);
+    let courseQuery = Course.findOne({'courseId': courseId}).exec();
+  
+    let parser = parse(options, (err, data) => {
+  
+      let usersRepo = User;
+      let userQueries: any = [];
+  
+      Object.keys(data).forEach((key: string) => {
       let admin = data[key];
-      let course: ICourseDocument;
-      logger.info('CourseController:: addAdminList() Creating admin in Users if does not already ' +
-         'exist for CSV line: ' + JSON.stringify(admin));
-      userQueries.push(usersRepo.findOrCreate({
-        username: admin.CWL,
-        fname: admin.FIRST,
-        lname: admin.LAST
-      }).then((u: IUserDocument) => {
-        // CSID and SNUM must be unique and exist on User object according to index (so throw in consistent unique value)
-        u.userrole = ADMIN_USERROLE;
-        u.csid = u.username;
-        u.snum = u.username;
-        return u.save();
-      }));
-    });
-
-    courseQuery.then((course: ICourseDocument) => {
-      let userIds: IUserDocument[] = [];
-
-      return Promise.all(userQueries)
-        .then((results: any) => {
-          Object.keys(results).forEach((key) => {
-            results[key];
-            userIds.push(results[key]._id as IUserDocument);
+        let course: ICourseDocument;
+        logger.info('CourseController:: addAdminList() Creating admin in Users if does not already ' +
+           'exist for CSV line: ' + JSON.stringify(admin));
+        userQueries.push(usersRepo.findOrCreate({
+          username: admin.CWL,
+          csid: admin.CWL,
+          snum: admin.CWL,
+        }).then((u: IUserDocument) => {
+          // CSID and SNUM must be unique and exist on User object according to index (so throw in consistent unique value)
+          u.userrole = ADMIN_USERROLE;
+          u.csid = u.username;
+          u.snum = u.username;
+          return u.save();
+        }));
+      });
+  
+      courseQuery.then((course: ICourseDocument) => {
+        let userIds: IUserDocument[] = [];
+  
+        return Promise.all(userQueries)
+          .then((results: any) => {
+            Object.keys(results).forEach((key) => {
+              if (course.admins.indexOf(results[key]._id as IUserDocument) === -1) {
+                course.admins.push(results[key]._id as IUserDocument);
+              }
+            });
+            course.save()
+              .then((course: ICourseDocument) => {
+                fulfill(course);
+              });
           });
-
-          course.admins = userIds;
-          course.save();
-        });
+      });
+  
+      if (err) {
+        reject(err);
+        err;
+      }
     });
-
-    if (err) {
-      throw Error(err);
-    }
+  
+    rs.pipe(parser);  
+  })
+  .then((c: ICourseDocument) => {
+    return Course.findOne({courseId: c.courseId})
+      .populate('admins')
+      .then((course: ICourseDocument) => {
+        return course.admins;
+      });
   });
-
-  rs.pipe(parser);
-
-  return Course.findOne({courseId})
-    .populate({path: 'admins'})
-    .exec()
-    .then((course: ICourseDocument) => {
-      return course.admins;
-    })
-    .catch(err => {
-      logger.error(`CourseController::addAdminList() ERROR ${err}`);
-    });
 }
 
 /**
  * Upload a staffList
- * Staff will be created in Users database as 'student' to ensure that they are seen
- * by AutoTest as students in other courses (except when in Course.staffList under particular
- * specified @param courseId)
+ * Staff will be created in Users database as 'student' because there is always
+ * the chance that they are registered in another Course. Hence, their CSID and SNUM 
+ * must always be included in case of this possibility.
  * 
  * Pre-req #1 is that HEADERS in CSV are labelled with headers below:
- *                    HEADERS: CWL (required) / CSID / SNUM
+ *                    REQUIRED: CWL / CSID / SNUM / FNAME / LNAME
  * 
  * ** WARNING ** Uploading a staffList will overwrite the previous labList 
  * in the Course object.
@@ -152,8 +154,7 @@ function addAdminList(reqFiles: any, courseId: string) {
  * @param courseId string ie. '310' of the course we are adding staffList too
  * @return staffList object
  */
-function addStaffList(reqFiles: any, courseId: string) {
-
+function addStaffList(reqFiles: any, courseId: string): Promise<IUserDocument[]> {
   const options = {
     columns:          true,
     skip_empty_lines: true,
@@ -162,57 +163,59 @@ function addStaffList(reqFiles: any, courseId: string) {
 
   let rs = fs.createReadStream(reqFiles['staffList'].path);
   let courseQuery = Course.findOne({'courseId': courseId}).exec();
+  return new Promise((fulfill, reject) => {
+    let parser = parse(options, (err, data) => {
 
-  let parser = parse(options, (err, data) => {
-
-    let usersRepo = User;
-    let userQueries: any = [];
-
-    Object.keys(data).forEach((key: string) => {
-      let staff = data[key];
-      let course: ICourseDocument;
-      logger.info('CourseController:: addStaffList() Creating staff in Users if does not already ' +
-         'exist for CSV line: ' + JSON.stringify(staff));
-      userQueries.push(usersRepo.findOrCreate({
-        username: staff.CWL,
-        csid: staff.CSID,
-        snum: staff.SNUM
-      }).then((u: IUserDocument) => {
-        return u;
-      }));
-    });
-
-    courseQuery.then((course: ICourseDocument) => {
-      let userIds: IUserDocument[] = [];
-
-      return Promise.all(userQueries)
-        .then((results: any) => {
-          Object.keys(results).forEach((key) => {
-            results[key];
-            userIds.push(results[key]._id as IUserDocument);
+      let userQueries: any = [];
+  
+      Object.keys(data).forEach((key: string) => {
+        let staff = data[key];
+        let course: ICourseDocument;
+        logger.info('CourseController:: addStaffList() Creating staff in Users if user does not already ' +
+           'exist for CSV line: ' + JSON.stringify(staff));
+        userQueries.push(User.findOrCreate({
+          snum: staff.SNUM,
+          csid: staff.CSID,
+        }).then((u: IUserDocument) => {
+          u.username = staff.CWL;
+          u.fname = staff.FIRST;
+          u.lname = staff.LAST;
+          // Still a student. Staff role comes from objectId in Course.staffList[] property
+          u.userrole = 'student';
+          return u.save();
+        }));
+      });
+  
+      courseQuery.then((course: ICourseDocument) => {
+        let userIds: IUserDocument[] = [];
+  
+        return Promise.all(userQueries)
+          .then((results: any) => {
+            Object.keys(results).forEach((key) => {
+              if (course.staffList.indexOf(results[key]._id as IUserDocument) === -1) {
+                course.staffList.push(results[key]._id as IUserDocument);
+              }
+            });
+  
+            fulfill(course.save());
           });
-
-          course.staffList = userIds;
-          course.save();
-        });
+      });
+  
+      if (err) {
+        reject(err);
+      }
     });
-
-    if (err) {
-      throw Error(err);
-    }
-  });
-
-  rs.pipe(parser);
-
-  return Course.findOne({courseId})
+  
+    rs.pipe(parser);
+  })
+  .then(() => {
+    return Course.findOne({courseId})
     .populate({path: 'staffList'})
     .exec()
     .then((course: ICourseDocument) => {
       return course.staffList;
-    })
-    .catch(err => {
-      logger.error(`CourseController::addStaffList() ERROR ${err}`);
     });
+  });
 }
 
 /**
