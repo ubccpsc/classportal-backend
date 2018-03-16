@@ -179,7 +179,7 @@ function addGradesCSV(req: any): Promise<GradeUploadResponse> {
 
           // If student does not exist, return it in an additional payload object.
           if (!studentExists) {
-            logger.warn('GradeController:: csvParser() WARNING: Student does not exist', result[i]);
+            logger.warn('GradeController:: csvParser() WARNING: Student does not exist ', result[i]);
             cannotUpdate.push(result[i]);
             allStudentsExist = false;
           }
@@ -217,7 +217,6 @@ function addGradesCSV(req: any): Promise<GradeUploadResponse> {
             console.log('major err' + err);
           }
 
-
           if (studentExists) {
             let gradePromise = Grade.findOrCreate(gradeQuery)
               .then((grade: IGradeDocument) => {
@@ -240,7 +239,15 @@ function addGradesCSV(req: any): Promise<GradeUploadResponse> {
           return Promise.all(gradePromises)
           .then(() => {
             // Return updated grades to front-end
-            logger.info('GradeController:: SUCCESS Updated grades: ' + JSON.stringify({cannotUpdate, updatedGrades}));
+            for (let i = 0; i < updatedGrades.length; i++) {
+              // Delete all extra columns before sending back successfully updated Grades that were updated.
+              Object.keys(updatedGrades[i]).forEach((key) => {
+                if (key !== "COMMENTS" && key !== "GRADE" && key !== 'CSID' && key !== 'SNUM' && key !== 'CWL') {
+                  delete (updatedGrades[i] as any)[key];
+                }
+              });
+              logger.info('GradeController:: SUCCESS Updated grades: ' + JSON.stringify({cannotUpdate, updatedGrades}));
+            }
             return {cannotUpdate, updatedGrades};
           })
           .catch((err) => {
