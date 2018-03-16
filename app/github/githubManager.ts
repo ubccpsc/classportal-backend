@@ -1587,6 +1587,12 @@ export default class GitHubManager {
         .then(() => {
           that.reAddWebhook(inputGroup, course.urlWebhook);
         })
+        .then(() => {
+          // if it made it here error free, then erase the error.
+          inputGroup._team.githubState.creationRecord.error = '';
+          inputGroup._team.markModified('githubState');
+          inputGroup._team.save();
+        })
         .catch(function (err: any) {
           logger.error("******");
           logger.error("******");
