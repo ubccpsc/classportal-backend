@@ -248,6 +248,16 @@ function addGradesCSV(req: any): Promise<GradeUploadResponse> {
               });
               logger.info('GradeController:: SUCCESS Updated grades: ' + JSON.stringify({cannotUpdate, updatedGrades}));
             }
+            for (let i = 0; i < cannotUpdate.length; i++) {
+              // Delete all extra columns before sending back successfully updated Grades that were updated.
+              Object.keys(cannotUpdate[i]).forEach((key) => {
+                if (key !== "COMMENTS" && key !== "GRADE" && key !== 'CSID' && key !== 'SNUM' && key !== 'CWL') {
+                  delete (cannotUpdate[i] as any)[key];
+                }
+              });
+              logger.info('GradeController:: SUCCESS Updated grades: ' + JSON.stringify({cannotUpdate, updatedGrades}));
+            }
+
             return {cannotUpdate, updatedGrades};
           })
           .catch((err) => {

@@ -41,6 +41,8 @@ const REPO_MAKER = async function (starterCodeRepoUrl: string, studentRepoUrl: s
   let importToken: string = deliv.deliverableKey !== '' ? deliv.deliverableKey : '';
   let authedStudentRepo = Helper.addGithubAuthToken(studentRepoUrl, importToken);
   let authedStarterCodeRepo = Helper.addGithubAuthToken(starterCodeRepoUrl, config.github_clone_token);
+  logger.info('GithubHelper::REPO_MAKER() - Auth/Unauth Student Repo: ' + actionType);
+  logger.info('GithubHelper::REPO_MAKER() - Auth/Unauth Starter Code Repo: ' + actionType);
 
   if (deliv.deliverableKey !== '') {
     logger.info('GithubManager::importRepoFS() USING Deliverable.deliverableKey as Starter Code Auth');
@@ -187,7 +189,7 @@ const REPO_MAKER = async function (starterCodeRepoUrl: string, studentRepoUrl: s
 
   function changeGitRemote() {
     logger.info('GithubManager::changeGitRemote()');
-    return exec(`cd ${tempImportPath} && git remote add origin ${studentRepoUrl}.git && git fetch --all`)
+    return exec(`cd ${tempImportPath} && git remote add origin ${authedStudentRepo}.git && git fetch --all`)
       .then(function (result: any) {
         logger.info('GithubManager::changeGitRemote() STDOUT/STDERR:');
         logger.info('GithubManager::changeGitRemote() stdout: ', result.stdout);
