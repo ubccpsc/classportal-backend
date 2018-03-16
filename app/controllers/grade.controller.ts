@@ -219,9 +219,6 @@ function addGradesCSV(req: any): Promise<GradeUploadResponse> {
 
 
           if (studentExists) {
-            if (user.snum === '26728135') {
-              console.log('oh oh', user);
-            }
             let gradePromise = Grade.findOrCreate(gradeQuery)
               .then((grade: IGradeDocument) => {
                 grade.grade = result[i].GRADE === "-1" || "" ? null : Number(result[i].GRADE);
@@ -230,24 +227,24 @@ function addGradesCSV(req: any): Promise<GradeUploadResponse> {
                 grade.lname = user.lname;
                 grade.username = user.username;
                 if (grade) {
-                  updatedGrades.push(grade);
+                  updatedGrades.push(result[i]);
                 }
                 return grade.save();
               });
             gradePromises.push(gradePromise);
           } else {
-            console.log('student does not exist ', result[i]);
+            logger.info('GradeController:: INFO Student does not exist ', result[i]);
           }
         }
 
           return Promise.all(gradePromises)
           .then(() => {
             // Return updated grades to front-end
-            console.log({cannotUpdate, updatedGrades});
+            logger.info('GradeController:: SUCCESS Updated grades: ' + JSON.stringify({cannotUpdate, updatedGrades}));
             return {cannotUpdate, updatedGrades};
           })
           .catch((err) => {
-            console.log('why heer' + err);
+            logger.error('GradeController:: ERROR updating Grades: ' + err);
             return {cannotUpdate, updatedGrades};
           });
 

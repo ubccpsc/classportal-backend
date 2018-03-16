@@ -54,15 +54,19 @@ function getCourseStaff(payload: any) {
 }
 
 /**
- * Upload an adminList
- * Admin will be created in Users database as 'admin' userrole.
+ * INFO: Adds Admins in from CSV to Course.admin[] to give them Admin priviledges
+ * and changes their userrole to 'admin' in the User field.
+ * 
+ * NOTE - ADMINS CANNOT BE STUDENTS:
+ * 
+ * Admins cannot be enrolled in Courses at this time due to compatibility issues on
+ * views and since they do not have a SNUM. If an Admin gets an SNUM in the future,
+ * change the findOrCreate() method to use their unique CSID and SNUM and they can 
+ * become students.
  * 
  * Pre-req #1 is that HEADERS in CSV are labelled with headers below:
  *                    HEADERS: CWL (required), FIRST (optional), LAST (optional)
  *         #2 CWL, first, last must match if already exist.
- * 
- * ** WARNING ** Uploading a adminList will overwrite the previous adminList 
- * in the Course object. Admins are never deleted from DB.
  * 
  * @param req.files as reqFiles with FS readable reqFiles['adminList'].path
  * @param courseId string ie. '310' of the course we are adding labList too
