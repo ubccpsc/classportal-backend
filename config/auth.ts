@@ -20,7 +20,7 @@ passport.use(new Strategy({
   function (accessToken: any, refreshToken: any, profile: any, cb: any) {
 
     let username = String(profile.username).toLowerCase();
-    console.log('debug username' + username);
+    logger.info('Auth.ts:: Querying OAuth Github Enterprise user: ' + username);
 
     // Github username taken to look-up user in our DB.
     // Create SuperAdmin if it does not exist in DB
@@ -32,7 +32,7 @@ passport.use(new Strategy({
         }
         // If user is a superadmin but does not exist in DB yet
 
-        let superadmins = config.super_admin.split( );
+        let superadmins = config.super_admin.split(' ');
         let isSuper: boolean = false;
         superadmins.map((superadmin: string) => {
           if (superadmin === username) {
@@ -41,6 +41,7 @@ passport.use(new Strategy({
         });
 
         if (!user && isSuper) {
+          logger.info('Auth.ts:: SuperAdmin detected - Attempting login - start');
           authenticateSuperAdmin(err, username, cb);
         }
         // If user is not an admin and there is no record of them in the DB
@@ -54,6 +55,7 @@ passport.use(new Strategy({
           return cb(err, user);
         }
       } catch (err) {
+        logger.error('Auth.ts:: ERROR Authenticating: ' + err);
         return Promise.reject(err);
       }
     })
