@@ -26,7 +26,11 @@ passport.use(new Strategy({
     // Create SuperAdmin if it does not exist in DB
     User.findOne({username}, (err, user) => {
       try {
-        // If user is an admin but does not exist in DB yet
+        if (err) {
+          logger.error('Auth.ts:: ERROR ' + err);
+          throw err;
+        }
+        // If user is a superadmin but does not exist in DB yet
 
         let superadmins = config.super_admin.split( );
         let isSuper: boolean = false;

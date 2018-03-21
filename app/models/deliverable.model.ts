@@ -175,7 +175,7 @@ const DeliverableSchema = new mongoose.Schema({
   },
   whitelistedServers: {
     type: String,
-    default: 'portal.cs.ubc.ca:1210 portal.cs.ubc.ca:1310 portal.cs.ubc.ca:1311'
+    default: ''
   },
   team:           {
     type: mongoose.Schema.Types.ObjectId, ref: 'Team',
