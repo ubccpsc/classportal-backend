@@ -43,6 +43,12 @@ const getAllCourses = (req: restify.Request, res: restify.Response) => {
     .catch((err: any) => res.json(500, {err: err}));
 };
 
+const getCourse = (req: restify.Request, res: restify.Response) => {
+  return courseCtrl.getCourse(req.params)
+    .then((course) => res.json(200, {response: course}))
+    .catch((err: any) => res.json(500, {err: err}));
+};
+
 const getCourseIds = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.getCourseIds(req.params)
     .then((courseIds: string[]) => res.json(200, {response: courseIds}))
@@ -391,7 +397,7 @@ export {
   getCurrentUserInfo, updateDeliverable, getDeliverables, isStaffOrAdmin,
   getAllGrades, createTeam, updateTeam, getStudentNamesFromCourse,
   addAdminList, getCourseAdmins, getTeams, addGradesCSV, createGithubTeam, createGithubReposForTeams, getRepos,
-  getCurrentUser, isAuthenticated, getCourseIds,
+  getCurrentUser, isAuthenticated, getCourseIds, getCourse,
   getCourseTeamsPerUser, getLabSectionsFromCourse, getCourseLabSectionList,
   addDeliverable, randomlyGenerateTeamsPerCourse, getTestDelay, getContainerInfo,
   getUsersNotOnTeam, getMyTeams, repairGithubReposForTeams,

@@ -6,7 +6,6 @@ require('dotenv').config();
 const config: any = {
   env:                  process.env.NODE_ENV || 'development',
   debug:                process.env.DEBUG || false,
-  app_name:             process.env.APP_NAME,
   host:                 process.env.DEV_HOST,
   port:                 process.env.DEV_PORT,
   db:                   process.env.DEV_DB,
@@ -16,7 +15,6 @@ const config: any = {
   ssl_int_cert_path:    process.env.SSL_INT_CERT_PATH,
   github_client_id:     process.env.GITHUB_CLIENT_ID,
   github_client_secret: process.env.GITHUB_CLIENT_SECRET,
-  github_callback_url:  process.env.GITHUB_OAUTH_CALLBACK,
   super_admin:          process.env.DEV_SUPER_ADMIN,
   admins:               process.env.DEV_ADMINS.split(' '),
   auth_strategy:        'github',

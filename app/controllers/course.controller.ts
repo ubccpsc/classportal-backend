@@ -21,6 +21,7 @@ import {config} from '../../config/env';
 import {log} from 'util';
 import {ENOLCK} from 'constants';
 import {DockerLogs} from './docker.controller';
+import {isAdmin, superAuthenticated} from '../middleware/auth.middleware';
 
 enum ValidationModes {
   UPDATE,
@@ -113,6 +114,7 @@ function addAdminList(reqFiles: any, courseId: string): Promise<IUserDocument[]>
   
         return Promise.all(userQueries)
           .then((results: any) => {
+            course.admins = [];
             Object.keys(results).forEach((key) => {
               if (course.admins.indexOf(results[key]._id as IUserDocument) === -1) {
                 course.admins.push(results[key]._id as IUserDocument);
@@ -195,6 +197,7 @@ function addStaffList(reqFiles: any, courseId: string): Promise<IUserDocument[]>
   
         return Promise.all(userQueries)
           .then((results: any) => {
+            course.staffList = [];
             Object.keys(results).forEach((key) => {
               if (course.staffList.indexOf(results[key]._id as IUserDocument) === -1) {
                 course.staffList.push(results[key]._id as IUserDocument);
@@ -587,10 +590,12 @@ async function updateCourse(coursePayload: CourseInterface): Promise<ICourseDocu
       .then((course: ICourseDocument) => {
         if (course) {
           // IMPORTANT: Never want to update courseId, as that would result in catastrophe.
-          course.githubOrg = coursePayload.githubOrg;
           course.dockerRepo = coursePayload.dockerRepo;
           course.dockerKey = coursePayload.dockerKey;
           course.urlWebhook = coursePayload.urlWebhook;
+          if (superAuthenticated) {
+            course.githubOrg = coursePayload.githubOrg;
+          }
           // NOTE: Never want UI to update DockerLogs, buildingContainer. Purely back-end logic.
           return course.save()
             .then((course: ICourseDocument) => {
@@ -715,9 +720,23 @@ function getCourseIds(payload: any): Promise<string[]> {
     });
 }
 
+/**
+ * @param payload.courseId course id string to get course for ie. '310'
+ * @return ICourseDocument course that is requested.
+ */
+function getCourse(payload: any): Promise<ICourseDocument> {
+  return Course.findOne({courseId: payload.courseId})
+    .then((course: ICourseDocument) => {
+      if (course) {
+        return course;
+      }
+      throw `Could not find Course ${payload.courseId}`;
+    });
+}
+
 
 export {
   getAllCourses, createCourse, updateClassList, getClassList, getStudentNamesFromCourse,
   getCourseAdmins, getLabSectionsFromCourse, getCourseIds, getCourseLabSectionList,
-  isStaffOrAdmin, addAdminList, addStaffList, getCourseStaff, updateCourse
+  isStaffOrAdmin, addAdminList, addStaffList, getCourseStaff, updateCourse, getCourse,
 };

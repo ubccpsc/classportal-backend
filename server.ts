@@ -42,7 +42,7 @@ let onConnect = Promise.resolve(connection.once('open', () => {
     })
     .then(() => {
       return app.listen(config.port, () => {
-        logger.info(`\n${config.app_name} is listening on ${app.url}`);
+        logger.info(`\nClassPortal-Backend is listening on ${app.url}`);
         logger.info('config:', config);
         return true;
       });

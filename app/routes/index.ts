@@ -37,6 +37,8 @@ const routes = (server: restify.Server) => {
   server.get('/:courseId/admin/staff', adminAuthenticated, routeHandler.getCourseStaff);
   server.get('/:courseId/admin/teams', adminAuthenticated, routeHandler.getTeams);
   server.get('/:courseId/:deliverableName/rate', routeHandler.getTestDelay);
+  server.post('/:courseId/admin/course', adminAuthenticated, routeHandler.updateCourse);
+  server.get('/:courseId/admin/course', adminAuthenticated, routeHandler.getCourse);
   server.get('/:courseId/defaultDeliverable', routeHandler.getDefaultDeliv);
   server.get('/:courseId/isStaff/:username', routeHandler.isStaffOrAdmin);
   server.post('/teams/disband/:teamId', adminAuthenticated, routeHandler.disbandTeamById);

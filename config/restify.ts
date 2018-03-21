@@ -8,7 +8,7 @@ import {session, CookieParser, passport} from './auth';
 
 // create https server
 const app = restify.createServer({
-  name:        config.app_name,
+  name:        'ClassPortal-Backend',
   key:         fs.readFileSync(config.ssl_key_path),
   certificate: fs.readFileSync(config.ssl_cert_path),
   ca:          fs.readFileSync(config.ssl_int_cert_path).toString(),

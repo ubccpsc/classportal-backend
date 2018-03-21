@@ -6,7 +6,6 @@ import {logger} from '../utils/logger';
 const passport = require('passport-restify');
 const session = require('cookie-session');
 const CookieParser = require('restify-cookies');
-const jwt = require('jsonwebtoken');
 // must update links in 'passport-github' package to Github Enterprise URIs
 let Strategy = require('passport-github').Strategy;
 
@@ -28,7 +27,16 @@ passport.use(new Strategy({
     User.findOne({username}, (err, user) => {
       try {
         // If user is an admin but does not exist in DB yet
-        if (!user && config.super_admin == username) {
+
+        let superadmins = config.super_admin.split( );
+        let isSuper: boolean = false;
+        superadmins.map((superadmin: string) => {
+          if (superadmin === username) {
+            isSuper = true;
+          }
+        });
+
+        if (!user && isSuper) {
           authenticateSuperAdmin(err, username, cb);
         }
         // If user is not an admin and there is no record of them in the DB
@@ -39,10 +47,6 @@ passport.use(new Strategy({
         else {
           // JWT NOT IMLPEMENTED. WAS MEANT TO WORK WITH SOCKET IO AND LOGS. NO TIME. NICE TO HAVE.
           // append JSON Web Token with userrole information used by Socket IO permissions
-          const token = jwt.sign({username: user.username, userrole: user.userrole}, new Buffer(config.jwt_secret_key));
-          console.log('debug in else statement');
-          user.userrole = token;
-          console.log('with JSON web token userrole', user);
           return cb(err, user);
         }
       } catch (err) {
