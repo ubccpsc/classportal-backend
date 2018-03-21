@@ -113,8 +113,8 @@ const REPO_MAKER = async function (starterCodeRepoUrl: string, studentRepoUrl: s
           } else {
             logger.info('githubManager::cloneRepo() INFO Student Repo Not Empty or not Initial Commit' + 
               '. Skipping Starter Code Push Repair on ' + studentRepoUrl);
+              return;
           }
-          
         })
         .catch((err: any) => {
           logger.error(`githubManager::cloneRepo() ERROR in Repair Mode: ` + err);

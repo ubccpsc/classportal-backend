@@ -1576,22 +1576,19 @@ export default class GitHubManager {
           return GithubCloneHelper(IMPORT_REPO_URL, STUDENT_REPO_URL, 'REPAIR', inputGroup.deliverable);
         })
         .then(() => {
-          // FINALLY: If we did not run into errors, erase the GithubState errors from previous provision runs
-          inputGroup._team.githubState.creationRecord.error = '';
-          return inputGroup._team.save()
-            .then(() => {
-              logger.info("GitHubManager::repairTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
-              fulfill(inputGroup);
-            });
-        })
-        .then(() => {
-          that.reAddWebhook(inputGroup, course.urlWebhook);
+          logger.info("GitHubManager::repairTeamProvision(..) - adding webhook( " + inputGroup.projectName + ", " +
+             course.urlWebhook + ")); adding team to project");
+          that.addWebhook(inputGroup.projectName, course.urlWebhook);
         })
         .then(() => {
           // if it made it here error free, then erase the error.
           inputGroup._team.githubState.creationRecord.error = '';
           inputGroup._team.markModified('githubState');
-          inputGroup._team.save();
+          return inputGroup._team.save()
+            .then(() => {
+              logger.info("GitHubManager::repairTeamProvision(..) - process complete for: " + JSON.stringify(inputGroup));
+              fulfill(inputGroup);
+            });
         })
         .catch(function (err: any) {
           logger.error("******");
@@ -1600,8 +1597,7 @@ export default class GitHubManager {
           logger.error("GitHubManager::repairTeamProvision(..) - ERROR: " + err);
           logger.error("******");
           logger.error("******");
-
-          console.log('GitHubManager::repairTeamProvision(..) ERROR:', err);
+          logger.error('GitHubManager::repairTeamProvision(..) ERROR:', err);
           reject(err);
         });
     });
