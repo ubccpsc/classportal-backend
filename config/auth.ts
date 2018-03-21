@@ -98,7 +98,7 @@ if (config.env === 'test') {
 // example does not have a database, the complete Facebook profile is serialized
 // and deserialized.
 passport.serializeUser(function (user: IUserDocument, cb: any) {
-  logger.info('Serializing User' + JSON.stringify(user, null, 2));
+  logger.info('Auth.ts:: Serializing User' + JSON.stringify(user, null, 2));
   try {
     logger.info(`config/auth.ts::passport.serializeUser Serializing ${user}`);
     cb(null, user);
@@ -108,7 +108,7 @@ passport.serializeUser(function (user: IUserDocument, cb: any) {
 });
 
 passport.deserializeUser(function (obj: any, cb: any) {
-  logger.info('Deserializing object : ' + JSON.stringify(obj, null, 2));
+  logger.info('Auth.ts:: Deserializing object : ' + JSON.stringify(obj, null, 2));
   try {
     console.log(obj);
     User.findById(obj)
@@ -130,16 +130,17 @@ passport.deserializeUser(function (obj: any, cb: any) {
  * @param cb Passport callback for after SuperAdmin user object is created
  */
 let authenticateSuperAdmin = function (err: any, username: string, cb: any) {
+  logger.info('Auth.ts:: authenticateSuperAdmin() - start');
   let superAdmin = {
     csid:     Math.floor(100000000 + Math.random() * 900000000).toString(),
     snum:     Math.floor(100000000 + Math.random() * 900000000).toString(),
-    lname:    'SUPER',
-    fname:    'ADMIN ' + username,
+    lname:    'SUPER' + username,
+    fname:    'ADMIN' ,
     username,
     userrole: 'superadmin',
   };
 
-  User.create(superAdmin)
+  User.findOrCreate(superAdmin)
     .then((newAdmin: IUserDocument) => {
       if (newAdmin) {
         logger.info(`config/auth.ts:: Authenticated new SuperAdmin user ${username} with Github OAuth`);

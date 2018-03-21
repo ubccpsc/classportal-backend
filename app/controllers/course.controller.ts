@@ -97,14 +97,14 @@ function addAdminList(reqFiles: any, courseId: string): Promise<IUserDocument[]>
         logger.info('CourseController:: addAdminList() Creating admin in Users if does not already ' +
            'exist for CSV line: ' + JSON.stringify(admin));
         userQueries.push(usersRepo.findOrCreate({
-          username: admin.CWL,
-          csid: admin.CWL,
-          snum: admin.CWL,
+          username: admin.CWL
         }).then((u: IUserDocument) => {
           // CSID and SNUM must be unique and exist on User object according to index (so throw in consistent unique value)
           u.userrole = ADMIN_USERROLE;
           u.csid = u.username;
           u.snum = u.username;
+          u.fname = admin.FIRST;
+          u.lname = admin.LAST;
           return u.save();
         }));
       });
@@ -180,9 +180,10 @@ function addStaffList(reqFiles: any, courseId: string): Promise<IUserDocument[]>
         logger.info('CourseController:: addStaffList() Creating staff in Users if user does not already ' +
            'exist for CSV line: ' + JSON.stringify(staff));
         userQueries.push(User.findOrCreate({
-          snum: staff.SNUM,
-          csid: staff.CSID,
+          username: staff.CWL,
         }).then((u: IUserDocument) => {
+          u.snum = staff.SNUM;
+          u.csid = staff.CSID;
           u.username = staff.CWL;
           u.fname = staff.FIRST;
           u.lname = staff.LAST;
