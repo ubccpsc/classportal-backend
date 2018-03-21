@@ -140,7 +140,7 @@ let authenticateSuperAdmin = function (err: any, username: string, cb: any) {
   let superAdmin = {
     csid:     Math.floor(100000000 + Math.random() * 900000000).toString(),
     snum:     Math.floor(100000000 + Math.random() * 900000000).toString(),
-    lname:    'SUPER' + username,
+    lname:    'SUPER ' + username,
     fname:    'ADMIN' ,
     username,
     userrole: 'superadmin',
