@@ -276,7 +276,9 @@ function updateClassList(reqFiles: any, courseId: string): Promise<StudentWithLa
   
         logger.info('Parsing student into user model: ' + JSON.stringify(student));
         userQueries.push(User.findOne({
-          csid: student.CWL,
+          username: student.CWL,
+          csid: student.CSID,
+          snum: student.SNUM
         }).then((u: IUserDocument) => {
           // If User already exists, return the user, or create the user and then return it
           // NOTE: We DO NOT want to overwrite already created user._id properties that are referenced
