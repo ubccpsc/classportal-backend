@@ -53,7 +53,7 @@ const exec = require('child-process-promise').exec;
  */
 async function buildContainer(payload: any): Promise<any> {
   let that = this;
-  let tempDir = await tmp.dir({dir: '/recycling', unsafeCleanup: true});
+  let tempDir = await tmp.dir({dir: '/tmp', unsafeCleanup: true});
   let tempPath = tempDir.path;
   let deliv: IDeliverableDocument;
   let githubRepoUrl: string;

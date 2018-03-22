@@ -48,8 +48,8 @@ const REPO_MAKER = async function (starterCodeRepoUrl: string, studentRepoUrl: s
     logger.info('GithubManager::importRepoFS() USING Deliverable.deliverableKey as Starter Code Auth');
   }
 
-  let tempImportDir = await tmp.dir({dir: '/recycling', unsafeCleanup: true});
-  let tempStudentDir = await tmp.dir({dir: '/recycling', unsafeCleanup: true});
+  let tempImportDir = await tmp.dir({dir: '/tmp', unsafeCleanup: true});
+  let tempStudentDir = await tmp.dir({dir: '/tmp', unsafeCleanup: true});
   let tempImportPath = tempImportDir.path;
   let tempStudentRepoPath = tempStudentDir.path;
 

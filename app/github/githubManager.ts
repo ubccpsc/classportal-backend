@@ -1532,7 +1532,7 @@ export default class GitHubManager {
     logger.info('GithubManager::repairTeamProvision() SET Import Repo ' + STUDENT_REPO_URL);
     let deliv = inputGroup.deliverable;
     let exec = require('child-process-promise').exec;
-    let tempDir = await tmp.dir({dir: '/recycling', unsafeCleanup: true});
+    let tempDir = await tmp.dir({dir: '/tmp', unsafeCleanup: true});
     let tempPath = tempDir.path;
     let importToken: string = deliv.deliverableKey !== '' ? deliv.deliverableKey : '';
     let authedStudentRepo = Helper.addGithubAuthToken(STUDENT_REPO_URL, importToken);

@@ -38,3 +38,7 @@ build/*
 
 # Exception of builds/uploads folder needed for bodyParser (without uploaded files)
 !build/uploads/*
+
+# Production Log files
+ERRFILE
+OUTPUT
