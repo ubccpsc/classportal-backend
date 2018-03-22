@@ -179,16 +179,33 @@ function addStaffList(reqFiles: any, courseId: string): Promise<IUserDocument[]>
         let course: ICourseDocument;
         logger.info('CourseController:: addStaffList() Creating staff in Users if user does not already ' +
            'exist for CSV line: ' + JSON.stringify(staff));
-        userQueries.push(User.findOrCreate({
+        userQueries.push(User.findOne({
           username: staff.CWL,
           csid: staff.CSID,
           snum: staff.SNUM
         }).then((u: IUserDocument) => {
-          u.fname = staff.FIRST;
-          u.lname = staff.LAST;
-          // Still a student. Staff role comes from objectId in Course.staffList[] property
-          u.userrole = 'student';
-          return u.save();
+          if (u) {
+            u.fname = staff.FIRST;
+            u.lname = staff.LAST;
+            // Still a student. Staff role comes from objectId in Course.staffList[] property
+            u.userrole = 'student';
+            return u.save();
+          } else {
+            return User.create({
+              username: staff.CWL,
+              csid: staff.CSID,
+              snum: staff.SNUM,
+              fname: staff.FIRST,
+              lname: staff.LAST
+            })
+              .then((u: IUserDocument) => {
+                return u;
+              });
+          }
+
+        }).catch((err: any) => {
+          logger.error('CourseController::addStaffList() ERROR ' + err);
+          reject('CourseController::addStaffList() ERROR ' + err + ' STAFF: ' + JSON.stringify(staff));
         }));
       });
   
@@ -206,6 +223,7 @@ function addStaffList(reqFiles: any, courseId: string): Promise<IUserDocument[]>
   
             fulfill(course.save());
           });
+
       });
   
       if (err) {

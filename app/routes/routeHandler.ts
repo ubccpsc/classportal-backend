@@ -340,7 +340,7 @@ const isStaffOrAdmin = (req: restify.Request, res: restify.Response, next: resti
 
 const addStaffList = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return courseCtrl.addStaffList(req.files, req.params.courseId)
-    .then((isStaff: any) => res.json(200, {response: isStaff}))
+    .then((staffList: any) => res.json(200, {response: staffList}))
     .catch((err: any) => res.json(500, {err: err}));
 };
 
