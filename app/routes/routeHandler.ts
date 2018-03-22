@@ -70,7 +70,7 @@ const getCourseLabSectionList = (req: restify.Request, res: restify.Response) =>
 const updateClassList = (req: restify.Request, res: restify.Response) => {
   return courseCtrl.updateClassList(req.files, req.params.courseId)
     .then((c: StudentWithLab[]) => res.json(200, {response: c}))
-    .catch((err: Error) => res.json(500, {'err': err.message}));
+    .catch((err: any) => res.json(500, {'err': err}));
 };
 
 const getClassList = (req: restify.Request, res: restify.Response) => {
