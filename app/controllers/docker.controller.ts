@@ -394,6 +394,7 @@ function isContainerBuilt(payload: any) {
     .then((tagName: string) => {
       return exec(GET_CONTAINER_LIST_CMD)
       .then(function (result: any) {
+        logger.info('GithubManager::isContainerBuilt() Looking for ' + tagName);
         logger.info('GithubManager::isContainerBuilt() STDOUT/STDERR:');
         console.log('stdout: ', result.stdout);
         console.log('stderr: ', result.stderr);
