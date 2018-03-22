@@ -287,6 +287,7 @@ export default class GitHubManager {
       if (typeof teamId != 'undefined') {
         console.log(team);
         team.githubState.team.id = teamId;
+        team.markModified('githubState');
         team.save()
           .then((team: ITeamDocument) => {
             fulfill(team.teamId);
@@ -1552,7 +1553,7 @@ export default class GitHubManager {
               return teamId;
             });
         } else {
-          return that.createTeam(inputGroup.team, 'push')
+          return that.createTeam(inputGroup.teamName, 'push')
             .then((newTeamInfo) => {
               return newTeamInfo.teamId;
             });
