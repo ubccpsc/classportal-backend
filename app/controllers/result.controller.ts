@@ -597,7 +597,13 @@ export class Results {
               } else {
                 mappedObj.grade = '0';
               }
-
+            } else if (orgName !== 'CPSC310-2017W-T2' && orgName !== 'CPSC210-2017-T2') {
+              // NOTE FOR REID et al.: Next semester, going forward, this will break, but 210 and 310 should both implement a similar
+              // structure by then, as hard-wiring this code will not work in the long-run. Flatter structure is implemented
+              // in demo container.
+              if (typeof results[key].report !== 'undefined' && results[key].report !== null) {
+                mappedObj.grade = results[key].report.finalGrade;
+              }
             }
           }
           mappedResults.push(mappedObj);

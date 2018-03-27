@@ -199,7 +199,7 @@ const createGithubTeam = (req: restify.Request, res: restify.Response, next: res
 
 const createGithubReposForTeams = (req: restify.Request, res: restify.Response, next: restify.Next) => {
   return githubCtrl.createGithubReposForTeams(req.params)
-    .then((githubResponse: Object) => res.json(200, {response: 'Successfully created repo with teams and members.'}))
+    .then((githubResponse: Object) => res.json(200, {response: 'Starting Github Repo creation process...'}))
     .catch((err: any) => res.json(500, {err: err.message}));
 };
 

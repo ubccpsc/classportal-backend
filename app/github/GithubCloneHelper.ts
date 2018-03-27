@@ -18,7 +18,7 @@ let exec = require('child-process-promise').exec;
 
 /**
  * 
- * NOTE: REFACTOR INTO CREATE/REPAIR METHOD IN CLASS NEEDED & EASY:
+ * NOTE: A REFACTOR OF THIS FUNCTION INTO A CREATE/REPAIR METHOD IN A CLASS MODEL IS NEEDED:
  * 
  * Create or repairs Github Repos by cloning starter code and redistributing it from 
  * the file-system command-line level. 
