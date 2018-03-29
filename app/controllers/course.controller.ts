@@ -735,9 +735,9 @@ async function validateCourse(course: CourseInterface, mode: ValidationModes): P
  * @return string[] courseIDs ie. ['310', '210'];
  */
 function getCourseIds(payload: any, req: any): Promise<string[]> {
+  logger.info('CourseController::getCourseIds() - start');
   let courseIds: string[] = [];
   return Course.find({})
-    .populate('admins staffList')
     .then((courses: ICourseDocument[]) => {
       if (courses) {
         courses.map((course) => {
@@ -748,17 +748,15 @@ function getCourseIds(payload: any, req: any): Promise<string[]> {
               courseIds.push(course.courseId);
             }
             if (course.classList.indexOf(req.user._id) > -1) {
-              if (courseIds.indexOf(req.user._id) === -1) {
+              if (courseIds.indexOf(course.courseId) === -1) {
                 courseIds.push(course.courseId);
               }
             }
           }
           if (typeof req.user.userrole !== 'undefined' && req.user.userrole === 'admin') {
-            course.admins.map((user) => {
-              if (user.username === req.user.username) {
-                courseIds.push(course.courseId);
-              }
-            });
+            if (course.admins.indexOf(req.user._id) > -1) {
+              courseIds.push(course.courseId);
+            }
           }
           if (typeof req.user.username !== 'undefined' && req.user.userrole === 'superadmin') {
             courseIds.push(course.courseId);
