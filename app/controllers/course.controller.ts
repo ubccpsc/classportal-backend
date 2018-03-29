@@ -21,7 +21,7 @@ import {config} from '../../config/env';
 import {log} from 'util';
 import {ENOLCK} from 'constants';
 import {DockerLogs} from './docker.controller';
-import {isAdmin, superAuthenticated} from '../middleware/auth.middleware';
+import {isAdmin, superAuth} from '../middleware/auth.middleware';
 
 enum ValidationModes {
   UPDATE,
@@ -618,7 +618,7 @@ async function updateCourse(coursePayload: CourseInterface): Promise<ICourseDocu
           course.dockerRepo = coursePayload.dockerRepo;
           course.dockerKey = coursePayload.dockerKey;
           course.urlWebhook = coursePayload.urlWebhook;
-          if (superAuthenticated) {
+          if (superAuth) {
             course.githubOrg = coursePayload.githubOrg;
           }
           // NOTE: Never want UI to update DockerLogs, buildingContainer. Purely back-end logic.
@@ -728,16 +728,45 @@ async function validateCourse(course: CourseInterface, mode: ValidationModes): P
 }
 
 /**
- * 
+ * IF student role, returns course Ids that student is registered in
+ * IF admin role, returns course Ids that admin is admin in
+ * IF superadmin role, returns all course Ids
  * @param payload.courseIds 
+ * @return string[] courseIDs ie. ['310', '210'];
  */
-function getCourseIds(payload: any): Promise<string[]> {
+function getCourseIds(payload: any, req: any): Promise<string[]> {
   let courseIds: string[] = [];
   return Course.find({})
+    .populate('admins staffList classList')
     .then((courses: ICourseDocument[]) => {
       if (courses) {
         courses.map((course) => {
-          courseIds.push(course.courseId);
+          // Pushes the courseId if the user is an admin or staff in that course for privacy
+          // and eliminates lots of other logic debugging for other views.
+          if (typeof req.user.username !== 'undefined' && req.user.userrole === 'student') {
+            course.staffList.map((user) => {
+              if (user.username === req.user.username) {
+                courseIds.push(course.courseId);
+              }
+            });
+            course.classList.map((user: IUserDocument) => {
+              if (user.username === req.user.username) {
+                if (courseIds.indexOf(course.courseId) === -1) {
+                  courseIds.push(course.courseId);
+                }
+              }
+            });
+          }
+          if (typeof req.user.userrole !== 'undefined' && req.user.userrole === 'admin') {
+            course.admins.map((user) => {
+              if (user.username === req.user.username) {
+                courseIds.push(course.courseId);
+              }
+            });
+          }
+          if (typeof req.user.username !== 'undefined' && req.user.userrole === 'superadmin') {
+            courseIds.push(course.courseId);
+          }
         });
         return courseIds;
       }

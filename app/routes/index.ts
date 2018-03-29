@@ -1,7 +1,7 @@
 import * as restify from 'restify';
 import * as routeHandler from './routeHandler';
 import * as auth from './auth';
-import {isAuthenticated, adminAuthenticated, superAuthenticated} from '../../app/middleware/auth.middleware';
+import {isAuthenticated, staffOrAdminAuth, adminAuth, superAuth} from '../../app/middleware/auth.middleware';
 import {passport} from '../../config/auth';
 import {config} from '../../config/env';
 
@@ -19,7 +19,7 @@ const routes = (server: restify.Server) => {
   server.post('/:courseId/students/isInSameLab', isAuthenticated, routeHandler.isStudentInSameLab);
   server.get('/:courseId/students/withoutTeam', isAuthenticated, routeHandler.getUsersNotOnTeam);
   server.put('/:courseId/team', isAuthenticated, routeHandler.createTeam);
-  server.put('/:courseId/admin/customTeam', adminAuthenticated, routeHandler.createCustomTeam);
+  server.put('/:courseId/admin/customTeam', adminAuth, routeHandler.createCustomTeam);
   server.put('/:courseId/students/customTeam', isAuthenticated, routeHandler.createCustomTeam);
   // OAuth routes by logged-in users only
   server.post('/logout', auth.loadUser, routeHandler.logout);
@@ -33,56 +33,56 @@ const routes = (server: restify.Server) => {
   // Authenticated routes   
 
   // -- Prof or Admin Routes
-  server.post('/:courseId/admin/staff', adminAuthenticated, routeHandler.addStaffList);
-  server.get('/:courseId/admin/staff', adminAuthenticated, routeHandler.getCourseStaff);
-  server.get('/:courseId/admin/teams', adminAuthenticated, routeHandler.getTeams);
+  server.post('/:courseId/admin/staff', adminAuth, routeHandler.addStaffList);
+  server.get('/:courseId/admin/staff', adminAuth, routeHandler.getCourseStaff);
+  server.get('/:courseId/admin/teams', adminAuth, routeHandler.getTeams);
   server.get('/:courseId/:deliverableName/rate', routeHandler.getTestDelay);
-  server.post('/:courseId/admin/course', adminAuthenticated, routeHandler.updateCourse);
-  server.get('/:courseId/admin/course', adminAuthenticated, routeHandler.getCourse);
+  server.post('/:courseId/admin/course', adminAuth, routeHandler.updateCourse);
+  server.get('/:courseId/admin/course', adminAuth, routeHandler.getCourse);
   server.get('/:courseId/defaultDeliverable', routeHandler.getDefaultDeliv);
   server.get('/:courseId/isStaff/:username', routeHandler.isStaffOrAdmin);
-  server.post('/teams/disband/:teamId', adminAuthenticated, routeHandler.disbandTeamById);
-  server.get('/:courseId/admin/teams/:deliverable/overview', adminAuthenticated, routeHandler.getTeamProvisionOverview);  
-  server.get('/admin/files/:deliverable/:username/:commit/:filename', adminAuthenticated,
+  server.post('/teams/disband/:teamId', adminAuth, routeHandler.disbandTeamById);
+  server.get('/:courseId/admin/teams/:deliverable/overview', adminAuth, routeHandler.getTeamProvisionOverview);  
+  server.get('/admin/files/:deliverable/:username/:commit/:filename', adminAuth,
     routeHandler.getFileFromResultRecord);
-  server.put('/:courseId/admin/buildContainer', adminAuthenticated, routeHandler.buildContainer);
-  server.put('/:courseId/admin/destroyContainer', adminAuthenticated, routeHandler.destroyContainer);
-  server.put('/:courseId/admin/isContainerBuilt', adminAuthenticated, routeHandler.isContainerBuilt);
+  server.put('/:courseId/admin/buildContainer', adminAuth, routeHandler.buildContainer);
+  server.put('/:courseId/admin/destroyContainer', adminAuth, routeHandler.destroyContainer);
+  server.put('/:courseId/admin/isContainerBuilt', adminAuth, routeHandler.isContainerBuilt);
   server.get('/:courseId/:deliverableName/container', routeHandler.getContainerInfo);
-  server.get('/admin/files/:stdioRef/stdio.txt', adminAuthenticated, routeHandler.getStdioFile);
-  server.get('/:courseId/admin/teams/:deliverableName', adminAuthenticated, routeHandler.getTeams);
-  server.post('/:courseId/admin/grades/results', adminAuthenticated, routeHandler.getGradesFromResults);
-  server.get('/:courseId/admin/teams/info/:deliverableName', adminAuthenticated, routeHandler.getCourseTeamInfo);
-  server.get('/:courseId/admin/classList', adminAuthenticated, routeHandler.getClassList);
+  server.get('/admin/files/:stdioRef/stdio.txt', adminAuth, routeHandler.getStdioFile);
+  server.get('/:courseId/admin/teams/:deliverableName', adminAuth, routeHandler.getTeams);
+  server.post('/:courseId/admin/grades/results', adminAuth, routeHandler.getGradesFromResults);
+  server.get('/:courseId/admin/teams/info/:deliverableName', adminAuth, routeHandler.getCourseTeamInfo);
+  server.get('/:courseId/admin/classList', adminAuth, routeHandler.getClassList);
 
   // -- Super Admin Only Routes
-  server.put('/:courseId/superadmin/course', superAuthenticated, routeHandler.createCourse);
-  server.post('/:courseId/superadmin/course', superAuthenticated, routeHandler.updateCourse);
+  server.put('/:courseId/superadmin/course', superAuth, routeHandler.createCourse);
+  server.post('/:courseId/superadmin/course', superAuth, routeHandler.updateCourse);
   server.get('/superadmin/courses', isAuthenticated, routeHandler.getAllCourses);
-  server.post('/:courseId/superadmin/admins', adminAuthenticated, routeHandler.addAdminList);
-  server.get('/:courseId/superadmin/admins', adminAuthenticated, routeHandler.getCourseAdmins);
+  server.post('/:courseId/superadmin/admins', adminAuth, routeHandler.addAdminList);
+  server.get('/:courseId/superadmin/admins', adminAuth, routeHandler.getCourseAdmins);
 
   // -- Admin or Super Admin Only Routes
-  server.put('/:courseId/admin/github/team', adminAuthenticated, routeHandler.createGithubTeam);
-  server.put('/:courseId/admin/github/repo/team', adminAuthenticated, routeHandler.createGithubReposForTeams);
-  server.put('/:courseId/admin/github/repo/team/repair', adminAuthenticated, routeHandler.repairGithubReposForTeams);
-  server.put('/:courseId/admin/github/repo/team/unlink', adminAuthenticated, routeHandler.removeRepoFromTeams);
-  server.post('/:courseId/admin/teamGeneration', adminAuthenticated, routeHandler.randomlyGenerateTeamsPerCourse);
-  server.get('/:courseId/admin/github/repos/:orgName', adminAuthenticated, routeHandler.getRepos);
-  server.post('/:courseId/admin/team', adminAuthenticated, routeHandler.updateTeam);
-  server.get('/:courseId/admin/students', adminAuthenticated, routeHandler.getClassList);
-  server.post('/:courseId/admin/classList', adminAuthenticated, routeHandler.updateClassList);
-  server.get('/:courseId/admin/grades', adminAuthenticated, routeHandler.getAllGrades);
-  server.get('/:courseId/admin/grades/:delivName', adminAuthenticated, routeHandler.getGradesByDeliv);
-  server.post('/:courseId/admin/grades/:delivName', adminAuthenticated, routeHandler.addGradesCSV);
-  server.post('/:courseId/admin/deliverable', adminAuthenticated, routeHandler.updateDeliverable);
-  server.put('/:courseId/admin/deliverable', adminAuthenticated, routeHandler.addDeliverable);
+  server.put('/:courseId/admin/github/team', adminAuth, routeHandler.createGithubTeam);
+  server.put('/:courseId/admin/github/repo/team', adminAuth, routeHandler.createGithubReposForTeams);
+  server.put('/:courseId/admin/github/repo/team/repair', adminAuth, routeHandler.repairGithubReposForTeams);
+  server.put('/:courseId/admin/github/repo/team/unlink', adminAuth, routeHandler.removeRepoFromTeams);
+  server.post('/:courseId/admin/teamGeneration', adminAuth, routeHandler.randomlyGenerateTeamsPerCourse);
+  server.get('/:courseId/admin/github/repos/:orgName', adminAuth, routeHandler.getRepos);
+  server.post('/:courseId/admin/team', adminAuth, routeHandler.updateTeam);
+  server.get('/:courseId/admin/students', adminAuth, routeHandler.getClassList);
+  server.post('/:courseId/admin/classList', adminAuth, routeHandler.updateClassList);
+  server.get('/:courseId/admin/grades', adminAuth, routeHandler.getAllGrades);
+  server.get('/:courseId/admin/grades/:delivName', adminAuth, routeHandler.getGradesByDeliv);
+  server.post('/:courseId/admin/grades/:delivName', adminAuth, routeHandler.addGradesCSV);
+  server.post('/:courseId/admin/deliverable', adminAuth, routeHandler.updateDeliverable);
+  server.put('/:courseId/admin/deliverable', adminAuth, routeHandler.addDeliverable);
   server.get('/settings', isAuthenticated, isAuthenticated, routeHandler.getCurrentUserInfo);
   server.get('/logout', isAuthenticated, routeHandler.logout);
   server.get('/test/jwt', isAuthenticated, routeHandler.testJwt);
 
   // dashboard
-  server.get('/:courseId/admin/dashboard/:orgName/:delivId', adminAuthenticated, routeHandler.getDashForDeliverable);
+  server.get('/:courseId/admin/dashboard/:orgName/:delivId', adminAuth, routeHandler.getDashForDeliverable);
 };
 
 export {routes};

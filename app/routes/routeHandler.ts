@@ -50,7 +50,7 @@ const getCourse = (req: restify.Request, res: restify.Response) => {
 };
 
 const getCourseIds = (req: restify.Request, res: restify.Response) => {
-  return courseCtrl.getCourseIds(req.params)
+  return courseCtrl.getCourseIds(req.params, req)
     .then((courseIds: string[]) => res.json(200, {response: courseIds}))
     .catch((err: Error) => res.json(500, {'err': err.message}));
 };
