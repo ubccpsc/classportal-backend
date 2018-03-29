@@ -737,25 +737,21 @@ async function validateCourse(course: CourseInterface, mode: ValidationModes): P
 function getCourseIds(payload: any, req: any): Promise<string[]> {
   let courseIds: string[] = [];
   return Course.find({})
-    .populate('admins staffList classList')
+    .populate('admins staffList')
     .then((courses: ICourseDocument[]) => {
       if (courses) {
         courses.map((course) => {
           // Pushes the courseId if the user is an admin or staff in that course for privacy
           // and eliminates lots of other logic debugging for other views.
           if (typeof req.user.username !== 'undefined' && req.user.userrole === 'student') {
-            course.staffList.map((user) => {
-              if (user.username === req.user.username) {
+            if (course.staffList.indexOf(req.user._id) > -1) {
+              courseIds.push(course.courseId);
+            }
+            if (course.classList.indexOf(req.user._id) > -1) {
+              if (courseIds.indexOf(req.user._id) === -1) {
                 courseIds.push(course.courseId);
               }
-            });
-            course.classList.map((user: IUserDocument) => {
-              if (user.username === req.user.username) {
-                if (courseIds.indexOf(course.courseId) === -1) {
-                  courseIds.push(course.courseId);
-                }
-              }
-            });
+            }
           }
           if (typeof req.user.userrole !== 'undefined' && req.user.userrole === 'admin') {
             course.admins.map((user) => {
