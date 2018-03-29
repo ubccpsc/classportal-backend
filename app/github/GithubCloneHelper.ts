@@ -41,8 +41,11 @@ const REPO_MAKER = async function (starterCodeRepoUrl: string, studentRepoUrl: s
   let importToken: string = deliv.deliverableKey !== '' ? deliv.deliverableKey : '';
   let authedStudentRepo = Helper.addGithubAuthToken(studentRepoUrl, importToken);
   let authedStarterCodeRepo = Helper.addGithubAuthToken(starterCodeRepoUrl, config.github_clone_token);
+  logger.info('GithubHelper::REPO_MAKER() - studentRepo key: ' + importToken + ', starterCodeRepo key: ' + config.github_clone_token);
   logger.info('GithubHelper::REPO_MAKER() - Auth/Unauth Student Repo: ' + actionType);
   logger.info('GithubHelper::REPO_MAKER() - Auth/Unauth Starter Code Repo: ' + actionType);
+  logger.info('GithubHelper::REPO_MAKER() - Auth/Unauth Student Repo: ' + authedStudentRepo);
+  logger.info('GithubHelper::REPO_MAKER() - Auth/Unauth Starter Code Repo: ' + authedStarterCodeRepo);
 
   if (deliv.deliverableKey !== '') {
     logger.info('GithubManager::importRepoFS() USING Deliverable.deliverableKey as Starter Code Auth');
