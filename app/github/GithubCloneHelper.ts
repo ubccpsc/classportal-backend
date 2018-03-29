@@ -39,8 +39,8 @@ const REPO_MAKER = async function (starterCodeRepoUrl: string, studentRepoUrl: s
   const INITIAL_COMMIT_TAG: string = 'Initial commit';
   const ON_MASTER_TAG: string = 'On branch master';
   let importToken: string = deliv.deliverableKey !== '' ? deliv.deliverableKey : '';
-  let authedStudentRepo = Helper.addGithubAuthToken(studentRepoUrl, importToken);
-  let authedStarterCodeRepo = Helper.addGithubAuthToken(starterCodeRepoUrl, config.github_clone_token);
+  let authedStudentRepo = Helper.addGithubAuthToken(studentRepoUrl, config.github_clone_token);
+  let authedStarterCodeRepo = Helper.addGithubAuthToken(starterCodeRepoUrl, importToken);
   logger.info('GithubHelper::REPO_MAKER() - studentRepo key: ' + importToken + ', starterCodeRepo key: ' + config.github_clone_token);
   logger.info('GithubHelper::REPO_MAKER() - Auth/Unauth Student Repo: ' + actionType);
   logger.info('GithubHelper::REPO_MAKER() - Auth/Unauth Starter Code Repo: ' + actionType);
