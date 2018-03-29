@@ -764,9 +764,8 @@ function getCourseIds(payload: any, req: any): Promise<string[]> {
             courseIds.push(course.courseId);
           }
         });
-        return courseIds;
       }
-      return [];
+      return courseIds;
     });
 }
 
