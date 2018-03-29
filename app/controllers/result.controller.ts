@@ -21,6 +21,40 @@ let MongoClient = mongodb.MongoClient;
 let fs = require('fs');
 let stringify = require('csv-stringify');
 
+// NOTE: Your custom business logic report, which will not be read by AutoTest or ClassPortal, but held onto
+// if it is necessary to hold onto it for export at a convenience time.
+//
+// IMPORTANT: The final grade will be read by ClassPortal for rendering grade information.
+
+export interface MyReport {
+  finalGrade: number;
+  custom: Object;
+}
+
+export interface ResultRecord {
+  team: string;
+  repo: string;
+  state: string;
+  projectUrl: string;
+  commitUrl: string;
+  orgName: string;
+  deliverable: string;
+  postbackOnComplete: boolean;
+  courseNum: number;
+  user: string;
+  timestamp: number;
+  ref: string;
+  custom: object;
+  // REPORT: Customizable data object for you.
+  // 'null' will default to zero grade in ClassPortal;
+  report: MyReport;
+  container: Object;
+  githubFeedback: string;
+  gradeRequested: boolean;
+  gradeRequestedTimestamp: number;
+  attachments: object[];
+}
+
 export class Results {
 
   /**
@@ -601,6 +635,9 @@ export class Results {
               // NOTE FOR REID et al.: Next semester, going forward, this will break, but 210 and 310 should both implement a similar
               // structure by then, as hard-wiring this code will not work in the long-run. Flatter structure is implemented
               // in demo container.
+
+              // PLEASE SEE THE NEW INTERFACE AT THE TOP OF THE RESULT CONTROLLER. IT IS UNIMPLEMENTED, BUT PART OF THE DOCUMENTATION
+              // INSTRUCTIONS ON SETTING UP A CONTAINER.
               if (typeof results[key].report !== 'undefined' && results[key].report !== null) {
                 mappedObj.grade = results[key].report.finalGrade;
               }

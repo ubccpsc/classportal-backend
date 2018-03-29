@@ -65,9 +65,14 @@ export class Helper {
    */
   public static addGithubAuthToken(url: string, authToken: string): string {
     let start_append = url.indexOf('//') + 2;
+    let authedUrl = '';
     let authKey = authToken + '@';
-    let authedUrl = url.slice(0, start_append) + authKey + url.slice(start_append);
-    return authedUrl;
+    if (typeof authToken !== 'undefined' && authToken !== '') {
+      authedUrl = url.slice(0, start_append) + authKey + url.slice(start_append);
+      return authedUrl;
+    } else {
+      return url;
+    }
   }
 
   /**
