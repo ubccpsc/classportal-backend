@@ -737,17 +737,25 @@ async function validateCourse(course: CourseInterface, mode: ValidationModes): P
 function getCourseIds(payload: any, req: any): Promise<string[]> {
   logger.info('CourseController::getCourseIds() - start');
   let courseIds: string[] = [];
+
+  if (typeof req.user === 'undefined') {
+    return Promise.resolve(courseIds);
+  }
+
   return Course.find({})
     .then((courses: ICourseDocument[]) => {
       if (courses) {
         courses.map((course) => {
           // Pushes the courseId if the user is an admin or staff in that course for privacy
           // and eliminates lots of other logic debugging for other views.
+
           if (typeof req.user.username !== 'undefined' && req.user.userrole === 'student') {
             if (course.staffList.indexOf(req.user._id) > -1) {
+              console.log('found staff');
               courseIds.push(course.courseId);
             }
             if (course.classList.indexOf(req.user._id) > -1) {
+              console.log('found class list');
               if (courseIds.indexOf(course.courseId) === -1) {
                 courseIds.push(course.courseId);
               }
