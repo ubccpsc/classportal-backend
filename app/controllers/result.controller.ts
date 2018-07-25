@@ -618,9 +618,9 @@ export class Results {
             mappedObj.grade = '0';
           } else {
             const orgName = String(results[key].orgName);
-            if (orgName === 'CPSC210-2017W-T2' && reportFailed === false) { // HACK: org shouldn't be hard coded
+            if (orgName.substring(0, 8) === 'CPSC210-' && reportFailed === false) { // HACK: org shouldn't be hard coded
               mappedObj.grade = results[key].report !== null ? results[key].report.tests.grade.finalGrade : '0';
-            } else if (orgName === 'CPSC310-2017W-T2' && reportFailed === false) { // HACK: org shouldn't be hard coded
+            } else if (orgName.substring(0, 8) === 'CPSC310-' && reportFailed === false) { // HACK: org shouldn't be hard coded
               // mappedObj.grade = results[key].report.tests.grade.finalGrade || '0'; // OLD (pre 2017-T2)
               // logger.info("result: " + JSON.stringify(results[key]));
               if (typeof results[key].report !== 'undefined' &&
